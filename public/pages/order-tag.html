@@ -1,35 +1,132 @@
-<div class="container py-5" style="max-width: 700px;">
-    <div class="text-center">
-        <h1 class="display-5">Order a Lasting Tribute Tag</h1>
-        <p class="lead text-muted">Receive a weatherproof, stainless steel tag with the QR code professionally etched. It can be affixed to any headstone or memorial marker.</p>
+<div class="container py-5" style="max-width: 900px;">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">Make Their Memorial Last Forever</h1>
+        <p class="lead text-muted">Weatherproof QR code tag professionally engraved on premium stainless steel</p>
     </div>
 
-    <div class="row g-5 mt-4">
-        <div class="col-md-5 col-lg-4 order-md-last">
-            <h4 class="d-flex justify-content-between align-items-center mb-3">
-                <span class="text-primary">Your Order</span>
-            </h4>
-            <ul class="list-group mb-3">
-                <li class="list-group-item d-flex justify-content-between lh-sm">
-                    <div>
-                        <h6 class="my-0">Stainless Steel QR Tag</h6>
-                        <small class="text-muted" id="order-memorial-name">For memorial...</small>
-                    </div>
-                    <span class="text-muted">$29.99</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>Total (USD)</span>
-                    <strong>$29.99</strong>
-                </li>
-            </ul>
+    <!-- Product Features Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4 text-center">
+            <div class="mb-3">
+                <i class="fas fa-shield-alt fa-3x text-primary"></i>
+            </div>
+            <h5 class="fw-bold">Weatherproof</h5>
+            <p class="text-muted small">Withstands rain, snow, sun, and extreme temperatures. Rated for 50+ years outdoors.</p>
         </div>
+        <div class="col-md-4 text-center">
+            <div class="mb-3">
+                <i class="fas fa-gem fa-3x text-primary"></i>
+            </div>
+            <h5 class="fw-bold">Premium Materials</h5>
+            <p class="text-muted small">Laser-engraved 316 stainless steel won't fade, rust, or deteriorate over time.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="mb-3">
+                <i class="fas fa-wrench fa-3x text-primary"></i>
+            </div>
+            <h5 class="fw-bold">Easy Installation</h5>
+            <p class="text-muted small">Includes adhesive backing or mounting screws. Attaches to granite, marble, or bronze in minutes.</p>
+        </div>
+    </div>
+
+    <!-- Order Details -->
+    <div class="row g-5">
         <div class="col-md-7 col-lg-8">
-            <h4 class="mb-3">Shipping address</h4>
-            <p class="text-muted">Your final shipping address will be collected securely by Square on the next page.</p>
-             <hr class="my-4">
-            <button class="w-100 btn btn-primary btn-lg" type="button" id="checkout-button">
-                <i class="fas fa-credit-card me-2"></i> Proceed to Secure Checkout
-            </button>
+            <!-- What's Included -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h4 class="mb-3"><i class="fas fa-box-open me-2 text-primary"></i>What's Included</h4>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> 3" x 2" stainless steel QR code tag</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Laser-engraved with your unique memorial code</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Heavy-duty outdoor adhesive backing</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Optional mounting screws for permanent installation</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Installation instructions</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Lifetime replacement guarantee</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Guarantee -->
+            <div class="alert alert-info border-0" role="alert">
+                <h5 class="alert-heading"><i class="fas fa-infinity me-2"></i>Lifetime Guarantee</h5>
+                <p class="mb-0">If your tag ever fades, cracks, or becomes unreadable, we'll replace it free of charge. Forever.</p>
+            </div>
+
+            <!-- Shipping Info -->
+            <h4 class="mb-3">Shipping Information</h4>
+            <p class="text-muted">Your final shipping address will be collected securely by Square on the next page. Ships within 3-5 business days via USPS First Class Mail.</p>
+
+            <div class="d-grid gap-2 mt-4">
+                <button class="btn btn-primary btn-lg" type="button" id="checkout-button">
+                    <i class="fas fa-lock me-2"></i> Proceed to Secure Checkout
+                </button>
+                <p class="text-muted small text-center mb-0">
+                    <i class="fas fa-shield-alt me-1"></i> Secure payment processed by Square
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-5 col-lg-4">
+            <!-- Order Summary -->
+            <div class="card border-primary shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="fw-bold">Stainless Steel QR Tag</h6>
+                        <p class="text-muted small mb-1" id="order-memorial-name">For memorial...</p>
+                        <p class="text-muted small mb-0">3" x 2" • Weatherproof • Laser Engraved</p>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>$29.99</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span class="text-success">FREE</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <strong>Total (USD)</strong>
+                        <strong class="text-primary">$29.99</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="text-center mt-4">
+                <p class="text-muted small mb-2">
+                    <i class="fas fa-truck text-success me-1"></i> Ships in 3-5 days<br>
+                    <i class="fas fa-shield-alt text-success me-1"></i> Lifetime guarantee<br>
+                    <i class="fas fa-lock text-success me-1"></i> Secure checkout
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="mt-5 pt-5 border-top">
+        <h4 class="text-center mb-4">Frequently Asked Questions</h4>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="fw-bold">How do I install the tag?</h6>
+                <p class="text-muted small">Peel and stick the adhesive backing onto any clean, dry headstone surface. For permanent installation, use the included mounting screws.</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold">Will it work in all weather?</h6>
+                <p class="text-muted small">Yes! Our tags are tested to withstand temperatures from -40°F to 180°F and resist rain, snow, UV rays, and humidity.</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold">What if it gets damaged?</h6>
+                <p class="text-muted small">We offer a lifetime replacement guarantee. If your tag ever becomes unreadable, contact us for a free replacement.</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold">Can I order multiple tags?</h6>
+                <p class="text-muted small">Yes! Complete this purchase, then return to order additional tags. Contact us for bulk pricing on 5+ tags.</p>
+            </div>
         </div>
     </div>
 </div>

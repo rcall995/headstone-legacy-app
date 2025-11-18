@@ -282,7 +282,7 @@ export async function loadHomePage(appRoot) {
     if (!response.ok) throw new Error('Could not load home.html');
     appRoot.innerHTML = await response.text();
 
-    await loadFeaturedMemorials();
+    // Removed featured memorials section - focusing on QR tag value proposition instead
     await initializeHomepageMap();
   } catch (error) {
     console.error('Failed to load home page:', error);
