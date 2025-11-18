@@ -4,7 +4,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config as dotenvConfig } from 'dotenv';
 
-dotenvConfig();
+// Load .env only if running locally (Vercel injects env vars directly)
+if (fs.existsSync('.env')) {
+  dotenvConfig();
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -63,6 +66,10 @@ function build() {
   console.log('  publicDir:', publicDir, fs.existsSync(publicDir) ? '(found)' : '(missing)');
   console.log('  srcDir   :', srcDir,    fs.existsSync(srcDir)    ? '(found)' : '(missing)');
   console.log('  distDir  :', distDir);
+
+  // Debug: Check if env vars are loaded
+  const hasFirebaseConfig = !!(process.env.FIREBASE_API_KEY && process.env.FIREBASE_PROJECT_ID);
+  console.log('  Firebase env vars:', hasFirebaseConfig ? 'found' : 'MISSING');
 
   // 1) clean dist
   emptyDir(distDir);
