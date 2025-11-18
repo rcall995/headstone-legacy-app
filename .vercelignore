@@ -1,0 +1,35 @@
+# Environment files
+.env
+.env.local
+.env*.local
+
+# Firebase
+.firebase/
+.firebaserc
+firebase.json
+
+# Node modules
+node_modules/
+
+# Source files (only deploy dist/)
+src/
+public/
+
+# Build script
+build.js
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

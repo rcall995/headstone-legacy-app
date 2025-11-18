@@ -1,0 +1,126 @@
+<link rel="stylesheet" href="/css/memorial-form.css">
+
+<div class="container py-5">
+    <form id="memorialForm" novalidate>
+        <div class="d-flex justify-content-center mb-4">
+            <div class="wizard-progress">
+                <div class="wizard-progress-step" data-step="1">
+                    <div class="step-number">1</div>
+                    Essentials
+                </div>
+                <div class="wizard-progress-step" data-step="2">
+                    <div class="step-number">2</div>
+                    Story
+                </div>
+                <div class="wizard-progress-step" data-step="3">
+                    <div class="step-number">3</div>
+                    Media
+                </div>
+                <div class="wizard-progress-step" data-step="4">
+                    <div class="step-number">4</div>
+                    Family
+                </div>
+                <div class="wizard-progress-step" data-step="5">
+                    <div class="step-number">5</div>
+                    Advanced
+                </div>
+            </div>
+        </div>
+
+        <div class="wizard-step" data-step="1">
+            <h4 id="memorial-tier-heading">Choose a Memorial Tier</h4>
+            <div class="tier-select mb-4">
+                <label class="tier-card">
+                    <input type="radio" name="tier" value="memorial" class="d-none" required>
+                    <div class="tier-name">Memorial</div>
+                    <p class="tier-desc">A beautiful page with biography, photos, and tributes.</p>
+                </label>
+                <label class="tier-card">
+                    <input type="radio" name="tier" value="storyteller" class="d-none" required>
+                    <div class="tier-name">Storyteller <span class="tier-badge">Popular</span></div>
+                    <p class="tier-desc">Adds an interactive timeline and enhanced styling.</p>
+                </label>
+                <label class="tier-card">
+                    <input type="radio" name="tier" value="historian" class="d-none" required>
+                    <div class="tier-name">Historian</div>
+                    <p class="tier-desc">Includes mapping, family tree, and a digital archive.</p>
+                </label>
+            </div>
+            
+            <hr class="my-4">
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="memorial-name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="memorial-name" required>
+                </div>
+                <div class="col-12">
+                    <label for="memorial-title" class="form-label">Title or Epitaph (e.g., "Loving Father and Husband")</label>
+                    <input type="text" class="form-control" id="memorial-title">
+                </div>
+                <div class="col-md-6">
+                    <label for="memorial-birth-date" class="form-label">Date of Birth</label>
+                    <input type="date" class="form-control" id="memorial-birth-date">
+                </div>
+                <div class="col-md-6">
+                    <label for="memorial-death-date" class="form-label">Date of Death</label>
+                    <input type="date" class="form-control" id="memorial-death-date">
+                </div>
+                 <div class="col-md-6">
+                    <label for="memorial-cemetery-name" class="form-label">Cemetery Name</label>
+                    <input type="text" class="form-control" id="memorial-cemetery-name">
+                </div>
+                <div class="col-md-6">
+                    <label for="memorial-cemetery-address" class="form-label">Cemetery Address</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="memorial-cemetery-address" placeholder="Full address including city, state">
+                        <button class="btn btn-outline-secondary" type="button" id="geocode-cemetery-btn">
+                            <i class="fas fa-map-marker-alt"></i> Verify Location
+                        </button>
+                    </div>
+                    <small class="text-muted" id="geocode-status"></small>
+                </div>
+                <div class="col-12">
+                    <div id="cemetery-map-preview" style="height: 250px; display: none; margin-top: 15px; border-radius: 8px; overflow: hidden;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wizard-step" data-step="2">
+            <label for="memorial-story" class="form-label">Biography / Life Story</label>
+            <textarea id="memorial-story" class="form-control" rows="10"></textarea>
+        </div>
+        
+        <div class="wizard-step" data-step="3">
+             <div class="mb-3">
+                <label for="main-photo" class="form-label">Main Photo</label>
+                <input type="file" class="form-control" id="main-photo" accept="image/*" capture="environment">
+                <div id="main-photo-preview" class="row mt-2"></div>
+            </div>
+            <div class="mb-3">
+                <label for="memorial-photos" class="form-label">Photo Gallery</label>
+                <input type="file" class="form-control" id="memorial-photos" accept="image/*" capture="environment" multiple>
+                <div id="photos-preview" class="row mt-2"></div>
+            </div>
+        </div>
+
+        <div class="wizard-step" data-step="4">
+             <div id="relatives-container"></div>
+             <button type="button" class="btn btn-outline-secondary mt-2" id="add-relative-button">Add Relative</button>
+        </div>
+
+        <div class="wizard-step" data-step="5">
+            <div id="milestones-container"></div>
+            <button type="button" class="btn btn-outline-secondary mt-2 mb-4" id="add-milestone-button">Add Milestone</button>
+        </div>
+
+        <div class="wizard-navigation mt-4 pt-4 border-top">
+            <button type="button" class="btn btn-secondary" id="prev-step-btn">Previous</button>
+            <div class="d-flex gap-2">
+                 <button type="button" class="btn btn-outline-primary" id="save-draft-button">Save Draft</button>
+                 <button type="button" class="btn btn-primary" id="publish-button">Publish</button>
+            </div>
+            <button type="button" class="btn btn-primary" id="next-step-btn">Next</button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memorial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        /* Example styles, adjust as needed */
+        .memorial-page-header {
+            background-color: #f8f9fa;
+            padding: 2rem 0;
+        }
+        .memorial-header-name {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        .scrolly-section .card {
+            margin-bottom: 1.5rem;
+        }
+        .full-width-map-section {
+            background-color: #e9ecef;
+            padding-bottom: 2rem;
+        }
+        .image-zoom-modal .modal-content {
+            background: transparent;
+            border: none;
+        }
+        .modal-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            font-size: 2rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+        }
+        .modal-nav-btn.prev { left: 10px; }
+        .modal-nav-btn.next { right: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="app-root">
+    <div id="memorial-layout-container" style="display: none;">
+        <div class="memorial-page-header">
+            <div class="container text-center">
+                <div id="display-main-media" class="mb-3"></div>
+                <h1 id="display-name" class="memorial-header-name"></h1>
+                <p id="display-dates" class="text-muted"></p>
+                <div class="d-flex justify-content-center gap-2 mt-3">
+                    <button class="btn btn-dark" id="qr-code-btn" data-bs-toggle="modal" data-bs-target="#qrCodeModal"><i class="fas fa-qrcode me-2"></i> QR Code</button>
+                    <button class="btn btn-primary" id="share-btn"><i class="fas fa-share-alt me-2"></i> Share</button>
+                    <a href="#" id="edit-memorial-button" class="btn btn-secondary" style="display: none;" data-route><i class="fas fa-pencil-alt me-2"></i> Edit</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid py-5">
+            <div class="scrolly-section">
+                <div id="bio-card" class="card"></div>
+                <div id="gallery-card" class="card" style="display: none;"></div>
+                <div id="timeline-card" class="card" style="display: none;"></div>
+                <div id="family-card" class="card" style="display: none;"></div>
+                <div id="residences-card" class="card" style="display: none;"></div>
+                <div id="map-card" class="card" style="display: none;"></div>
+                <div id="quotes-card" class="card" style="display: none;"></div>
+                <div id="archive-card" class="card" style="display: none;"></div>
+                <div id="tributes-card" class="card" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div id="residences-map-card" class="full-width-map-section" style="display: none;">
+            <div class="container py-3">
+                <h5 class="card-title"><i class="fas fa-map-marked-alt me-2"></i> Residential History Map</h5>
+            </div>
+            <div id="residences-map-container" style="height: 400px; width: 100%;"></div>
+        </div>
+    </div>
+
+    <div id="no-memorial-message" class="text-center py-5" style="display: none;">
+        <h2>Memorial Not Found</h2>
+        <p>The memorial you are looking for does not exist or may have been removed.</p>
+        <a href="/" class="btn btn-primary" data-route>Return Home</a>
+    </div>
+
+    <div class="modal fade" id="qrCodeModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Memorial QR Code</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body text-center">
+                    <p class="text-muted">Scan this code to visit the memorial's welcome page.</p>
+                    <div id="qr-code-container" class="my-3 d-flex justify-content-center"></div>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <a href="#" id="order-tag-btn" class="btn btn-primary" data-route><i class="fas fa-tag me-2"></i> Order Tag</a>
+                    <button type="button" class="btn btn-secondary" id="download-qr-btn"><i class="fas fa-download me-2"></i> Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade image-zoom-modal" id="imageZoomModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header border-0"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body d-flex align-items-center justify-content-center">
+                    <img src="" class="img-fluid" id="zoomed-image" alt="Full size view">
+                </div>
+                <button class="modal-nav-btn prev" id="modal-prev-btn" title="Previous image">❮</button>
+                <button class="modal-nav-btn next" id="modal-next-btn" title="Next image">❯</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

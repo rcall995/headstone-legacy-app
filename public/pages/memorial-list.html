@@ -1,0 +1,38 @@
+<div class="dashboard-theme-wrapper">
+    <div class="container py-4">
+        <div class="dashboard-header mb-4">
+            <div>
+                <h2 id="list-page-title" class="dashboard-title">Memorials</h2>
+                <p id="list-page-subtitle" class="lead mb-0">Your creative legacy.</p>
+            </div>
+            <a href="/curator-panel" class="btn btn-outline-light" data-route>
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+        <div id="list-container" class="memorial-list">
+            </div>
+    </div>
+</div>
+
+<template id="memorial-item-template">
+    <div class="memorial-list-item">
+        <div class="memorial-list-item-info">
+            <h5 class="memorial-name">Memorial Name</h5>
+            <p class="memorial-dates text-muted">Birth - Death</p>
+        </div>
+        <div class="memorial-list-item-actions">
+            <a class="btn btn-sm btn-outline-light view-link" data-route>View</a>
+            <a class="btn btn-sm btn-primary edit-link" data-route>Edit</a>
+        </div>
+    </div>
+</template>
+
+<template id="empty-state-template">
+    <div class="col-12">
+        <div class="empty-state-container text-center p-5 rounded">
+            <i class="fas fa-folder-open fa-3x"></i>
+            <p class="lead mt-3 empty-message">Nothing to see here yet.</p>
+            <a href="/memorial-form" class="btn btn-primary create-memorial-link" data-route style="display: none;">Create a New Memorial</a>
+        </div>
+    </div>
+</template>

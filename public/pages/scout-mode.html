@@ -1,0 +1,94 @@
+<!-- /pages/scout-mode.html -->
+<section class="container py-4" id="scout-choice-screen">
+  <!-- Top bar -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="m-0" style="font-family: 'Playfair Display', serif;">Scout Mode</h2>
+    <a id="back-to-dashboard-btn" href="/curator-panel" class="btn btn-outline-secondary">
+      Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Choice panel -->
+  <div class="p-4 rounded-3" style="background: linear-gradient(180deg,#0d2230,#071a29); border:1px solid rgba(255,255,255,.15)">
+    <p class="text-light mb-4" style="font-size:1rem; color:#f8f9fa;">
+  Choose a method for adding new memorials.
+</p>
+
+
+    <!-- Single Pin -->
+    <div class="mb-4">
+      <button id="single-pin-btn" class="btn btn-success w-100 py-3 d-flex align-items-center justify-content-center">
+        <i class="fa-solid fa-location-dot me-2"></i>
+        Single Pin Wizard
+      </button>
+      <small class="text-light d-block mt-2" style="opacity:.85">
+        Drop one precise pin for a single memorial, then continue to add details and a photo.
+      </small>
+    </div>
+
+    <!-- Multi-Pin -->
+    <div>
+      <button id="multi-pin-btn" class="btn btn-success w-100 py-3 d-flex align-items-center justify-content-center">
+        <i class="fa-solid fa-layer-group me-2"></i>
+        Multi-Pin Batch
+      </button>
+      <small class="text-light d-block mt-2" style="opacity:.85">
+        Quickly add several pins first (optionally with photos), save them as drafts, and finish details later.
+      </small>
+    </div>
+  </div>
+</section>
+
+<!-- The wizard screen gets revealed by JS after you choose a mode. Keep the id so the script can toggle it. -->
+<section id="scout-wizard-screen" class="container py-3 d-none">
+  <!-- Step containers are optional; the JS will create the full-screen map and HUD when needed. -->
+  <div id="step-1" class="mb-3" style="display:none;">
+    <div class="alert alert-dark text-light mb-3" style="background:#0b1f2e;border-color:#173449">
+      <strong>Step 1: Set Location</strong>
+      <p class="m-0 text-light" style="opacity:.85">Pan the map until the center pin is on the exact gravesite.</p>
+    </div>
+    <div class="d-grid">
+      <button id="confirm-location-btn" class="btn btn-success btn-lg">Set Pin Location</button>
+    </div>
+  </div>
+
+  <div id="multi-pin-ui" class="d-none">
+    <!-- Your existing modal/list UI (if any) will be used by scout-mode.js.
+         Keeping an empty container here is fine, the JS will render/manage it. -->
+    <div class="d-flex gap-2 mb-3">
+      <button id="add-pin-btn" class="btn btn-success"><i class="fa-solid fa-plus me-1"></i>Add Pin</button>
+      <button id="save-pins-btn" class="btn btn-primary" disabled><i class="fa-solid fa-save me-1"></i>Save Pins & Finish</button>
+      <a href="/curator-panel" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+    <div id="pinned-relatives-list" class="mb-4"></div>
+  </div>
+</section>
+
+<!-- Optional modal used by multi-pin flow (kept minimal; scout-mode.js wires it if present) -->
+<div class="modal fade" id="addPinModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Pin Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addPinForm">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input id="pinName" type="text" class="form-control" placeholder="Full name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Photo (optional)</label>
+            <input id="pinPhoto" type="file" accept="image/*" capture="environment" class="form-control">
+            <img id="pin-photo-preview" class="img-fluid rounded mt-2 d-none" alt="Preview">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="savePinNameBtn" type="button" class="btn btn-success">Save Pin</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

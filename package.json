@@ -1,0 +1,21 @@
+{
+  "type": "module",
+  "name": "headstone-legacy",
+  "version": "1.0.0",
+  "description": "Headstone Memorial Project",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js && firebase emulators:start --only hosting",
+    "serve": "firebase emulators:start",
+    "deploy": "npm run build && firebase deploy",
+    "vercel-build": "npm run build"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1"
+  },
+  "devDependencies": {},
+  "private": true
+}

@@ -1,0 +1,28 @@
+<div class="dashboard-theme-wrapper py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-11 col-md-8 col-lg-6">
+        <div class="menu-card p-4 p-sm-5" style="background-color: rgba(255, 255, 255, 0.05);">
+          <h2 class="dashboard-title text-center mb-4">Curator Sign In</h2>
+          <form id="login-form" novalidate>
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" required autocomplete="email">
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control" id="password" required autocomplete="current-password">
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
+                <button id="google-signin" class="btn btn-outline-light btn-lg"><i class="fab fa-google me-2"></i>Sign In with Google</button>
+            </div>
+          </form>
+          <div class="d-grid mt-4">
+              <button id="signup-button" class="btn btn-secondary btn-lg">Create an Account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

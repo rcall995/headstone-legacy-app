@@ -1,0 +1,126 @@
+/* --- Memorial Form Wizard & Tier Selection Styles --- */
+.wizard-step { display: none; animation: fadeIn 0.5s ease-in-out; }
+.wizard-step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.wizard-progress {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.wizard-progress-step {
+  flex: 1;
+  text-align: center;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9rem;
+}
+.wizard-progress-step .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid #E9ECEF;
+    margin: 0 auto 0.5rem auto;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+.wizard-progress-step.active {
+  background-color: #fff;
+  color: #000;
+  font-weight: bold;
+  border-bottom: 2px solid #005F60;
+}
+.wizard-progress-step.active .step-number {
+    border-color: #005F60;
+    background-color: #005F60;
+    color: #fff;
+}
+.wizard-progress-step.completed .step-number {
+    border-color: #005F60;
+    background-color: #fff;
+    color: #005F60;
+}
+.wizard-progress-step.completed {
+  background-color: #e9ecef;
+  color: #495057;
+}
+.wizard-navigation { display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; border-top: 1px solid #E9ECEF; }
+
+#memorial-tier-heading {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.45rem;
+  color: #113242;
+  margin-bottom: .25rem;
+}
+.tier-select {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+/* Prevent tier card overflow on very small screens */
+@media (max-width: 480px) {
+  .tier-select {
+    grid-template-columns: 1fr;
+  }
+}
+.tier-card {
+  border: 2px solid #dee2e6;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #fff;
+  color: #343A40;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  cursor: pointer;
+  user-select: none;
+}
+.tier-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+.tier-card.selected {
+  border-color: #005F60;
+  box-shadow: 0 0 0 3px rgba(0, 95, 96, 0.15);
+}
+.tier-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #005F60;
+}
+.tier-desc {
+  opacity: .92;
+  font-size: .95rem;
+  color: #6c757d;
+}
+.tier-badge {
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: .02em;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #005F60;
+  color: #fff;
+  font-size: .78rem;
+}
