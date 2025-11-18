@@ -1,6 +1,8 @@
 // /js/pages/signup.js
 import { signUp } from '/js/auth-manager.js';
 import { showToast } from '/js/utils/toasts.js';
+import { auth } from '/js/firebase-config.js';
+import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 export async function loadSignupPage(appRoot) {
     try {
@@ -12,6 +14,28 @@ export async function loadSignupPage(appRoot) {
         // Get the form and the login link
         const form = document.getElementById('signup-form');
         const loginLink = document.getElementById('login-link');
+        const googleSignupBtn = document.getElementById('google-signup-btn');
+
+        // Google signup handler
+        if (googleSignupBtn) {
+            googleSignupBtn.addEventListener('click', async () => {
+                try {
+                    googleSignupBtn.disabled = true;
+                    googleSignupBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in with Google...';
+
+                    const provider = new GoogleAuthProvider();
+                    await signInWithPopup(auth, provider);
+
+                    showToast('Account created successfully!', 'success');
+                    window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=published' }));
+                } catch (error) {
+                    console.error('Google signup error:', error);
+                    showToast(error.message || 'Failed to sign in with Google', 'error');
+                    googleSignupBtn.disabled = false;
+                    googleSignupBtn.innerHTML = '<i class="fab fa-google me-2"></i>Continue with Google';
+                }
+            });
+        }
 
         // Add event listener for form submission
         if (form) {
@@ -20,7 +44,6 @@ export async function loadSignupPage(appRoot) {
                 const name = form.querySelector('#name').value.trim();
                 const email = form.querySelector('#email').value.trim();
                 const password = form.querySelector('#password').value;
-                const confirmPassword = form.querySelector('#confirm-password')?.value;
 
                 // Validate name
                 if (!name || name.length < 2) {
@@ -35,39 +58,18 @@ export async function loadSignupPage(appRoot) {
                     return;
                 }
 
-                // Validate password strength
-                if (password.length < 8) {
-                    showToast('Password must be at least 8 characters long', 'error');
-                    return;
-                }
-
-                if (!/[A-Z]/.test(password)) {
-                    showToast('Password must contain at least one uppercase letter', 'error');
-                    return;
-                }
-
-                if (!/[a-z]/.test(password)) {
-                    showToast('Password must contain at least one lowercase letter', 'error');
-                    return;
-                }
-
-                if (!/[0-9]/.test(password)) {
-                    showToast('Password must contain at least one number', 'error');
-                    return;
-                }
-
-                // Check password confirmation if field exists
-                if (confirmPassword !== undefined && password !== confirmPassword) {
-                    showToast('Passwords do not match', 'error');
+                // SIMPLIFIED: Only require 6+ characters (reduced friction)
+                if (password.length < 6) {
+                    showToast('Password must be at least 6 characters', 'error');
                     return;
                 }
 
                 // Pass the name to the signUp function
                 const success = await signUp(name, email, password);
                 if (success) {
-                    // Navigate to the curator panel on successful sign up
-                    showToast('Account created successfully! You are now logged in.', 'success');
-                    window.dispatchEvent(new CustomEvent('navigate', { detail: '/curator-panel' }));
+                    // Navigate to memorial list on successful sign up
+                    showToast('Welcome! Your account has been created.', 'success');
+                    window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=published' }));
                 }
             });
         }
