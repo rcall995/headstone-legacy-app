@@ -11,12 +11,8 @@ firebase.json
 # Node modules
 node_modules/
 
-# Source files (only deploy dist/)
-src/
-public/
-
-# Build script
-build.js
+# Source files needed for build
+# Note: src/ and public/ are needed by build.js to generate dist/
 
 # Git
 .git/
