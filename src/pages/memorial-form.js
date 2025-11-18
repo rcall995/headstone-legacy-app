@@ -357,7 +357,14 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
         }
 
         showToast(`Memorial ${desiredStatus}!`, 'success');
-        window.dispatchEvent(new CustomEvent('navigate', { detail: `/memorial-list?status=${desiredStatus}` }));
+
+        // If published, show success modal with share options and tag upsell
+        if (desiredStatus === 'published') {
+            showSuccessModal(appRoot, memorialId, memorialData.name);
+        } else {
+            // For drafts, just navigate to list
+            window.dispatchEvent(new CustomEvent('navigate', { detail: `/memorial-list?status=${desiredStatus}` }));
+        }
     } catch (error) {
         console.error("Error saving memorial:", error);
         showToast(`Error saving memorial: ${error.message}`, 'error');
@@ -365,6 +372,64 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
         saveButton.disabled = false;
         saveButton.innerHTML = desiredStatus === 'draft' ? 'Save Draft' : 'Publish';
     }
+}
+
+function showSuccessModal(appRoot, memorialId, memorialName) {
+    const modal = new bootstrap.Modal(appRoot.querySelector('#successModal'));
+
+    // Set memorial name in modal
+    const nameEl = appRoot.querySelector('#success-memorial-name');
+    if (nameEl) nameEl.textContent = `"${memorialName}" is now live!`;
+
+    const memorialUrl = `${window.location.origin}/memorial?id=${memorialId}`;
+
+    // Copy link button
+    appRoot.querySelector('#copy-link-btn')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(memorialUrl).then(() => {
+            showToast('Link copied to clipboard!', 'success');
+        });
+    });
+
+    // WhatsApp share
+    const whatsappBtn = appRoot.querySelector('#share-whatsapp-btn');
+    if (whatsappBtn) {
+        const text = encodeURIComponent(`I just created a memorial for ${memorialName}. View it here: ${memorialUrl}`);
+        whatsappBtn.href = `https://wa.me/?text=${text}`;
+    }
+
+    // Email share
+    const emailBtn = appRoot.querySelector('#share-email-btn');
+    if (emailBtn) {
+        const subject = encodeURIComponent(`Memorial for ${memorialName}`);
+        const body = encodeURIComponent(`I created a digital memorial for ${memorialName}.\n\nView it here: ${memorialUrl}\n\nYou can add photos, stories, and tributes.`);
+        emailBtn.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
+    // View memorial button
+    const viewBtn = appRoot.querySelector('#view-memorial-btn');
+    if (viewBtn) {
+        viewBtn.href = `/memorial?id=${memorialId}`;
+        viewBtn.setAttribute('data-route', '');
+        viewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            modal.hide();
+            window.dispatchEvent(new CustomEvent('navigate', { detail: `/memorial?id=${memorialId}` }));
+        });
+    }
+
+    // Order tag button
+    const orderTagBtn = appRoot.querySelector('#order-tag-from-success-btn');
+    if (orderTagBtn) {
+        orderTagBtn.href = `/order-tag?id=${memorialId}`;
+        orderTagBtn.setAttribute('data-route', '');
+        orderTagBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            modal.hide();
+            window.dispatchEvent(new CustomEvent('navigate', { detail: `/order-tag?id=${memorialId}` }));
+        });
+    }
+
+    modal.show();
 }
 
 function getAuthUser() {

@@ -126,3 +126,71 @@
         </div>
     </form>
 </div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body p-0">
+                <div class="text-center p-5" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-white" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="text-white fw-bold mb-3">🎉 Memorial Published!</h2>
+                    <p class="text-white lead mb-0" id="success-memorial-name">Memorial created successfully</p>
+                </div>
+
+                <div class="p-5">
+                    <h5 class="fw-bold mb-3">What's Next?</h5>
+
+                    <!-- Share Section -->
+                    <div class="card border-0 bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-share-alt text-primary me-2"></i>Share with Family</h6>
+                            <p class="text-muted small mb-3">Let your family know about this beautiful memorial</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-outline-primary" id="copy-link-btn">
+                                    <i class="fas fa-link me-1"></i>Copy Link
+                                </button>
+                                <a href="#" class="btn btn-sm btn-outline-success" id="share-whatsapp-btn" target="_blank">
+                                    <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-primary" id="share-email-btn">
+                                    <i class="fas fa-envelope me-1"></i>Email
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QR Tag Upsell -->
+                    <div class="card border-primary mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0 me-3">
+                                    <i class="fas fa-qrcode text-primary" style="font-size: 2rem;"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold mb-2">Add a QR Code to the Headstone</h6>
+                                    <p class="text-muted small mb-3">Visitors can scan and discover the full story. Weatherproof tag, lifetime guarantee.</p>
+                                    <a href="#" class="btn btn-primary btn-sm" id="order-tag-from-success-btn">
+                                        <i class="fas fa-tag me-1"></i>Order Tag - $29
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary" id="view-memorial-btn">
+                            <i class="fas fa-eye me-2"></i>View Memorial
+                        </a>
+                        <a href="/memorial-list?status=published" class="btn btn-outline-secondary" data-route data-bs-dismiss="modal">
+                            <i class="fas fa-list me-2"></i>Go to My Memorials
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
