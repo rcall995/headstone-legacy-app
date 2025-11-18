@@ -24,13 +24,35 @@ export async function loadSignupPage(appRoot) {
                     googleSignupBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in with Google...';
 
                     const provider = new GoogleAuthProvider();
-                    await signInWithPopup(auth, provider);
+                    provider.setCustomParameters({
+                        prompt: 'select_account'
+                    });
+
+                    const result = await signInWithPopup(auth, provider);
+                    console.log('Google signup successful:', result.user.email);
 
                     showToast('Account created successfully!', 'success');
                     window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=published' }));
                 } catch (error) {
                     console.error('Google signup error:', error);
-                    showToast(error.message || 'Failed to sign in with Google', 'error');
+                    console.error("Error code:", error.code);
+                    console.error("Error message:", error.message);
+
+                    let errorMessage = 'Failed to sign up with Google. ';
+
+                    if (error.code === 'auth/unauthorized-domain') {
+                        errorMessage += 'This domain is not authorized. Please contact support.';
+                    } else if (error.code === 'auth/popup-blocked') {
+                        errorMessage += 'Popup was blocked. Please allow popups for this site.';
+                    } else if (error.code === 'auth/popup-closed-by-user') {
+                        errorMessage += 'Sign-up was cancelled.';
+                    } else if (error.code === 'auth/cancelled-popup-request') {
+                        errorMessage += 'Another sign-up popup is already open.';
+                    } else {
+                        errorMessage += error.message || 'Unknown error occurred';
+                    }
+
+                    showToast(errorMessage, 'error');
                     googleSignupBtn.disabled = false;
                     googleSignupBtn.innerHTML = '<i class="fab fa-google me-2"></i>Continue with Google';
                 }

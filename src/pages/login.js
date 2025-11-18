@@ -28,14 +28,42 @@ export async function loadLoginPage(appRoot) {
 
         if (googleBtn) {
             googleBtn.addEventListener('click', async () => {
-                const provider = new GoogleAuthProvider();
                 try {
-                    await signInWithPopup(auth, provider);
+                    googleBtn.disabled = true;
+                    googleBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
+
+                    const provider = new GoogleAuthProvider();
+                    provider.setCustomParameters({
+                        prompt: 'select_account'
+                    });
+
+                    const result = await signInWithPopup(auth, provider);
+                    console.log('Google sign-in successful:', result.user.email);
+
                     showToast('Signed in with Google!', 'success');
                     window.dispatchEvent(new CustomEvent('navigate', { detail: '/curator-panel' }));
                 } catch (error) {
                     console.error("Google sign-in error:", error);
-                    showToast(`Google sign-in failed: ${error.message}`, 'error');
+                    console.error("Error code:", error.code);
+                    console.error("Error message:", error.message);
+
+                    let errorMessage = 'Failed to sign in with Google. ';
+
+                    if (error.code === 'auth/unauthorized-domain') {
+                        errorMessage += 'This domain is not authorized. Please contact support.';
+                    } else if (error.code === 'auth/popup-blocked') {
+                        errorMessage += 'Popup was blocked. Please allow popups for this site.';
+                    } else if (error.code === 'auth/popup-closed-by-user') {
+                        errorMessage += 'Sign-in was cancelled.';
+                    } else if (error.code === 'auth/cancelled-popup-request') {
+                        errorMessage += 'Another sign-in popup is already open.';
+                    } else {
+                        errorMessage += error.message;
+                    }
+
+                    showToast(errorMessage, 'error');
+                    googleBtn.disabled = false;
+                    googleBtn.innerHTML = '<i class="fab fa-google me-2"></i>Continue with Google';
                 }
             });
         }
