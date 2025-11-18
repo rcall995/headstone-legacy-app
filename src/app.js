@@ -139,8 +139,38 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error(`Failed to load page for ${path}`, error);
-      appRoot.innerHTML = `<p class="text-center text-danger">An error occurred loading the page.</p>`;
-      showToast(`Error: ${error.message}`, 'error');
+
+      // Helper function to escape HTML
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Provide helpful error UI with retry option
+      appRoot.innerHTML = `
+        <div class="container mt-5 text-center">
+          <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Page Load Error</h4>
+            <p>We encountered an error loading this page.</p>
+            <hr>
+            <p class="mb-0"><small>${escapeHtml(error.message)}</small></p>
+          </div>
+          <button id="retry-page-load" class="btn btn-primary me-2">
+            <i class="fas fa-redo me-2"></i>Try Again
+          </button>
+          <a href="/" class="btn btn-outline-secondary" data-route>
+            <i class="fas fa-home me-2"></i>Go Home
+          </a>
+        </div>
+      `;
+
+      // Add retry button handler
+      document.getElementById('retry-page-load')?.addEventListener('click', () => {
+        router(); // Retry loading the same route
+      });
+
+      showToast(`Error loading page. Please try again.`, 'error');
     }
   }
 
