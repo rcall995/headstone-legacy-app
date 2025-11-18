@@ -146,6 +146,23 @@ document.addEventListener('DOMContentLoaded', () => {
         setPageTitle('Family Tree');
         const { loadFamilyTreePage } = await import('./pages/family-tree.js');
         await loadFamilyTreePage(appRoot, urlParams.get('id'));
+      } else if (path === '/tributes-list') {
+        // TODO: Create dedicated tributes management page
+        // For now, redirect to memorials where tributes can be managed
+        setPageTitle('Pending Tributes');
+        appRoot.innerHTML = `
+          <div class="container mt-5 text-center">
+            <div class="alert alert-info" role="alert">
+              <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Tributes Management</h4>
+              <p>The dedicated tributes management page is coming soon!</p>
+              <hr>
+              <p class="mb-0">For now, you can view and approve tributes by visiting each memorial individually.</p>
+            </div>
+            <a href="/memorial-list?status=published" class="btn btn-primary mt-3" data-route>
+              <i class="fas fa-book-open me-2"></i>Go to My Memorials
+            </a>
+          </div>
+        `;
       } else {
         setPageTitle('404 Not Found');
         appRoot.innerHTML = `<p class="text-center text-danger">404: Page not found.</p>`;
