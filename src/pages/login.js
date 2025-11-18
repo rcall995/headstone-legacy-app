@@ -1,10 +1,26 @@
 import { signIn } from '/js/auth-manager.js';
-import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { auth } from '/js/firebase-config.js';
 import { showToast } from '/js/utils/toasts.js';
 
+// Detect if we're on a mobile device
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
 export async function loadLoginPage(appRoot) {
     try {
+        // Check for redirect result first (if returning from Google OAuth)
+        try {
+            const result = await getRedirectResult(auth);
+            if (result && result.user) {
+                console.log('Redirect sign-in successful:', result.user.email);
+                showToast('Signed in with Google!', 'success');
+                window.dispatchEvent(new CustomEvent('navigate', { detail: '/curator-panel' }));
+                return;
+            }
+        } catch (error) {
+            console.error('Redirect result error:', error);
+        }
+
         const response = await fetch('/pages/login.html');
         if (!response.ok) throw new Error('Could not load login page content');
         appRoot.innerHTML = await response.text();
@@ -37,6 +53,17 @@ export async function loadLoginPage(appRoot) {
                         prompt: 'select_account'
                     });
 
+                    // Use redirect method on mobile devices (more reliable)
+                    if (isMobile) {
+                        console.log('Mobile detected, using redirect method');
+                        await signInWithRedirect(auth, provider);
+                        // User will be redirected away, then back to this page
+                        // The redirect result will be handled at the top of loadLoginPage
+                        return;
+                    }
+
+                    // Use popup method on desktop
+                    console.log('Desktop detected, using popup method');
                     const result = await signInWithPopup(auth, provider);
                     console.log('Google sign-in successful:', result.user.email);
 
@@ -46,6 +73,7 @@ export async function loadLoginPage(appRoot) {
                     console.error("Google sign-in error:", error);
                     console.error("Error code:", error.code);
                     console.error("Error message:", error.message);
+                    console.error("Full error:", JSON.stringify(error, null, 2));
 
                     let errorMessage = 'Failed to sign in with Google. ';
 
