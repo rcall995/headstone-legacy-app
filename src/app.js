@@ -263,13 +263,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!authInitialized) {
       authInitialized = true;
-      const initial = window.location.pathname + window.location.search;
-      if (isLoggedIn && initial === '/login') handleNavigation('/memorial-list?status=published');
-      if (isLoggedIn && initial === '/signup') handleNavigation('/memorial-list?status=published');
-      if (!isLoggedIn && initial === '/curator-panel') handleNavigation('/login');
-      if (!isLoggedIn && initial === '/memorial-form') handleNavigation('/login');
-      if (!isLoggedIn && initial === '/memorial-list') handleNavigation('/login');
-      if (!isLoggedIn && initial === '/scout-mode') handleNavigation('/login');
+      const initialPath = window.location.pathname;
+      const initialFull = initialPath + window.location.search;
+
+      if (isLoggedIn && initialPath === '/login') handleNavigation('/memorial-list?status=published');
+      if (isLoggedIn && initialPath === '/signup') handleNavigation('/memorial-list?status=published');
+      if (!isLoggedIn && initialPath === '/curator-panel') handleNavigation('/login');
+      if (!isLoggedIn && initialPath === '/memorial-form') handleNavigation('/login');
+      if (!isLoggedIn && initialPath === '/memorial-list') handleNavigation('/login');
+      if (!isLoggedIn && initialPath === '/scout-mode') handleNavigation('/login');
       router();
     }
   });

@@ -152,10 +152,16 @@ header {
     display: flex; justify-content: space-between; align-items: center;
     color: #fff; padding: 1rem; flex-shrink: 0;
 }
+
+.card-menu-content {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 0 1rem 1rem 1rem;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
 .card-menu-header h2 { color: #fff; }
 
-#curator-menu-items, #guest-menu-items {
-    display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem;
+#curator-menu-items, #guest-menu-items, #universal-menu-items, #curator-nav-menu-items {
+    display: flex; flex-direction: column; gap: 0.5rem;
 }
 .card-menu-item {
     display: flex; align-items: center; padding: 1rem;

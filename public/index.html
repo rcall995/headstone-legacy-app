@@ -33,78 +33,80 @@
             <h4>Menu</h4>
             <button id="card-menu-close-btn" class="btn-close"></button>
         </div>
-        <div id="universal-menu-items">
-            <a href="/" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-home"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">Home</h5>
-                </div>
-            </a>
-            <a href="/how-it-works" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-question-circle"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">How It Works</h5>
-                </div>
-            </a>
-            <a href="/get-started" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-rocket"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">Get Started</h5>
-                </div>
-            </a>
-            <a href="/scout" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-search-location"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">About Scouting</h5>
-                </div>
-            </a>
-        </div>
-        <div id="curator-nav-menu-items" class="d-none">
-             <hr style="border-color: rgba(255,255,255,0.2);">
-             <a href="/scout-mode" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-map-marker-alt"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">Scout Mode</h5>
-                    <p class="card-menu-desc">Find and map new memorials</p>
-                </div>
-            </a>
-            <a href="/memorial-form" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-plus"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">Create New Memorial</h5>
-                    <p class="card-menu-desc">Start a new memorial page</p>
-                </div>
-            </a>
-            <a href="/memorial-list?status=published" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-book-open"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">View Memorials</h5>
-                    <p class="card-menu-desc">See all published memorials</p>
-                </div>
-            </a>
-            <a href="/memorial-list?status=draft" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-pencil-ruler"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">Drafts</h5>
-                    <p class="card-menu-desc">View unpublished work</p>
-                </div>
-                <span class="notification-badge" id="mobile-draft-badge" style="display: none;"></span>
-            </a>
-            <a href="/tributes-list" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-comment-check"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">Pending Tributes</h5>
-                    <p class="card-menu-desc">Approve visitor tributes</p>
-                </div>
-                <span class="notification-badge" id="mobile-tribute-badge" style="display: none;"></span>
-            </a>
-            <hr style="border-color: rgba(255,255,255,0.2);">
-            <a href="#" class="card-menu-item text-decoration-none" id="signOutLink-menu">
-                <i class="fas fa-sign-out-alt"></i>
-                <div class="card-menu-text">
-                    <h5 class="card-menu-title">Sign Out</h5>
-                </div>
-            </a>
+        <div class="card-menu-content">
+            <div id="universal-menu-items">
+                <a href="/" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-home"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Home</h5>
+                    </div>
+                </a>
+                <a href="/how-it-works" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-question-circle"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">How It Works</h5>
+                    </div>
+                </a>
+                <a href="/get-started" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-rocket"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Get Started</h5>
+                    </div>
+                </a>
+                <a href="/scout" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-search-location"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">About Scouting</h5>
+                    </div>
+                </a>
+            </div>
+            <div id="curator-nav-menu-items" class="d-none">
+                 <hr style="border-color: rgba(255,255,255,0.2);">
+                 <a href="/scout-mode" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Scout Mode</h5>
+                        <p class="card-menu-desc">Find and map new memorials</p>
+                    </div>
+                </a>
+                <a href="/memorial-form" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-plus"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Create New Memorial</h5>
+                        <p class="card-menu-desc">Start a new memorial page</p>
+                    </div>
+                </a>
+                <a href="/memorial-list?status=published" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-book-open"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">View Memorials</h5>
+                        <p class="card-menu-desc">See all published memorials</p>
+                    </div>
+                </a>
+                <a href="/memorial-list?status=draft" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-pencil-ruler"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Drafts</h5>
+                        <p class="card-menu-desc">View unpublished work</p>
+                    </div>
+                    <span class="notification-badge" id="mobile-draft-badge" style="display: none;"></span>
+                </a>
+                <a href="/tributes-list" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-comment-check"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Pending Tributes</h5>
+                        <p class="card-menu-desc">Approve visitor tributes</p>
+                    </div>
+                    <span class="notification-badge" id="mobile-tribute-badge" style="display: none;"></span>
+                </a>
+                <hr style="border-color: rgba(255,255,255,0.2);">
+                <a href="#" class="card-menu-item text-decoration-none" id="signOutLink-menu">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Sign Out</h5>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 
