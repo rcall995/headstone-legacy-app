@@ -34,6 +34,24 @@ function ensureScoutStyles() {
     pointer-events: auto;
   }
   .scout-cta .btn { padding: 12px 20px; font-size: 1.05rem; min-height: 44px; }
+  #multi-pin-ui {
+    position: fixed;
+    top: 20px;
+    top: max(20px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+    pointer-events: auto;
+    max-width: 90%;
+    width: auto;
+  }
+  #pinned-relatives-list {
+    background: rgba(255,255,255,0.95);
+    border-radius: 8px;
+    padding: 1rem;
+    max-height: 200px;
+    overflow-y: auto;
+  }
   `;
   const style = document.createElement('style');
   style.id = 'scout-style-tag';
@@ -135,9 +153,8 @@ function initScoutMap(center) {
   }
 }
 
-/* ---------------- Single-pin HUD + Confirm CTA ---------------- */
-function showSinglePinHUDAndCTA() {
-  // Center pin HUD
+/* ---------------- Center Pin HUD (used by both modes) ---------------- */
+function showCenterPinHUD() {
   if (!document.getElementById('scout-hud')) {
     const hud = document.createElement('div');
     hud.id = 'scout-hud';
@@ -145,6 +162,13 @@ function showSinglePinHUDAndCTA() {
     hud.innerHTML = `<div class="center"><div class="scout-center-pin" aria-hidden="true">📍</div></div>`;
     document.body.appendChild(hud);
   }
+}
+
+/* ---------------- Single-pin HUD + Confirm CTA ---------------- */
+function showSinglePinHUDAndCTA() {
+  // Show center pin HUD
+  showCenterPinHUD();
+
   // Confirm CTA (always visible)
   let ctaBtn = document.getElementById('scout-confirm-fallback');
   if (!ctaBtn) {
@@ -270,6 +294,8 @@ export async function loadScoutModePage(appRoot) {
         if (mode === 'single') {
           showSinglePinHUDAndCTA();
         } else {
+          // Multi-pin mode: show center pin HUD + UI controls
+          showCenterPinHUD();
           document.getElementById('multi-pin-ui')?.classList.remove('d-none');
           renderPinnedRelatives();
         }
