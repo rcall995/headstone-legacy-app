@@ -251,8 +251,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   onAuthStateChanged(auth, async (user) => {
     const isLoggedIn = !!(user && !user.isAnonymous);
+
+    // Toggle desktop navigation (marketing vs curator)
+    document.getElementById('marketing-nav-desktop')?.classList.toggle('d-none', isLoggedIn);
+    document.getElementById('curator-nav-desktop')?.classList.toggle('d-none', !isLoggedIn);
     document.getElementById('signInLink-desktop')?.classList.toggle('d-none', isLoggedIn);
     document.getElementById('userDropdown-desktop')?.classList.toggle('d-none', !isLoggedIn);
+
+    // Toggle mobile navigation and sign in button
     document.getElementById('mobile-signin-btn')?.classList.toggle('d-none', isLoggedIn);
     document.getElementById('curator-nav-menu-items')?.classList.toggle('d-none', !isLoggedIn);
 

@@ -125,25 +125,30 @@
                 </div>
 
                 <div class="collapse navbar-collapse">
-                    <ul class="navbar-nav me-auto">
+                    <!-- Marketing Navigation (Shown when logged OUT) -->
+                    <ul class="navbar-nav me-auto" id="marketing-nav-desktop">
                         <li class="nav-item"><a class="nav-link" href="/" data-route>Home</a></li>
                         <li class="nav-item"><a class="nav-link" href="/how-it-works" data-route>How It Works</a></li>
                         <li class="nav-item"><a class="nav-link" href="/get-started" data-route>Get Started</a></li>
                         <li class="nav-item"><a class="nav-link" href="/scout" data-route>About Scouting</a></li>
                     </ul>
+
+                    <!-- Curator Navigation (Shown when logged IN) -->
+                    <ul class="navbar-nav me-auto d-none" id="curator-nav-desktop">
+                        <li class="nav-item"><a class="nav-link" href="/scout-mode" data-route><i class="fas fa-map-marker-alt me-1"></i> Scout Mode</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/memorial-form" data-route><i class="fas fa-plus me-1"></i> Create Memorial</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/memorial-list?status=published" data-route><i class="fas fa-book-open me-1"></i> My Memorials</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/memorial-list?status=draft" data-route><i class="fas fa-pencil-ruler me-1"></i> Drafts <span class="badge bg-danger ms-1" id="desktop-draft-badge" style="display: none;"></span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="/tributes-list" data-route><i class="fas fa-comment-check me-1"></i> Tributes <span class="badge bg-danger ms-1" id="desktop-tribute-badge" style="display: none;"></span></a></li>
+                    </ul>
+
                     <ul class="navbar-nav">
                         <li class="nav-item d-none" id="signInLink-desktop"><a class="nav-link" href="/login" data-route>Sign In</a></li>
                         <li class="nav-item dropdown d-none" id="userDropdown-desktop">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                My Account
+                                <i class="fas fa-user-circle me-1"></i>
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/scout-mode" data-route><i class="fas fa-map-marker-alt me-2"></i>Scout Mode</a></li>
-                                <li><a class="dropdown-item" href="/memorial-form" data-route><i class="fas fa-plus me-2"></i>Create New Memorial</a></li>
-                                <li><a class="dropdown-item" href="/memorial-list?status=published" data-route><i class="fas fa-book-open me-2"></i>View Memorials</a></li>
-                                <li><a class="dropdown-item" href="/memorial-list?status=draft" data-route><i class="fas fa-pencil-ruler me-2"></i>Drafts <span class="badge bg-primary ms-1" id="desktop-draft-badge" style="display: none;"></span></a></li>
-                                <li><a class="dropdown-item" href="/tributes-list" data-route><i class="fas fa-comment-check me-2"></i>Pending Tributes <span class="badge bg-primary ms-1" id="desktop-tribute-badge" style="display: none;"></span></a></li>
-                                <li><hr class="dropdown-divider"></li>
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" id="signOutLink-desktop" href="#"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
                             </ul>
                         </li>
