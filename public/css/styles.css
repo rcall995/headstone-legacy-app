@@ -106,28 +106,67 @@ h2, h3, h4, h5, .card-title {
 /* --- Header & Menu Styles --- */
 header {
     display: none;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border-color);
-    background-color: #eef2f7;
+    padding: 1rem 0;
+    border-bottom: 2px solid rgba(0, 95, 96, 0.1);
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 .header-visible { display: block; }
 
 .logo-img { height: 80px; width: auto; }
-.navbar-brand { padding-top: 0; padding-bottom: 0; }
+.navbar-brand {
+    padding-top: 0;
+    padding-bottom: 0;
+    transition: transform 0.2s ease;
+}
+.navbar-brand:hover {
+    transform: scale(1.02);
+}
 
-/* Updated: logo sizing for consistency */
+/* Desktop logo sizing - larger and more prominent */
 .navbar-brand-logo {
-    height: 64px;
+    height: 80px;
     width: auto;
-}
-@media (max-width: 576px) {
-    .navbar-brand-logo { height: 48px; }
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-.navbar-brand span {
-    font-size: 1.75rem;
-    vertical-align: middle;
-    margin-left: 0.5rem;
+/* Brand text next to logo */
+.brand-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    letter-spacing: -0.5px;
+    display: none; /* Hidden on mobile by default */
+}
+
+/* Tablet and Desktop - show brand text and larger logo */
+@media (min-width: 768px) {
+    .brand-text {
+        display: inline-block;
+    }
+    .navbar-brand-logo {
+        height: 85px;
+    }
+}
+
+/* Large Desktop - even more prominent */
+@media (min-width: 1200px) {
+    .navbar-brand-logo {
+        height: 90px;
+    }
+    .brand-text {
+        font-size: 1.75rem;
+    }
+}
+
+/* Mobile - smaller but still visible */
+@media (max-width: 576px) {
+    .navbar-brand-logo {
+        height: 56px;
+    }
+    header {
+        padding: 0.75rem 0;
+    }
 }
 
 .navbar-nav .nav-link {
