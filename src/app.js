@@ -53,6 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const path = window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
 
+    // Show loading screen until auth is initialized (prevent race condition)
+    if (!authInitialized) {
+      appRoot.innerHTML = `
+        <div class="container mt-5 text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 text-muted">Loading application...</p>
+        </div>
+      `;
+      return; // Wait for onAuthStateChanged to call router again
+    }
+
     // Call previous page cleanup if it exists
     if (currentPageCleanup) {
       currentPageCleanup();
