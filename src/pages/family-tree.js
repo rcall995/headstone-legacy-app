@@ -107,13 +107,27 @@ async function buildHierarchy(people, startId) {
         }
     }
 
-    const processedIds = new Set(); // --- FIX: Create a set to track processed nodes
+    const processedIds = new Set(); // Track processed nodes to prevent circular references
     const MAX_DEPTH = 10; // Maximum recursion depth to prevent infinite loops
+    let recursionCount = 0; // Track total recursive calls as circuit breaker
+    const MAX_RECURSION_COUNT = 1000; // Safety limit for total recursive calls
 
     function buildNode(person, depth = 0) {
+        // Circuit breaker: prevent runaway recursion
+        recursionCount++;
+        if (recursionCount > MAX_RECURSION_COUNT) {
+            console.warn('[Family Tree] Maximum recursion count reached, stopping tree build');
+            return null;
+        }
+
         // Safety checks: prevent infinite loops and excessive depth
-        if (!person || processedIds.has(person.id) || depth >= MAX_DEPTH) return null;
-        processedIds.add(person.id); // --- FIX: Mark this person as processed
+        if (!person || processedIds.has(person.id) || depth >= MAX_DEPTH) {
+            if (depth >= MAX_DEPTH) {
+                console.warn(`[Family Tree] Maximum depth ${MAX_DEPTH} reached for ${person?.name}`);
+            }
+            return null;
+        }
+        processedIds.add(person.id); // Mark this person as processed
 
         const spouseRelative = person.relatives.find(r => r.memorialId && r.relationship === 'Spouse');
         const spouseData = spouseRelative ? people.get(spouseRelative.memorialId) : null;
@@ -149,6 +163,12 @@ async function buildHierarchy(people, startId) {
     }
 
     const finalTree = buildNode(rootPerson);
+
+    // Show warning if tree was truncated
+    if (recursionCount > MAX_RECURSION_COUNT * 0.8) {
+        console.warn(`[Family Tree] Large family tree detected (${recursionCount} nodes). Some branches may be truncated.`);
+    }
+
     if(finalTree && !finalTree.relationship) {
         finalTree.relationship = 'Family Member';
     }
