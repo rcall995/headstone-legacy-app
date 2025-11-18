@@ -124,3 +124,37 @@
   color: #fff;
   font-size: .78rem;
 }
+
+/* Mobile Responsive Breakpoints */
+@media (max-width: 576px) {
+  .form-label {
+    font-size: 0.9rem;
+  }
+
+  .form-control {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .wizard-progress-step {
+    font-size: 0.75rem;
+  }
+
+  .wizard-progress-step .step-number {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
+
+  .tier-card {
+    padding: 0.75rem;
+  }
+
+  .tier-name {
+    font-size: 1rem;
+  }
+
+  .tier-desc {
+    font-size: 0.85rem;
+  }
+}

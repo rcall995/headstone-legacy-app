@@ -453,7 +453,7 @@ header {
 }
 .memorial-list-item:hover { background-color: rgba(255,255,255,0.1); }
 .memorial-list-item-info h5 { color: #fff; margin: 0; font-family: 'Roboto', sans-serif; font-size: 1.1rem; }
-.memorial-list-item-info p { color: rgba(255,255,255,0.6); margin: 0; font-size: 0.9rem; }
+.memorial-list-item-info p { color: rgba(255,255,255,0.85); margin: 0; font-size: 0.9rem; }
 .memorial-list-item-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 0.5rem; }
 .memorial-list-item-actions .btn { flex-grow: 1; font-size: 0.9rem; padding: 0.5rem; }
 
@@ -463,11 +463,11 @@ header {
 }
 .pending-card-icon i { font-size: 1.5rem; color: var(--accent-color); }
 .pending-card-body h6 { color: #fff; margin: 0; }
-.pending-card-body p { color: rgba(255,255,255,0.6); margin: 0; font-size: 0.85rem; }
+.pending-card-body p { color: rgba(255,255,255,0.85); margin: 0; font-size: 0.85rem; }
 .pending-card-body .pending-description { font-style: italic; margin-top: 0.25rem; }
 
-.empty-state-container { background-color: transparent; border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
-.empty-state-container .text-muted { color: rgba(255,255,255,0.5) !important; }
+.empty-state-container { background-color: transparent; border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.85); }
+.empty-state-container .text-muted { color: rgba(255,255,255,0.7) !important; }
 .empty-state-container i { color: var(--accent-color); margin-bottom: 1rem; }
 /* --- END: CURATOR DASHBOARD V2 STYLES --- */
 
@@ -497,63 +497,26 @@ body.scout-mode-active .directions-steps .step.active span {
   color: #113242;
   margin-bottom: .25rem;
 }
-.tier-select {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+/* Tier card styles removed - now defined in memorial-form.css only */
+
+/* --- Hover States for Interactive Elements --- */
+a:not(.btn):hover {
+  text-decoration: underline;
+  opacity: 0.85;
 }
-.tier-card {
-  border: 2px solid #bfa369;
-  border-radius: 14px;
-  padding: 14px 16px;
-  background: #0e2332;
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(0,0,0,.25);
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-  cursor: pointer;
-  user-select: none;
+
+.memorial-list-item {
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
-.tier-card:hover {
+
+.memorial-list-item:hover {
+  background-color: rgba(255,255,255,0.12) !important;
   transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(0,0,0,.3);
-}
-.tier-card.selected {
-  border-color: #26a69a;
-  box-shadow: 0 0 0 3px rgba(38,166,154,.25);
-}
-.tier-name {
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin-bottom: 4px;
-}
-.tier-desc {
-  opacity: .92;
-  font-size: .95rem;
-}
-.tier-badge {
-  display: inline-block;
-  font-weight: 700;
-  letter-spacing: .02em;
-  padding: 2px 10px;
-  border-radius: 999px;
-  margin-left: 8px;
-  background: #bfa369;
-  color: #0e2332;
-  font-size: .78rem;
-}
-.tier-select .tier-card.selected {
-  border-color: #000;
-  background-color: #fff;
 }
 
-.tier-select .tier-card.selected .tier-name,
-.tier-select .tier-card.selected .tier-desc {
-  color: #000;
-}
-
-.tier-select .tier-card.selected .tier-badge {
-  background-color: #000;
-  color: #fff;
+.card:not(.no-hover):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
 }
 
 /* --- Toast Notifications --- */
@@ -661,4 +624,48 @@ body.menu-active { overflow: hidden; }
 }
 .card .card-body .btn {
     margin-top: auto;
+}
+
+/* --- Mobile Optimization Breakpoints --- */
+@media (max-width: 767px) {
+  /* Order Tag Page Mobile */
+  .order-tag-page .row.g-5 {
+    flex-direction: column-reverse;
+  }
+
+  .order-tag-page .col-md-5,
+  .order-tag-page .col-lg-4 {
+    order: -1;
+    position: sticky;
+    top: 80px;
+    z-index: 100;
+  }
+
+  .order-tag-page #checkout-button {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    border-radius: 0;
+    padding: 1.25rem;
+    margin: 0;
+  }
+
+  .order-tag-page .trust-badges {
+    font-size: 0.9rem;
+  }
+
+  /* Homepage Hero Text - 3 lines on mobile */
+  .home-hero h1 {
+    font-size: 1.65rem !important;
+    line-height: 1.4;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .home-hero h1 br {
+    display: none;
+  }
 }

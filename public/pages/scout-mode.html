@@ -10,31 +10,52 @@
 
   <!-- Choice panel -->
   <div class="p-4 rounded-3" style="background: linear-gradient(180deg,#0d2230,#071a29); border:1px solid rgba(255,255,255,.15)">
-    <p class="text-light mb-4" style="font-size:1rem; color:#f8f9fa;">
-  Choose a method for adding new memorials.
-</p>
+    <p class="text-light mb-4" style="font-size:1.1rem; color:#f8f9fa;">
+      Choose how you'd like to add memorials:
+    </p>
 
-
-    <!-- Single Pin -->
+    <!-- Single Pin - Recommended -->
     <div class="mb-4">
-      <button id="single-pin-btn" class="btn btn-success w-100 py-3 d-flex align-items-center justify-content-center">
-        <i class="fa-solid fa-location-dot me-2"></i>
-        Single Pin Wizard
-      </button>
-      <small class="text-light d-block mt-2" style="opacity:.85">
-        Drop one precise pin for a single memorial, then continue to add details and a photo.
-      </small>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-start mb-2">
+            <div class="me-3">
+              <i class="fa-solid fa-location-dot text-primary" style="font-size: 1.5rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h5 class="mb-1 fw-bold">Add One Memorial <span class="badge bg-primary ms-2">Recommended</span></h5>
+              <p class="text-muted small mb-3">
+                Perfect for adding a single person. Drop a pin, add their story, and publish—all in one flow.
+              </p>
+              <button id="single-pin-btn" class="btn btn-primary w-100">
+                <i class="fa-solid fa-location-dot me-2"></i>Start Single Memorial
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Multi-Pin -->
     <div>
-      <button id="multi-pin-btn" class="btn btn-success w-100 py-3 d-flex align-items-center justify-content-center">
-        <i class="fa-solid fa-layer-group me-2"></i>
-        Multi-Pin Batch
-      </button>
-      <small class="text-light d-block mt-2" style="opacity:.85">
-        Quickly add several pins first (optionally with photos), save them as drafts, and finish details later.
-      </small>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-start mb-2">
+            <div class="me-3">
+              <i class="fa-solid fa-layer-group text-success" style="font-size: 1.5rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h5 class="mb-1 fw-bold">Batch Add Multiple</h5>
+              <p class="text-muted small mb-3">
+                Great for mapping entire cemeteries. Quickly drop multiple pins, then come back to add details later.
+              </p>
+              <button id="multi-pin-btn" class="btn btn-outline-success w-100">
+                <i class="fa-solid fa-layer-group me-2"></i>Start Batch Mode
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>

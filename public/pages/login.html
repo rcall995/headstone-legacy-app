@@ -1,25 +1,46 @@
-<div class="dashboard-theme-wrapper py-5">
+<div class="py-5" style="background-color: #f8f9fa;">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-11 col-md-8 col-lg-6">
-        <div class="menu-card p-4 p-sm-5" style="background-color: rgba(255, 255, 255, 0.05);">
-          <h2 class="dashboard-title text-center mb-4">Curator Sign In</h2>
+        <div class="card shadow-sm border-0 p-4 p-sm-5">
+          <h2 class="text-center mb-4 fw-bold" style="color: var(--primary-color);">Sign In</h2>
+
+          <!-- Google Sign In -->
+          <div class="mb-4">
+            <button id="google-signin" class="btn btn-outline-primary btn-lg w-100">
+              <i class="fab fa-google me-2"></i>Continue with Google
+            </button>
+            <div class="text-center mt-3">
+              <span class="text-muted small">or sign in with email</span>
+            </div>
+          </div>
+
+          <!-- Email Sign In Form -->
           <form id="login-form" novalidate>
             <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" required autocomplete="email">
+              <label for="email" class="form-label text-dark">Email Address</label>
+              <input type="email" class="form-control" id="email" required autocomplete="email" placeholder="you@example.com">
             </div>
             <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" required autocomplete="current-password">
+              <label for="password" class="form-label text-dark">Password</label>
+              <input type="password" class="form-control" id="password" required autocomplete="current-password" placeholder="Enter your password">
             </div>
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
-                <button id="google-signin" class="btn btn-outline-light btn-lg"><i class="fab fa-google me-2"></i>Sign In with Google</button>
+            <div class="d-grid mb-3">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+              </button>
             </div>
           </form>
-          <div class="d-grid mt-4">
-              <button id="signup-button" class="btn btn-secondary btn-lg">Create an Account</button>
+
+          <!-- Divider -->
+          <hr class="my-4">
+
+          <!-- Create Account CTA -->
+          <div class="text-center">
+            <p class="text-muted mb-3">Don't have an account yet?</p>
+            <button id="signup-button" class="btn btn-outline-primary btn-lg w-100">
+              <i class="fas fa-user-plus me-2"></i>Create Free Account
+            </button>
           </div>
         </div>
       </div>

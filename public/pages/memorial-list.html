@@ -30,9 +30,12 @@
 <template id="empty-state-template">
     <div class="col-12">
         <div class="empty-state-container text-center p-5 rounded">
-            <i class="fas fa-folder-open fa-3x"></i>
-            <p class="lead mt-3 empty-message">Nothing to see here yet.</p>
-            <a href="/memorial-form" class="btn btn-primary create-memorial-link" data-route style="display: none;">Create a New Memorial</a>
+            <i class="fas fa-heart fa-3x mb-3" style="opacity: 0.5;"></i>
+            <h4 class="mt-3 mb-2 empty-message">No memorials yet</h4>
+            <p class="text-muted mb-4">Create your first memorial to preserve and share someone's story</p>
+            <a href="/memorial-form" class="btn btn-primary btn-lg create-memorial-link" data-route>
+                <i class="fas fa-plus-circle me-2"></i>Create Your First Memorial
+            </a>
         </div>
     </div>
 </template>
