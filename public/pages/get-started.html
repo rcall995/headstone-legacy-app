@@ -1,58 +1,187 @@
+<!-- Hero Section -->
+<div class="py-5 text-center" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+    <div class="container">
+        <h1 class="display-4 fw-bold text-white mb-3">Choose Your Memorial Tier</h1>
+        <p class="lead text-white mb-4" style="max-width: 700px; margin: 0 auto;">
+            All memorials are free forever. Choose the tier that best honors your loved one's legacy.
+        </p>
+        <div class="d-inline-flex align-items-center px-4 py-2 rounded-pill" style="background-color: rgba(255,255,255,0.2);">
+            <i class="fas fa-infinity text-white me-2"></i>
+            <span class="text-white fw-bold">Free Forever • No Credit Card Required</span>
+        </div>
+    </div>
+</div>
+
+<!-- Pricing Cards -->
 <div class="container py-5">
-    <div class="text-center mb-5">
-        <h1 class="display-4">Create a Lasting Tribute</h1>
-        <p class="lead text-muted">Choose a memorial plan to begin preserving a life story. All tiers are currently free during our launch period.</p>
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+        <!-- Memorial Tier -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 rounded-3">
+                <div class="card-header py-4 text-center" style="background-color: #f8f9fa; border-bottom: 3px solid var(--primary-color);">
+                    <h3 class="fw-bold mb-0">Memorial</h3>
+                    <p class="text-muted small mb-0 mt-1">Essential tribute</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="display-4 fw-bold mb-0" style="color: var(--primary-color);">Free</div>
+                        <p class="text-muted small mb-0">Forever</p>
+                    </div>
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span>Beautiful biography page</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span>Profile photo</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span>Guest tributes & memories</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span>Unique QR code</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span>Shareable memorial link</span>
+                        </li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="/memorial-form?tier=memorial" class="btn btn-outline-primary btn-lg" data-route>
+                            <i class="fas fa-plus-circle me-2"></i>Start Creating
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storyteller Tier -->
+        <div class="col">
+            <div class="card h-100 shadow-lg border-primary rounded-3" style="transform: scale(1.05); position: relative;">
+                <div class="position-absolute top-0 start-50 translate-middle">
+                    <span class="badge bg-primary px-3 py-2">Most Popular</span>
+                </div>
+                <div class="card-header py-4 text-center text-white" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); border: none;">
+                    <h3 class="fw-bold mb-0">Storyteller</h3>
+                    <p class="small mb-0 mt-1 opacity-75">Rich multimedia</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="display-4 fw-bold mb-0" style="color: var(--primary-color);">Free</div>
+                        <p class="text-muted small mb-0">Forever</p>
+                    </div>
+                    <p class="text-center fw-bold mb-3" style="color: var(--primary-color);">
+                        <i class="fas fa-check-circle me-1"></i>Everything in Memorial, plus:
+                    </p>
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span><strong>Full photo gallery</strong> (unlimited photos)</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span><strong>Interactive timeline</strong> of life milestones</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span><strong>Video support</strong> for cherished moments</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span><strong>Enhanced design</strong> themes</span>
+                        </li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="/memorial-form?tier=storyteller" class="btn btn-primary btn-lg shadow-sm" data-route>
+                            <i class="fas fa-plus-circle me-2"></i>Start Creating
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historian Tier -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 rounded-3">
+                <div class="card-header py-4 text-center" style="background-color: #f8f9fa; border-bottom: 3px solid var(--primary-color);">
+                    <h3 class="fw-bold mb-0">Historian</h3>
+                    <p class="text-muted small mb-0 mt-1">Complete legacy</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="display-4 fw-bold mb-0" style="color: var(--primary-color);">Free</div>
+                        <p class="text-muted small mb-0">Forever</p>
+                    </div>
+                    <p class="text-center fw-bold mb-3" style="color: var(--primary-color);">
+                        <i class="fas fa-check-circle me-1"></i>Everything in Storyteller, plus:
+                    </p>
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span><strong>Cemetery mapping</strong> with exact location</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span><strong>Family tree builder</strong> with connections</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span><strong>Document archive</strong> for certificates</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span><strong>Residence history</strong> with maps</span>
+                        </li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="/memorial-form?tier=historian" class="btn btn-outline-primary btn-lg" data-route>
+                            <i class="fas fa-plus-circle me-2"></i>Start Creating
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm">
-                <div class="card-header py-3">
-                    <h4 class="my-0 fw-normal">Memorial</h4>
-                </div>
-                <div class="card-body">
-                    <h1 class="card-title pricing-card-title">$0<small class="text-muted fw-light">/limited time</small></h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li>Beautiful Biography Page</li>
-                        <li>Single Profile Photo</li>
-                        <li>Guest Tributes</li>
-                        <li>QR Code Link</li>
-                    </ul>
-                    <a href="/memorial-form?tier=memorial" class="w-100 btn btn-lg btn-outline-primary" data-route>Select Plan</a>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm">
-                <div class="card-header py-3">
-                    <h4 class="my-0 fw-normal">Storyteller</h4>
-                </div>
-                <div class="card-body">
-                    <h1 class="card-title pricing-card-title">$0<small class="text-muted fw-light">/limited time</small></h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><strong>Everything in Memorial, plus:</strong></li>
-                        <li>Full Photo & Video Gallery</li>
-                        <li>Interactive Life Timeline</li>
-                        <li>Enhanced Styling Options</li>
-                    </ul>
-                    <a href="/memorial-form?tier=storyteller" class="w-100 btn btn-lg btn-primary" data-route>Select Plan</a>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm border-primary">
-                <div class="card-header py-3 pricing-header-featured">
-                    <h4 class="my-0 fw-normal">Historian</h4>
-                </div>
-                <div class="card-body">
-                    <h1 class="card-title pricing-card-title">$0<small class="text-muted fw-light">/limited time</small></h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><strong>Everything in Storyteller, plus:</strong></li>
-                        <li>Cemetery & Grave Location Mapping</li>
-                        <li>Family Tree Connections</li>
-                        <li>Digital Archive for Documents</li>
-                    </ul>
-                    <a href="/memorial-form?tier=historian" class="w-100 btn btn-lg btn-primary" data-route>Select Plan</a>
+    <!-- Feature Comparison -->
+    <div class="text-center mb-4">
+        <h3 class="fw-bold mb-3">Not sure which tier to choose?</h3>
+        <p class="lead text-muted mb-4">Don't worry—you can always upgrade later. Start with what feels right and add more as you go.</p>
+    </div>
+
+    <!-- QR Tag Upsell -->
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm rounded-3" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                <div class="card-body p-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="fw-bold mb-3">
+                                <i class="fas fa-qrcode text-primary me-2"></i>
+                                Add a Physical QR Tag to the Headstone
+                            </h4>
+                            <p class="text-muted mb-3">
+                                Transform any headstone into an interactive memorial. Our weatherproof stainless steel tags last 50+ years outdoors and include a lifetime guarantee.
+                            </p>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Weatherproof stainless steel</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Easy peel-and-stick installation</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Lifetime replacement guarantee</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4 text-center mt-4 mt-md-0">
+                            <div class="mb-3">
+                                <div class="display-5 fw-bold" style="color: var(--primary-color);">$29</div>
+                                <p class="text-muted small mb-0">One-time purchase</p>
+                            </div>
+                            <a href="/order-tag" class="btn btn-primary btn-lg" data-route>
+                                <i class="fas fa-tag me-2"></i>Learn More
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

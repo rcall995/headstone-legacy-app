@@ -1,18 +1,59 @@
 <div class="welcome-container">
-    <div class="welcome-card">
-        <img src="/logo1.png" alt="Headstone Legacy Logo" class="welcome-logo">
-        <h1 class="display-5">
-            You've Discovered a Digital&nbsp;Tribute
+    <div class="welcome-card shadow-lg">
+        <!-- Logo and Header -->
+        <div class="text-center mb-4">
+            <img src="/logo1.png" alt="Headstone Legacy Logo" class="welcome-logo mb-3" style="max-width: 120px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+            <div class="mb-3">
+                <i class="fas fa-qrcode text-primary" style="font-size: 3rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <h1 class="display-5 fw-bold mb-3 text-center">
+            You've Discovered a Digital Memorial
         </h1>
-        <p class="lead text-muted">
-            Welcome to the Headstone Legacy for <strong id="welcome-memorial-name">...</strong>.
+
+        <div class="text-center mb-4 p-4 rounded-3" style="background: linear-gradient(135deg, rgba(0,95,96,0.05) 0%, rgba(148,187,187,0.05) 100%);">
+            <p class="lead mb-2">
+                Welcome to the memorial for
+            </p>
+            <h2 class="fw-bold mb-0" style="color: var(--primary-color);" id="welcome-memorial-name">...</h2>
+        </div>
+
+        <p class="text-muted text-center mb-4" style="font-size: 1.1rem;">
+            You are about to view an interactive memorial where family and friends have preserved their loved one's story, photos, and memories.
         </p>
-        <p>
-            You are about to view an interactive memorial where family and friends share the story of their loved one.
-        </p>
+
+        <!-- Features List -->
+        <div class="mb-4">
+            <div class="d-flex align-items-start mb-2">
+                <i class="fas fa-book-open text-primary me-3 mt-1"></i>
+                <p class="mb-0 small text-muted">Read their life story and biography</p>
+            </div>
+            <div class="d-flex align-items-start mb-2">
+                <i class="fas fa-images text-primary me-3 mt-1"></i>
+                <p class="mb-0 small text-muted">View photo galleries and memories</p>
+            </div>
+            <div class="d-flex align-items-start mb-2">
+                <i class="fas fa-heart text-primary me-3 mt-1"></i>
+                <p class="mb-0 small text-muted">Leave a tribute or share a memory</p>
+            </div>
+        </div>
+
+        <!-- CTA Button -->
         <div class="d-grid mt-4">
-            <a id="view-memorial-link" href="#" class="btn btn-primary btn-lg">
+            <a id="view-memorial-link" href="#" class="btn btn-primary btn-lg shadow-sm" style="padding: 1rem;">
                 <i class="fas fa-book-open me-2"></i> View Their Story
+            </a>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="text-center mt-4 pt-4 border-top">
+            <p class="small text-muted mb-2">
+                <i class="fas fa-info-circle me-1"></i> This memorial was created with Headstone Legacy
+            </p>
+            <a href="/" class="text-decoration-none small" data-route>
+                Create a memorial for your loved one <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
     </div>
