@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------- App state ---------- */
   const appRoot = document.getElementById('app-root');
   let currentUnloadListener = null;
+  let currentPageCleanup = null;
   let authInitialized = false;
 
   const menuToggleBtn    = document.getElementById('mobile-menu-trigger');
@@ -51,6 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function router() {
     const path = window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
+
+    // Call previous page cleanup if it exists
+    if (currentPageCleanup) {
+      currentPageCleanup();
+      currentPageCleanup = null;
+    }
 
     // Unregister any previous unload listener
     if (currentUnloadListener) {
@@ -96,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (path === '/scout-mode') {
         setPageTitle('Scout Mode');
         const { loadScoutModePage } = await import('./pages/scout-mode.js');
-        await loadScoutModePage(appRoot, auth.currentUser);
+        currentPageCleanup = await loadScoutModePage(appRoot, auth.currentUser);
       } else if (path === '/curator-panel') {
         setPageTitle('Dashboard');
         const { loadCuratorPanel } = await import('./pages/curator-panel.js');
@@ -177,7 +184,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Mobile menu actions
   menuToggleBtn?.addEventListener('click', openCardMenu);
   cardMenuCloseBtn?.addEventListener('click', closeCardMenu);
-  document.getElementById('card-menu-overlay')?.addEventListener('click', closeCardMenu);
+  document.getElementById('card-menu-overlay')?.addEventListener('click', (e) => {
+    // Only close if clicking directly on the overlay (backdrop), not on child elements
+    if (e.target.id === 'card-menu-overlay') {
+      closeCardMenu();
+    }
+  });
 
   // small visual effect
   document.addEventListener('mousemove', e => {

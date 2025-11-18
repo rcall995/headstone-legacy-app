@@ -65,6 +65,9 @@ function cleanupScoutMode() {
   const existingMap = document.getElementById('map');
   existingMap?.classList.remove('scout-active');
 
+  // Remove scout-active class from body
+  document.body.classList.remove('scout-active');
+
   // Modal + state
   addPinModalInstance?.hide?.();
   addPinModalInstance = null;
