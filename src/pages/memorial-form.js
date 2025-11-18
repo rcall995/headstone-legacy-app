@@ -240,8 +240,23 @@ function showPhotoPreview(appRoot, inputId, previewId) {
     input.addEventListener('change', (e) => {
         preview.innerHTML = '';
         const files = Array.from(e.target.files);
+        const MAX_FILE_SIZE_MB = 10;
+        const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
         files.slice(0, 20).forEach((file, index) => {
+            // Validate file type immediately
+            if (!file.type.startsWith('image/')) {
+                showToast(`${file.name} is not an image file`, 'error');
+                return;
+            }
+
+            // Validate file size BEFORE attempting to read
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                showToast(`${file.name} is too large (${sizeMB}MB). Maximum size is ${MAX_FILE_SIZE_MB}MB.`, 'error');
+                return;
+            }
+
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
