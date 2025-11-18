@@ -160,12 +160,14 @@ header {
 .card-menu-item {
     display: flex; align-items: center; padding: 1rem;
     border-radius: 8px; transition: background-color 0.2s ease-in-out; color: #fff;
+    position: relative; /* Allow absolute positioning of badges */
 }
 .card-menu-item:hover { background-color: rgba(255,255,255,0.1); color: #fff; }
 .card-menu-item i { font-size: 1.5rem; color: var(--accent-color); width: 40px; text-align: center; }
 .card-menu-text { margin-left: 1rem; }
 .card-menu-title { color: #fff; margin: 0; font-size: 1.1rem; font-weight: 500; }
 .card-menu-subtitle { color: rgba(255,255,255,0.6); font-size: 0.9rem; margin: 0; }
+.card-menu-desc { color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 0.25rem 0 0 0; }
 .card-menu-grid {
     display: grid; grid-template-columns: 1fr; gap: 1rem; padding: 1rem;
     overflow-y: auto; flex-grow: 1; align-content: start;

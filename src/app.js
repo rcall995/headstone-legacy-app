@@ -2,6 +2,7 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { auth } from '/js/firebase-config.js';
 import { showToast } from '/js/utils/toasts.js';
+import { updateMenuBadges } from '/js/utils/badge-updater.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ---------- Service Worker: simple, no auto-reload ---------- */
@@ -118,9 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const { loadScoutModePage } = await import('./pages/scout-mode.js');
         currentPageCleanup = await loadScoutModePage(appRoot, auth.currentUser);
       } else if (path === '/curator-panel') {
-        setPageTitle('Dashboard');
-        const { loadCuratorPanel } = await import('./pages/curator-panel.js');
-        await loadCuratorPanel(appRoot);
+        // Redirect to memorial list instead of showing dashboard
+        handleNavigation('/memorial-list?status=published');
       } else if (path === '/memorial-form') {
         setPageTitle('Memorial Form');
         const { loadMemorialForm } = await import('./pages/memorial-form.js');
@@ -256,11 +256,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mobile-signin-btn')?.classList.toggle('d-none', isLoggedIn);
     document.getElementById('curator-nav-menu-items')?.classList.toggle('d-none', !isLoggedIn);
 
+    // Update notification badges when logged in
+    if (isLoggedIn) {
+      await updateMenuBadges(user);
+    }
+
     if (!authInitialized) {
       authInitialized = true;
       const initial = window.location.pathname + window.location.search;
-      if (isLoggedIn && initial === '/login') handleNavigation('/curator-panel');
-      if (isLoggedIn && initial === '/signup') handleNavigation('/curator-panel');
+      if (isLoggedIn && initial === '/login') handleNavigation('/memorial-list?status=published');
+      if (isLoggedIn && initial === '/signup') handleNavigation('/memorial-list?status=published');
       if (!isLoggedIn && initial === '/curator-panel') handleNavigation('/login');
       if (!isLoggedIn && initial === '/memorial-form') handleNavigation('/login');
       if (!isLoggedIn && initial === '/memorial-list') handleNavigation('/login');

@@ -61,12 +61,44 @@
         </div>
         <div id="curator-nav-menu-items" class="d-none">
              <hr style="border-color: rgba(255,255,255,0.2);">
-             <a href="/curator-panel" class="card-menu-item text-decoration-none" data-route data-route-mobile>
-                <i class="fas fa-tachometer-alt"></i>
+             <a href="/scout-mode" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                <i class="fas fa-map-marker-alt"></i>
                 <div class="card-menu-text">
-                    <h5 class="card-menu-title">Dashboard</h5>
+                    <h5 class="card-menu-title">Scout Mode</h5>
+                    <p class="card-menu-desc">Find and map new memorials</p>
                 </div>
             </a>
+            <a href="/memorial-form" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                <i class="fas fa-plus"></i>
+                <div class="card-menu-text">
+                    <h5 class="card-menu-title">Create New Memorial</h5>
+                    <p class="card-menu-desc">Start a new memorial page</p>
+                </div>
+            </a>
+            <a href="/memorial-list?status=published" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                <i class="fas fa-book-open"></i>
+                <div class="card-menu-text">
+                    <h5 class="card-menu-title">View Memorials</h5>
+                    <p class="card-menu-desc">See all published memorials</p>
+                </div>
+            </a>
+            <a href="/memorial-list?status=draft" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                <i class="fas fa-pencil-ruler"></i>
+                <div class="card-menu-text">
+                    <h5 class="card-menu-title">Drafts</h5>
+                    <p class="card-menu-desc">View unpublished work</p>
+                </div>
+                <span class="notification-badge" id="mobile-draft-badge" style="display: none;"></span>
+            </a>
+            <a href="/tributes-list" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                <i class="fas fa-comment-check"></i>
+                <div class="card-menu-text">
+                    <h5 class="card-menu-title">Pending Tributes</h5>
+                    <p class="card-menu-desc">Approve visitor tributes</p>
+                </div>
+                <span class="notification-badge" id="mobile-tribute-badge" style="display: none;"></span>
+            </a>
+            <hr style="border-color: rgba(255,255,255,0.2);">
             <a href="#" class="card-menu-item text-decoration-none" id="signOutLink-menu">
                 <i class="fas fa-sign-out-alt"></i>
                 <div class="card-menu-text">
@@ -104,9 +136,13 @@
                                 My Account
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/curator-panel" data-route>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="/scout-mode" data-route><i class="fas fa-map-marker-alt me-2"></i>Scout Mode</a></li>
+                                <li><a class="dropdown-item" href="/memorial-form" data-route><i class="fas fa-plus me-2"></i>Create New Memorial</a></li>
+                                <li><a class="dropdown-item" href="/memorial-list?status=published" data-route><i class="fas fa-book-open me-2"></i>View Memorials</a></li>
+                                <li><a class="dropdown-item" href="/memorial-list?status=draft" data-route><i class="fas fa-pencil-ruler me-2"></i>Drafts <span class="badge bg-primary ms-1" id="desktop-draft-badge" style="display: none;"></span></a></li>
+                                <li><a class="dropdown-item" href="/tributes-list" data-route><i class="fas fa-comment-check me-2"></i>Pending Tributes <span class="badge bg-primary ms-1" id="desktop-tribute-badge" style="display: none;"></span></a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" id="signOutLink-desktop" href="#">Sign Out</a></li>
+                                <li><a class="dropdown-item" id="signOutLink-desktop" href="#"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
                             </ul>
                         </li>
                     </ul>
