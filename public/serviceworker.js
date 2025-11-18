@@ -1,5 +1,5 @@
 /* serviceworker.js */
-const CACHE_VERSION ='v23'; // Bumped version
+const CACHE_VERSION ='v24'; // Bumped version for favicon fix
 const CACHE_NAME = `headstone-memorial-cache-${CACHE_VERSION}`;
 
 const urlsToCache = [
@@ -17,6 +17,8 @@ const urlsToCache = [
   '/js/pages/scout-mode.js',
   '/favicon.png',
   '/logo1.png',
+  '/images/icons/icon-192x192.png',
+  '/images/icons/icon-512x512.png',
   '/pages/login.html'
 ];
 

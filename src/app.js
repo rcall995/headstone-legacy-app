@@ -6,7 +6,7 @@ import { showToast } from '/js/utils/toasts.js';
 document.addEventListener('DOMContentLoaded', () => {
   /* ---------- Service Worker: simple, no auto-reload ---------- */
   if ('serviceWorker' in navigator) {
-    const SW_VERSION = 'v23';            // bump this when you deploy
+    const SW_VERSION = 'v24';            // bump this when you deploy
     const SW_URL = `/serviceworker.js?sw=${SW_VERSION}`;
 
     navigator.serviceWorker.register(SW_URL, { scope: '/' })
