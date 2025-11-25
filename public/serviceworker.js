@@ -1,5 +1,5 @@
 /* serviceworker.js */
-const CACHE_VERSION ='v24'; // Bumped version for favicon fix
+const CACHE_VERSION = 'v25'; // Updated for Supabase migration
 const CACHE_NAME = `headstone-memorial-cache-${CACHE_VERSION}`;
 
 const urlsToCache = [
@@ -8,18 +8,20 @@ const urlsToCache = [
   '/manifest.json',
   '/css/styles.css',
   '/js/app.js',
-  '/js/firebase-config.js',
+  '/js/supabase-client.js',
   '/js/auth-manager.js',
   '/js/pages/home.js',
   '/js/pages/login.js',
   '/js/pages/memorial-form.js',
+  '/js/pages/memorial-template.js',
   '/js/pages/curator-panel.js',
   '/js/pages/scout-mode.js',
   '/favicon.png',
   '/logo1.png',
   '/images/icons/icon-192x192.png',
   '/images/icons/icon-512x512.png',
-  '/pages/login.html'
+  '/pages/login.html',
+  '/pages/memorial-template.html'
 ];
 
 // Install: Pre-cache the app shell
