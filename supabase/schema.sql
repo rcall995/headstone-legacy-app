@@ -137,18 +137,24 @@ CREATE TABLE IF NOT EXISTS suggested_locations (
 );
 
 -- ============================================
--- VOICE RECORDINGS (Phase 2)
+-- VOICE RECORDINGS
 -- ============================================
 CREATE TABLE IF NOT EXISTS voice_recordings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   memorial_id TEXT REFERENCES memorials(id) ON DELETE CASCADE,
+  recorded_by_name TEXT NOT NULL,
+  recorded_by_email TEXT,
+  recorded_by_user_id UUID REFERENCES auth.users(id),
   title TEXT,
   description TEXT,
   audio_url TEXT NOT NULL,
   duration_seconds INTEGER,
-  uploaded_by UUID REFERENCES auth.users(id),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_voice_recordings_memorial_id ON voice_recordings (memorial_id);
+CREATE INDEX IF NOT EXISTS idx_voice_recordings_status ON voice_recordings (status);
 
 -- ============================================
 -- ANNIVERSARY REMINDERS
@@ -249,22 +255,39 @@ CREATE POLICY "Curators can update tributes" ON tributes
     SELECT 1 FROM memorials WHERE memorials.id = tributes.memorial_id AND auth.uid() = ANY(memorials.curator_ids)
   ));
 
+CREATE POLICY "Curators can delete tributes" ON tributes
+  FOR DELETE USING (EXISTS (
+    SELECT 1 FROM memorials WHERE memorials.id = tributes.memorial_id AND auth.uid() = ANY(memorials.curator_ids)
+  ));
+
 -- Candles: Anyone can light, anyone can view
 CREATE POLICY "Anyone can view candles" ON candles FOR SELECT USING (true);
 CREATE POLICY "Anyone can light candles" ON candles FOR INSERT WITH CHECK (true);
 
--- Voice recordings: Curators can manage
-CREATE POLICY "Anyone can view voice recordings" ON voice_recordings FOR SELECT USING (true);
-CREATE POLICY "Curators can insert voice recordings" ON voice_recordings
-  FOR INSERT WITH CHECK (EXISTS (
+-- Voice recordings: Anyone can submit, curators can manage
+CREATE POLICY "Anyone can view approved voice recordings" ON voice_recordings
+  FOR SELECT USING (status = 'approved' OR EXISTS (
     SELECT 1 FROM memorials WHERE memorials.id = voice_recordings.memorial_id AND auth.uid() = ANY(memorials.curator_ids)
   ));
 
--- Anniversary reminders: Users manage their own
+CREATE POLICY "Anyone can submit voice recordings" ON voice_recordings
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Curators can update voice recordings" ON voice_recordings
+  FOR UPDATE USING (EXISTS (
+    SELECT 1 FROM memorials WHERE memorials.id = voice_recordings.memorial_id AND auth.uid() = ANY(memorials.curator_ids)
+  ));
+
+CREATE POLICY "Curators can delete voice recordings" ON voice_recordings
+  FOR DELETE USING (EXISTS (
+    SELECT 1 FROM memorials WHERE memorials.id = voice_recordings.memorial_id AND auth.uid() = ANY(memorials.curator_ids)
+  ));
+
+-- Anniversary reminders: Anyone can sign up, logged-in users can manage their own
 CREATE POLICY "Users can view own reminders" ON anniversary_reminders
   FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own reminders" ON anniversary_reminders
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Anyone can insert reminders" ON anniversary_reminders
+  FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can update own reminders" ON anniversary_reminders
   FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own reminders" ON anniversary_reminders
@@ -273,6 +296,17 @@ CREATE POLICY "Users can delete own reminders" ON anniversary_reminders
 -- Orders: Users can view own orders
 CREATE POLICY "Users can view own orders" ON orders
   FOR SELECT USING (auth.uid() = user_id);
+
+-- Project notes: Authenticated users can manage (admin only in practice)
+ALTER TABLE project_notes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users can view project notes" ON project_notes
+  FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can insert project notes" ON project_notes
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can update project notes" ON project_notes
+  FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can delete project notes" ON project_notes
+  FOR DELETE USING (auth.role() = 'authenticated');
 
 -- ============================================
 -- STORAGE BUCKETS (Run in Supabase Dashboard)
