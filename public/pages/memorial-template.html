@@ -42,6 +42,321 @@
         }
         .modal-nav-btn.prev { left: 10px; }
         .modal-nav-btn.next { right: 10px; }
+
+        /* Candle Section Styles */
+        #candle-section {
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(255, 193, 7, 0.08);
+        }
+        .candle-icon-container {
+            position: relative;
+            width: 50px;
+            height: 70px;
+        }
+        .candle-icon {
+            font-size: 2.5rem;
+            color: #f8f0e3;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        .candle-flame {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 20px;
+            background: linear-gradient(to top, #ff6b35, #ffc107, #fff3cd);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: flicker 0.5s ease-in-out infinite alternate;
+            box-shadow: 0 0 10px #ffc107, 0 0 20px #ff6b35, 0 0 30px rgba(255, 107, 53, 0.5);
+        }
+        .candle-flame.lit {
+            animation: flicker 0.3s ease-in-out infinite alternate, glow 2s ease-in-out infinite;
+        }
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1) rotate(-2deg); opacity: 0.9; }
+            100% { transform: translateX(-50%) scale(1.1) rotate(2deg); opacity: 1; }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px #ffc107, 0 0 20px #ff6b35, 0 0 30px rgba(255, 107, 53, 0.5); }
+            50% { box-shadow: 0 0 15px #ffc107, 0 0 30px #ff6b35, 0 0 45px rgba(255, 107, 53, 0.7); }
+        }
+        .candle-count {
+            color: #e65100;
+            font-weight: 700;
+        }
+        #light-candle-btn {
+            transition: all 0.3s ease;
+        }
+        #light-candle-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        }
+
+        /* Modal Candle Animation */
+        .candle-animation-container {
+            display: inline-block;
+            position: relative;
+            width: 40px;
+            height: 100px;
+        }
+        .candle-modal-body {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 60px;
+            background: linear-gradient(to bottom, #f8f0e3 0%, #e8dcc8 100%);
+            border-radius: 4px 4px 8px 8px;
+            box-shadow: inset -3px 0 5px rgba(0,0,0,0.1);
+        }
+        .candle-modal-body::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 10px;
+            background: #333;
+            border-radius: 2px;
+        }
+        .candle-modal-flame {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 30px;
+            background: linear-gradient(to top, #ff6b35, #ffc107, #fff3cd);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: modalFlicker 0.4s ease-in-out infinite alternate;
+            box-shadow: 0 0 15px #ffc107, 0 0 30px #ff6b35;
+        }
+        @keyframes modalFlicker {
+            0% { transform: translateX(-50%) scale(1) rotate(-3deg); }
+            100% { transform: translateX(-50%) scale(1.15) rotate(3deg); }
+        }
+
+        /* Recent candles list */
+        .candle-entry {
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        .candle-entry:last-child {
+            border-bottom: none;
+        }
+        .candle-entry-icon {
+            color: #ffc107;
+            font-size: 1.2rem;
+        }
+        .candle-entry-time {
+            font-size: 0.75rem;
+            color: #999;
+        }
+
+        /* View candles link */
+        #view-candles-link {
+            color: #e65100;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.85rem;
+        }
+        #view-candles-link:hover {
+            color: #bf360c;
+        }
+
+        /* Tribute Card Styles */
+        .tribute-item {
+            padding: 1.25rem;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            margin-bottom: 1rem;
+            border-left: 4px solid #e91e63;
+        }
+        .tribute-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .tribute-author {
+            font-weight: 600;
+            color: #333;
+        }
+        .tribute-date {
+            font-size: 0.8rem;
+            color: #999;
+        }
+        .tribute-message {
+            color: #555;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+        .tribute-photo {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 8px;
+            margin-top: 0.75rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .tribute-photo:hover {
+            transform: scale(1.02);
+        }
+        .tribute-pending-badge {
+            background: #fff3cd;
+            color: #856404;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        #tributes-card .card-header {
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+            border-bottom: none;
+        }
+
+        /* Voice Recording Styles */
+        #voice-recordings-card .card-header {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-bottom: none;
+        }
+        .voice-recording-item {
+            padding: 1rem;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
+            margin-bottom: 1rem;
+            border-left: 4px solid #2196f3;
+        }
+        .voice-recording-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .voice-author {
+            font-weight: 600;
+            color: #333;
+        }
+        .voice-date {
+            font-size: 0.8rem;
+            color: #999;
+        }
+        .voice-player {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        .voice-description {
+            color: #555;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .voice-pending-badge {
+            background: #fff3cd;
+            color: #856404;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* Recording UI */
+        .recording-visualizer {
+            height: 60px;
+            background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            overflow: hidden;
+        }
+        .recording-bar {
+            width: 4px;
+            background: #2196f3;
+            border-radius: 2px;
+            animation: soundBar 0.5s ease-in-out infinite;
+        }
+        .recording-bar:nth-child(1) { animation-delay: 0s; height: 20px; }
+        .recording-bar:nth-child(2) { animation-delay: 0.1s; height: 35px; }
+        .recording-bar:nth-child(3) { animation-delay: 0.2s; height: 25px; }
+        .recording-bar:nth-child(4) { animation-delay: 0.15s; height: 40px; }
+        .recording-bar:nth-child(5) { animation-delay: 0.25s; height: 30px; }
+        .recording-bar:nth-child(6) { animation-delay: 0.1s; height: 45px; }
+        .recording-bar:nth-child(7) { animation-delay: 0.3s; height: 20px; }
+        @keyframes soundBar {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1); }
+        }
+        .recording-timer {
+            font-size: 2rem;
+            font-weight: 300;
+            font-family: monospace;
+            color: #333;
+        }
+        .recording-controls .btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+        }
+        .btn-record {
+            background: #f44336;
+            color: white;
+            border: none;
+        }
+        .btn-record:hover {
+            background: #d32f2f;
+            color: white;
+        }
+        .btn-record.recording {
+            animation: pulse 1s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(244, 67, 54, 0); }
+        }
+
+        /* Share Modal Styles */
+        .share-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .share-option:hover {
+            background-color: #f5f5f5;
+            text-decoration: none;
+            color: inherit;
+        }
+        .share-option-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+        .share-option-icon.facebook { background: #1877f2; }
+        .share-option-icon.twitter { background: #1da1f2; }
+        .share-option-icon.whatsapp { background: #25d366; }
+        .share-option-icon.email { background: #ea4335; }
+        .share-option-icon.copy { background: #6c757d; }
+        .share-option-icon.native { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .share-option-text {
+            font-weight: 500;
+        }
+        .share-link-input {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -58,6 +373,28 @@
                     <button class="btn btn-primary" id="share-btn"><i class="fas fa-share-alt me-2"></i> Share</button>
                     <a href="#" id="edit-memorial-button" class="btn btn-secondary" style="display: none;" data-route><i class="fas fa-pencil-alt me-2"></i> Edit</a>
                 </div>
+
+                <!-- Virtual Candle Section -->
+                <div id="candle-section" class="mt-4">
+                    <div class="candle-display d-flex align-items-center justify-content-center gap-3 mb-3">
+                        <div class="candle-icon-container">
+                            <div class="candle-flame" id="candle-flame"></div>
+                            <i class="fas fa-candle-holder candle-icon"></i>
+                        </div>
+                        <div class="candle-stats text-start">
+                            <span class="candle-count h4 mb-0" id="candle-count">0</span>
+                            <span class="text-muted small d-block">candles lit in memory</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <button class="btn btn-outline-warning btn-lg" id="light-candle-btn">
+                            <i class="fas fa-fire me-2"></i>Light a Candle
+                        </button>
+                        <button class="btn btn-outline-primary" id="reminder-btn">
+                            <i class="fas fa-bell me-2"></i>Get Reminders
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -71,7 +408,54 @@
                 <div id="map-card" class="card" style="display: none;"></div>
                 <div id="quotes-card" class="card" style="display: none;"></div>
                 <div id="archive-card" class="card" style="display: none;"></div>
-                <div id="tributes-card" class="card" style="display: none;"></div>
+
+                <!-- Tributes/Guestbook Section -->
+                <div id="tributes-card" class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-heart me-2 text-danger"></i>Tributes & Messages</h5>
+                        <button class="btn btn-primary btn-sm" id="add-tribute-btn">
+                            <i class="fas fa-plus me-2"></i>Leave a Tribute
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="tributes-list">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Loading tributes...
+                            </div>
+                        </div>
+                        <div id="no-tributes-message" class="text-center text-muted py-4" style="display: none;">
+                            <i class="fas fa-heart fa-2x mb-3 opacity-50"></i>
+                            <p>No tributes yet. Be the first to share a memory or message.</p>
+                            <button class="btn btn-outline-primary" id="first-tribute-btn">
+                                <i class="fas fa-feather-alt me-2"></i>Write the First Tribute
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voice Recordings Section -->
+                <div id="voice-recordings-card" class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-microphone me-2 text-primary"></i>Voice Memories</h5>
+                        <button class="btn btn-primary btn-sm" id="add-voice-btn">
+                            <i class="fas fa-plus me-2"></i>Record Memory
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="voice-recordings-list">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Loading recordings...
+                            </div>
+                        </div>
+                        <div id="no-voice-message" class="text-center text-muted py-4" style="display: none;">
+                            <i class="fas fa-microphone fa-2x mb-3 opacity-50"></i>
+                            <p>No voice recordings yet. Share a spoken memory or story.</p>
+                            <button class="btn btn-outline-primary" id="first-voice-btn">
+                                <i class="fas fa-microphone me-2"></i>Record the First Memory
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -107,7 +491,7 @@
                         <p class="mt-3 mb-0 small opacity-75">
                             <i class="fas fa-check-circle me-1"></i> Free forever
                             <span class="mx-2">•</span>
-                            <i class="fas fa-qrcode me-1"></i> Add QR code tag for $29
+                            <i class="fas fa-qrcode me-1"></i> Add QR code tag for $39
                         </p>
                     </div>
                 </div>
@@ -146,6 +530,370 @@
                 </div>
                 <button class="modal-nav-btn prev" id="modal-prev-btn" title="Previous image">❮</button>
                 <button class="modal-nav-btn next" id="modal-next-btn" title="Next image">❯</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Light a Candle Modal -->
+    <div class="modal fade" id="lightCandleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title"><i class="fas fa-fire text-warning me-2"></i>Light a Candle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="candle-animation-container">
+                            <div class="candle-modal-flame"></div>
+                            <div class="candle-modal-body"></div>
+                        </div>
+                    </div>
+                    <form id="light-candle-form">
+                        <div class="mb-3">
+                            <label for="candle-name" class="form-label">Your Name <span class="text-muted">(optional)</span></label>
+                            <input type="text" class="form-control" id="candle-name" placeholder="Enter your name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="candle-message" class="form-label">Message <span class="text-muted">(optional)</span></label>
+                            <textarea class="form-control" id="candle-message" rows="3" placeholder="Share a memory or message..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="confirm-light-candle-btn">
+                        <i class="fas fa-fire me-2"></i>Light Candle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Candles Section (shown after lighting) -->
+    <div class="modal fade" id="recentCandlesModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-fire text-warning me-2"></i>Recent Candles</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="recent-candles-list">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Loading...
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anniversary Reminder Modal -->
+    <div class="modal fade" id="reminderModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title"><i class="fas fa-bell text-primary me-2"></i>Get Anniversary Reminders</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Receive email reminders on important dates so you never forget to honor their memory.</p>
+
+                    <form id="reminder-form">
+                        <div class="mb-3">
+                            <label for="reminder-email" class="form-label">Your Email</label>
+                            <input type="email" class="form-control" id="reminder-email" required placeholder="your@email.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Remind me on:</label>
+                            <div class="reminder-options">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="reminder-birthday" checked>
+                                    <label class="form-check-label" for="reminder-birthday">
+                                        <i class="fas fa-birthday-cake text-info me-2"></i>Birthday
+                                        <span class="text-muted small" id="birthday-date-preview"></span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="reminder-anniversary" checked>
+                                    <label class="form-check-label" for="reminder-anniversary">
+                                        <i class="fas fa-heart text-danger me-2"></i>Death Anniversary
+                                        <span class="text-muted small" id="anniversary-date-preview"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info small">
+                            <i class="fas fa-info-circle me-2"></i>
+                            We'll send you a gentle reminder email a day before each date.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-reminder-btn">
+                        <i class="fas fa-bell me-2"></i>Set Reminders
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Reminders Modal (for logged in users) -->
+    <div class="modal fade" id="manageRemindersModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-bell text-primary me-2"></i>Your Reminders</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="user-reminders-list">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Loading...
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" id="add-new-reminder-btn">
+                        <i class="fas fa-plus me-2"></i>Add Reminder
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Tribute Modal -->
+    <div class="modal fade" id="tributeModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title"><i class="fas fa-heart text-danger me-2"></i>Leave a Tribute</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Share a memory, story, or message of love. Your tribute will be visible after approval.</p>
+
+                    <form id="tribute-form">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="tribute-name" class="form-label">Your Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="tribute-name" required placeholder="Your name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tribute-email" class="form-label">Email <span class="text-muted">(optional, private)</span></label>
+                                <input type="email" class="form-control" id="tribute-email" placeholder="your@email.com">
+                            </div>
+                            <div class="col-12">
+                                <label for="tribute-message" class="form-label">Your Message <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="tribute-message" rows="5" required placeholder="Share a memory, story, or message..."></textarea>
+                                <div class="form-text">Write as much as you'd like. Your tribute helps keep their memory alive.</div>
+                            </div>
+                            <div class="col-12">
+                                <label for="tribute-photo" class="form-label">Add a Photo <span class="text-muted">(optional)</span></label>
+                                <input type="file" class="form-control" id="tribute-photo" accept="image/*">
+                                <div class="form-text">Upload a photo to include with your tribute.</div>
+                                <div id="tribute-photo-preview" class="mt-2" style="display: none;">
+                                    <img src="" alt="Preview" class="img-thumbnail" style="max-height: 150px;">
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="remove-tribute-photo">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="alert alert-info small mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your tribute will be reviewed before appearing publicly. We respect all heartfelt messages.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submit-tribute-btn">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Tribute
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Recording Modal -->
+    <div class="modal fade" id="voiceRecordingModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title"><i class="fas fa-microphone text-primary me-2"></i>Record a Voice Memory</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Share a spoken memory, story, or message. Your recording will be reviewed before appearing publicly.</p>
+
+                    <!-- Recording Mode Selection -->
+                    <div id="voice-mode-selection" class="mb-4">
+                        <div class="d-flex gap-3 justify-content-center">
+                            <button class="btn btn-outline-primary btn-lg" id="record-live-btn">
+                                <i class="fas fa-microphone me-2"></i>Record Now
+                            </button>
+                            <button class="btn btn-outline-secondary btn-lg" id="upload-audio-btn">
+                                <i class="fas fa-upload me-2"></i>Upload Audio
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Recording UI -->
+                    <div id="live-recording-ui" style="display: none;">
+                        <div class="text-center mb-4">
+                            <div class="recording-visualizer mb-3" id="recording-visualizer" style="display: none;">
+                                <div class="recording-bar"></div>
+                                <div class="recording-bar"></div>
+                                <div class="recording-bar"></div>
+                                <div class="recording-bar"></div>
+                                <div class="recording-bar"></div>
+                                <div class="recording-bar"></div>
+                                <div class="recording-bar"></div>
+                            </div>
+                            <div class="recording-timer mb-3" id="recording-timer">0:00</div>
+                            <div class="recording-controls d-flex gap-3 justify-content-center">
+                                <button class="btn btn-record" id="start-recording-btn" title="Start Recording">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <button class="btn btn-secondary" id="stop-recording-btn" style="display: none;" title="Stop Recording">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </div>
+                            <p class="text-muted small mt-2" id="recording-status">Click the microphone to start recording</p>
+                        </div>
+
+                        <!-- Recording Preview -->
+                        <div id="recording-preview" style="display: none;" class="mb-4">
+                            <label class="form-label">Preview your recording:</label>
+                            <audio id="recording-playback" controls class="w-100"></audio>
+                            <div class="d-flex gap-2 mt-2">
+                                <button class="btn btn-outline-danger btn-sm" id="discard-recording-btn">
+                                    <i class="fas fa-trash me-1"></i>Discard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Audio UI -->
+                    <div id="upload-audio-ui" style="display: none;">
+                        <div class="mb-3">
+                            <label for="voice-file" class="form-label">Select an audio file</label>
+                            <input type="file" class="form-control" id="voice-file" accept="audio/*">
+                            <div class="form-text">Supported formats: MP3, WAV, M4A, OGG (max 10MB)</div>
+                        </div>
+                        <div id="upload-preview" style="display: none;" class="mb-3">
+                            <label class="form-label">Preview:</label>
+                            <audio id="upload-playback" controls class="w-100"></audio>
+                        </div>
+                    </div>
+
+                    <!-- Common Form Fields -->
+                    <div id="voice-form-fields" style="display: none;">
+                        <hr>
+                        <form id="voice-form">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="voice-name" class="form-label">Your Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="voice-name" required placeholder="Your name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="voice-email" class="form-label">Email <span class="text-muted">(optional)</span></label>
+                                    <input type="email" class="form-control" id="voice-email" placeholder="your@email.com">
+                                </div>
+                                <div class="col-12">
+                                    <label for="voice-title" class="form-label">Title for this memory <span class="text-muted">(optional)</span></label>
+                                    <input type="text" class="form-control" id="voice-title" placeholder="e.g., 'Grandpa's favorite joke'">
+                                </div>
+                                <div class="col-12">
+                                    <label for="voice-description" class="form-label">Description <span class="text-muted">(optional)</span></label>
+                                    <textarea class="form-control" id="voice-description" rows="2" placeholder="What's the context of this recording?"></textarea>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="alert alert-info small mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Your voice recording will be reviewed before appearing publicly.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submit-voice-btn" style="display: none;">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Recording
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal fade" id="shareModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title"><i class="fas fa-share-alt text-primary me-2"></i>Share This Memorial</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3" id="share-memorial-name">Share with friends and family</p>
+
+                    <!-- Native Share (on supported devices) -->
+                    <div id="native-share-option" style="display: none;">
+                        <a href="#" class="share-option" id="native-share-btn">
+                            <div class="share-option-icon native">
+                                <i class="fas fa-share"></i>
+                            </div>
+                            <span class="share-option-text">Share via...</span>
+                        </a>
+                        <hr>
+                    </div>
+
+                    <!-- Social Share Options -->
+                    <div class="d-flex flex-column gap-1">
+                        <a href="#" class="share-option" id="share-facebook" target="_blank">
+                            <div class="share-option-icon facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </div>
+                            <span class="share-option-text">Facebook</span>
+                        </a>
+                        <a href="#" class="share-option" id="share-twitter" target="_blank">
+                            <div class="share-option-icon twitter">
+                                <i class="fab fa-twitter"></i>
+                            </div>
+                            <span class="share-option-text">Twitter / X</span>
+                        </a>
+                        <a href="#" class="share-option" id="share-whatsapp" target="_blank">
+                            <div class="share-option-icon whatsapp">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <span class="share-option-text">WhatsApp</span>
+                        </a>
+                        <a href="#" class="share-option" id="share-email">
+                            <div class="share-option-icon email">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <span class="share-option-text">Email</span>
+                        </a>
+                    </div>
+
+                    <hr>
+
+                    <!-- Copy Link -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Or copy the link:</label>
+                        <div class="share-link-input mb-2" id="share-link-display"></div>
+                        <button class="btn btn-outline-primary w-100" id="copy-link-btn">
+                            <i class="fas fa-copy me-2"></i>Copy Link
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -1,14 +1,16 @@
-import { auth, db } from '/js/firebase-config.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { collection, query, where, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { supabase } from '/js/supabase-client.js';
 import { showToast } from '/js/utils/toasts.js';
 
 async function updateDashboardBadges(user) {
     try {
         // Get count of drafts
-        const draftsQuery = query(collection(db, 'memorials'), where('curatorIds', 'array-contains', user.uid), where('status', '==', 'draft'));
-        const draftsSnapshot = await getCountFromServer(draftsQuery);
-        const draftCount = draftsSnapshot.data().count;
+        const { count: draftCount, error: draftError } = await supabase
+            .from('memorials')
+            .select('*', { count: 'exact', head: true })
+            .contains('curator_ids', [user.id])
+            .eq('status', 'draft');
+
+        if (draftError) throw draftError;
 
         const draftBadge = document.getElementById('draft-badge');
         if (draftBadge) {
@@ -21,18 +23,23 @@ async function updateDashboardBadges(user) {
         }
 
         // Get count of pending tributes
-        const memorialsQuery = query(collection(db, 'memorials'), where('curatorIds', 'array-contains', user.uid));
-        const memorialsSnapshot = await getDocs(memorialsQuery);
-        const memorialIds = memorialsSnapshot.docs.map(doc => doc.id);
+        const { data: memorials, error: memorialsError } = await supabase
+            .from('memorials')
+            .select('id')
+            .contains('curator_ids', [user.id]);
+
+        if (memorialsError) throw memorialsError;
+
+        const memorialIds = memorials.map(m => m.id);
 
         if (memorialIds.length > 0) {
-            const tributeQueries = memorialIds.map(id => {
-                const tributesRef = collection(db, `memorials/${id}/tributes`);
-                return getCountFromServer(query(tributesRef, where('status', '==', 'pending')));
-            });
-            
-            const tributeCounts = await Promise.all(tributeQueries);
-            const totalTributes = tributeCounts.reduce((sum, snapshot) => sum + snapshot.data().count, 0);
+            const { count: totalTributes, error: tributeError } = await supabase
+                .from('tributes')
+                .select('*', { count: 'exact', head: true })
+                .in('memorial_id', memorialIds)
+                .eq('status', 'pending');
+
+            if (tributeError) throw tributeError;
 
             const tributeBadge = document.getElementById('tribute-badge');
             if (tributeBadge) {
@@ -58,8 +65,8 @@ export async function loadCuratorPanel(appRoot) {
         appRoot.style.display = 'block';
 
         // Update badges based on current auth state
-        const user = auth.currentUser;
-        if (user && !user.isAnonymous) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
             await updateDashboardBadges(user);
         }
     } catch (error) {

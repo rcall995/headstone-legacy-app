@@ -242,7 +242,7 @@ exports.createSquarePaymentLink = onCall({ secrets: [squareAccessToken] }, async
                 lineItems: [{
                     name: "Headstone Legacy QR Tag",
                     quantity: '1',
-                    basePriceMoney: { amount: 2999, currency: 'USD' }
+                    basePriceMoney: { amount: 3900, currency: 'USD' }
                 }],
                 referenceId: JSON.stringify({ memorialId, userId })
             },

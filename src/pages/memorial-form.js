@@ -1,8 +1,4 @@
-import { auth, db, storage, functions } from '/js/firebase-config.js';
-import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
-import { getDoc, setDoc, doc, collection, query, where, getDocs, limit, deleteDoc, serverTimestamp, GeoPoint } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { ref, getDownloadURL, uploadBytesResumable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { supabase } from '/js/supabase-client.js';
 import { showToast } from '/js/utils/toasts.js';
 
 // --- Module-level State Variables ---
@@ -10,7 +6,7 @@ let currentStep = 1;
 const TOTAL_STEPS = 5;
 const commonRelationships = ["Spouse", "Parent", "Father", "Mother", "Son", "Daughter", "Sibling", "Brother", "Sister", "Grandparent", "Grandfather", "Grandmother", "Grandchild", "Grandson", "Granddaughter"];
 let originalAddress = '';
-let cemeteryLocation = null; // Store geocoded cemetery location
+let cemeteryLocation = null; // Store geocoded cemetery location { lat, lng }
 let cemeteryMapPreview = null; // Map instance for preview
 
 function navigateToStep(stepNumber) {
@@ -29,10 +25,10 @@ function navigateToStep(stepNumber) {
 function adjustFormForTier(form, tier) {
     const isHistorian = tier === 'historian';
     const isStoryteller = tier === 'storyteller' || isHistorian;
-    
+
     document.querySelector('.wizard-progress-step[data-step="4"]').style.display = isStoryteller ? 'flex' : 'none';
     document.querySelector('.wizard-progress-step[data-step="5"]').style.display = isHistorian ? 'flex' : 'none';
-    
+
     const photoGallery = form.querySelector('#photo-gallery-section');
     if (photoGallery) {
         photoGallery.style.display = isStoryteller ? 'block' : 'none';
@@ -44,7 +40,7 @@ function initializeWizard(appRoot) {
     const prevBtn = appRoot.querySelector('#prev-step-btn');
     const progressSteps = appRoot.querySelectorAll('.wizard-progress-step');
     const tierRadioButtons = appRoot.querySelectorAll('input[name="tier"]');
-    
+
     tierRadioButtons.forEach(radio => {
         radio.addEventListener('change', () => {
             const tierCards = appRoot.querySelectorAll('.tier-card');
@@ -89,12 +85,30 @@ async function geocodeCemeteryAddress(appRoot) {
     statusEl.textContent = '';
 
     try {
-        const geocodeAddress = httpsCallable(functions, 'geocodeAddress');
-        const result = await geocodeAddress({ address });
-        const { lat, lng } = result.data;
+        // Get session for API call
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            throw new Error('You must be signed in to verify locations');
+        }
+
+        const response = await fetch('/api/geo/geocode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ address })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Geocoding failed');
+        }
+
+        const { lat, lng } = await response.json();
 
         if (lat && lng) {
-            cemeteryLocation = new GeoPoint(lat, lng);
+            cemeteryLocation = { lat, lng };
             statusEl.innerHTML = '<i class="fas fa-check-circle text-success"></i> Location verified';
             showToast('Cemetery location verified successfully', 'success');
             showCemeteryMapPreview(appRoot, lat, lng, address);
@@ -161,7 +175,7 @@ function cleanupCemeteryMapPreview() {
     }
 }
 
-// --- Photo Upload Functions ---
+// --- Photo Upload Functions (Supabase Storage) ---
 async function uploadPhotoToStorage(file, memorialId, photoType = 'main') {
     if (!file) return null;
 
@@ -176,27 +190,26 @@ async function uploadPhotoToStorage(file, memorialId, photoType = 'main') {
 
     const timestamp = Date.now();
     const filename = `${photoType}_${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-    const storageRef = ref(storage, `memorials/${memorialId}/${filename}`);
+    const filePath = `${memorialId}/${filename}`;
 
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    const { data, error } = await supabase.storage
+        .from('memorials')
+        .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+        });
 
-    return new Promise((resolve, reject) => {
-        uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                console.log(`Upload ${photoType}: ${progress}%`);
-            },
-            (error) => {
-                console.error('Upload error:', error);
-                reject(error);
-            },
-            async () => {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                resolve(downloadURL);
-            }
-        );
-    });
+    if (error) {
+        console.error('Upload error:', error);
+        throw error;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+        .from('memorials')
+        .getPublicUrl(filePath);
+
+    return publicUrl;
 }
 
 async function handlePhotoUploads(appRoot, memorialId) {
@@ -299,8 +312,9 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
         showToast("Please fill out all required fields.", "error");
         return;
     }
-    const currentUser = await getAuthUser();
-    if (!currentUser) {
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
         showToast("You must be signed in to save.", "error");
         return;
     }
@@ -312,55 +326,55 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
     try {
         const memorialName = appRoot.querySelector('#memorial-name').value;
         const newMemorialId = memorialId || generateSlugId(memorialName);
-        const docRef = doc(db, 'memorials', newMemorialId);
-        
+
         const memorialData = {
+            id: newMemorialId,
             name: memorialName,
             name_lowercase: memorialName.toLowerCase(),
             title: appRoot.querySelector('#memorial-title').value,
-            birthDate: appRoot.querySelector('#memorial-birth-date').value,
-            deathDate: appRoot.querySelector('#memorial-death-date').value,
+            birth_date: appRoot.querySelector('#memorial-birth-date').value,
+            death_date: appRoot.querySelector('#memorial-death-date').value,
             story: appRoot.querySelector('#memorial-story').value,
-            cemeteryName: appRoot.querySelector('#memorial-cemetery-name').value,
-            cemeteryAddress: appRoot.querySelector('#memorial-cemetery-address').value,
+            cemetery_name: appRoot.querySelector('#memorial-cemetery-name').value,
+            cemetery_address: appRoot.querySelector('#memorial-cemetery-address').value,
             relatives: getDynamicFieldValues(appRoot, 'relatives'),
             milestones: getDynamicFieldValues(appRoot, 'milestones'),
             residences: getDynamicFieldValues(appRoot, 'residences'),
             status: desiredStatus,
             tier: appRoot.querySelector('input[name="tier"]:checked')?.value || 'memorial',
-            updatedAt: serverTimestamp(),
         };
 
         // Add cemetery location if it was geocoded
         if (cemeteryLocation) {
-            memorialData.cemeteryLocation = cemeteryLocation;
+            memorialData.cemetery_lat = cemeteryLocation.lat;
+            memorialData.cemetery_lng = cemeteryLocation.lng;
         }
 
         if (!memorialId) {
-            memorialData.curatorIds = [currentUser.uid];
-            memorialData.createdAt = serverTimestamp();
+            memorialData.curator_ids = [user.id];
+            memorialData.curators = [{ uid: user.id, email: user.email }];
         }
 
-        // Save memorial first to get the ID
-        await setDoc(docRef, memorialData, { merge: true });
-
-        // Upload photos after memorial is created
+        // Upload photos first
         saveButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Uploading photos...`;
         const uploadedPhotos = await handlePhotoUploads(appRoot, newMemorialId);
 
-        // Update memorial with photo URLs
-        if (uploadedPhotos.mainPhoto || uploadedPhotos.photos) {
-            const photoUpdate = {};
-            if (uploadedPhotos.mainPhoto) photoUpdate.mainPhoto = uploadedPhotos.mainPhoto;
-            if (uploadedPhotos.photos) photoUpdate.photos = uploadedPhotos.photos;
-            await setDoc(docRef, photoUpdate, { merge: true });
-        }
+        // Add photo URLs to memorial data
+        if (uploadedPhotos.mainPhoto) memorialData.main_photo = uploadedPhotos.mainPhoto;
+        if (uploadedPhotos.photos) memorialData.photos = uploadedPhotos.photos;
+
+        // Save/update memorial using upsert
+        const { error } = await supabase
+            .from('memorials')
+            .upsert(memorialData, { onConflict: 'id' });
+
+        if (error) throw error;
 
         showToast(`Memorial ${desiredStatus}!`, 'success');
 
         // If published, show success modal with share options and tag upsell
         if (desiredStatus === 'published') {
-            showSuccessModal(appRoot, memorialId, memorialData.name);
+            showSuccessModal(appRoot, newMemorialId, memorialData.name);
         } else {
             // For drafts, just navigate to list
             window.dispatchEvent(new CustomEvent('navigate', { detail: `/memorial-list?status=${desiredStatus}` }));
@@ -430,10 +444,6 @@ function showSuccessModal(appRoot, memorialId, memorialName) {
     }
 
     modal.show();
-}
-
-function getAuthUser() {
-    return new Promise(resolve => onAuthStateChanged(auth, user => resolve(user)));
 }
 
 function getDynamicFieldValues(appRoot, type) {
@@ -522,41 +532,38 @@ function addDynamicField(appRoot, type, values = {}) {
 function populateForm(data, appRoot) {
     appRoot.querySelector('#memorial-name').value = data.name || '';
     appRoot.querySelector('#memorial-title').value = data.title || '';
-    appRoot.querySelector('#memorial-birth-date').value = data.birthDate || '';
-    appRoot.querySelector('#memorial-death-date').value = data.deathDate || '';
+    appRoot.querySelector('#memorial-birth-date').value = data.birth_date || '';
+    appRoot.querySelector('#memorial-death-date').value = data.death_date || '';
     appRoot.querySelector('#memorial-story').value = data.story || '';
-    appRoot.querySelector('#memorial-cemetery-name').value = data.cemeteryName || '';
-    appRoot.querySelector('#memorial-cemetery-address').value = data.cemeteryAddress || '';
-    originalAddress = data.cemeteryAddress || '';
+    appRoot.querySelector('#memorial-cemetery-name').value = data.cemetery_name || '';
+    appRoot.querySelector('#memorial-cemetery-address').value = data.cemetery_address || '';
+    originalAddress = data.cemetery_address || '';
 
     // Load cemetery location if it exists
-    if (data.cemeteryLocation) {
-        cemeteryLocation = data.cemeteryLocation;
+    if (data.cemetery_lat && data.cemetery_lng) {
+        cemeteryLocation = { lat: data.cemetery_lat, lng: data.cemetery_lng };
         const statusEl = appRoot.querySelector('#geocode-status');
         if (statusEl) {
             statusEl.innerHTML = '<i class="fas fa-check-circle text-success"></i> Location verified';
         }
-        // Show map preview if we have coordinates
-        if (data.cemeteryLocation.latitude && data.cemeteryLocation.longitude) {
-            showCemeteryMapPreview(
-                appRoot,
-                data.cemeteryLocation.latitude,
-                data.cemeteryLocation.longitude,
-                data.cemeteryAddress || 'Cemetery Location'
-            );
-        }
-    } else if (data.location && data.location.latitude && data.location.longitude) {
+        showCemeteryMapPreview(
+            appRoot,
+            data.cemetery_lat,
+            data.cemetery_lng,
+            data.cemetery_address || 'Cemetery Location'
+        );
+    } else if (data.location_lat && data.location_lng) {
         // Fallback to general location if no cemetery-specific location (from Scout mode)
-        cemeteryLocation = data.location;
+        cemeteryLocation = { lat: data.location_lat, lng: data.location_lng };
         const statusEl = appRoot.querySelector('#geocode-status');
         if (statusEl) {
             statusEl.innerHTML = '<i class="fas fa-map-pin text-info"></i> Using memorial location';
         }
         showCemeteryMapPreview(
             appRoot,
-            data.location.latitude,
-            data.location.longitude,
-            data.cemeteryAddress || data.cemeteryName || 'Memorial Location'
+            data.location_lat,
+            data.location_lng,
+            data.cemetery_address || data.cemetery_name || 'Memorial Location'
         );
     }
 
@@ -593,16 +600,23 @@ async function initializePage(appRoot, urlParams) {
     }
 
     if (memorialId) {
-        const docRef = doc(db, "memorials", memorialId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            populateForm(docSnap.data(), appRoot);
-        } else {
+        const { data, error } = await supabase
+            .from('memorials')
+            .select('*')
+            .eq('id', memorialId)
+            .single();
+
+        if (error) {
+            console.error('Error loading memorial:', error);
             showToast('Memorial not found.', 'error');
             return;
         }
+
+        if (data) {
+            populateForm(data, appRoot);
+        }
     }
-    
+
     navigateToStep(1);
 
     appRoot.querySelector('#add-milestone-button')?.addEventListener('click', () => addDynamicField(appRoot, 'milestones'));
@@ -643,7 +657,7 @@ export async function loadMemorialForm(appRoot, urlParams) {
         const response = await fetch('/pages/memorial-form.html');
         if (!response.ok) throw new Error('HTML content not found');
         appRoot.innerHTML = await response.text();
-        await initializePage(appRoot, urlParams); 
+        await initializePage(appRoot, urlParams);
     } catch (error) {
         console.error("Failed to load memorial form page:", error);
     }

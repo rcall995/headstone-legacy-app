@@ -1,27 +1,9 @@
-// /js/pages/signup.js
-import { signUp } from '/js/auth-manager.js';
+// /js/pages/signup.js - Supabase Auth
+import { signUp, signInWithGoogle } from '/js/auth-manager.js';
 import { showToast } from '/js/utils/toasts.js';
-import { auth } from '/js/firebase-config.js';
-import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-// Detect if we're on a mobile device
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 export async function loadSignupPage(appRoot) {
     try {
-        // Check for redirect result first (if returning from Google OAuth)
-        try {
-            const result = await getRedirectResult(auth);
-            if (result && result.user) {
-                console.log('Redirect signup successful:', result.user.email);
-                showToast('Account created successfully!', 'success');
-                window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=published' }));
-                return;
-            }
-        } catch (error) {
-            console.error('Redirect result error:', error);
-        }
-
         // Fetch the signup HTML page content
         const response = await fetch('/pages/signup.html');
         if (!response.ok) throw new Error('Could not load signup page content');
@@ -39,48 +21,12 @@ export async function loadSignupPage(appRoot) {
                     googleSignupBtn.disabled = true;
                     googleSignupBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in with Google...';
 
-                    const provider = new GoogleAuthProvider();
-                    provider.setCustomParameters({
-                        prompt: 'select_account'
-                    });
-
-                    // Use redirect method on mobile devices (more reliable)
-                    if (isMobile) {
-                        console.log('Mobile detected, using redirect method');
-                        await signInWithRedirect(auth, provider);
-                        // User will be redirected away, then back to this page
-                        // The redirect result will be handled at the top of loadSignupPage
-                        return;
-                    }
-
-                    // Use popup method on desktop
-                    console.log('Desktop detected, using popup method');
-                    const result = await signInWithPopup(auth, provider);
-                    console.log('Google signup successful:', result.user.email);
-
-                    showToast('Account created successfully!', 'success');
-                    window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=published' }));
+                    await signInWithGoogle();
+                    // Supabase will redirect to OAuth provider, then back to our site
+                    // The auth state change will be handled by the listener in app.js
                 } catch (error) {
                     console.error('Google signup error:', error);
-                    console.error("Error code:", error.code);
-                    console.error("Error message:", error.message);
-                    console.error("Full error:", JSON.stringify(error, null, 2));
-
-                    let errorMessage = 'Failed to sign up with Google. ';
-
-                    if (error.code === 'auth/unauthorized-domain') {
-                        errorMessage += 'This domain is not authorized. Please contact support.';
-                    } else if (error.code === 'auth/popup-blocked') {
-                        errorMessage += 'Popup was blocked. Please allow popups for this site.';
-                    } else if (error.code === 'auth/popup-closed-by-user') {
-                        errorMessage += 'Sign-up was cancelled.';
-                    } else if (error.code === 'auth/cancelled-popup-request') {
-                        errorMessage += 'Another sign-up popup is already open.';
-                    } else {
-                        errorMessage += error.message || 'Unknown error occurred';
-                    }
-
-                    showToast(errorMessage, 'error');
+                    showToast('Failed to sign up with Google. ' + (error.message || 'Unknown error occurred'), 'error');
                     googleSignupBtn.disabled = false;
                     googleSignupBtn.innerHTML = '<i class="fab fa-google me-2"></i>Continue with Google';
                 }

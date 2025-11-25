@@ -5,16 +5,18 @@
   "description": "Headstone Memorial Project",
   "scripts": {
     "build": "node build.js",
-    "dev": "node build.js && firebase emulators:start --only hosting",
-    "serve": "firebase emulators:start",
-    "deploy": "npm run build && firebase deploy",
+    "dev": "node build.js && npx serve dist",
     "vercel-build": "npm run build"
   },
   "engines": {
     "node": "20"
   },
   "dependencies": {
-    "dotenv": "^17.2.1"
+    "@google-cloud/vision": "^4.0.0",
+    "@mapbox/mapbox-sdk": "^0.16.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "dotenv": "^17.2.1",
+    "square": "^37.0.0"
   },
   "devDependencies": {},
   "private": true

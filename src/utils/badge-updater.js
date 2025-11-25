@@ -1,25 +1,24 @@
-import { db } from '/js/firebase-config.js';
-import { collection, query, where, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { supabase } from '/js/supabase-client.js';
 
 /**
  * Updates notification badges in both mobile menu and desktop dropdown
  * Shows counts for drafts and pending tributes
- * @param {Object} user - Firebase user object
+ * @param {Object} user - Supabase user object
  */
 export async function updateMenuBadges(user) {
-    if (!user || user.isAnonymous) {
+    if (!user) {
         return;
     }
 
     try {
         // Get count of drafts
-        const draftsQuery = query(
-            collection(db, 'memorials'),
-            where('curatorIds', 'array-contains', user.uid),
-            where('status', '==', 'draft')
-        );
-        const draftsSnapshot = await getCountFromServer(draftsQuery);
-        const draftCount = draftsSnapshot.data().count;
+        const { count: draftCount, error: draftError } = await supabase
+            .from('memorials')
+            .select('*', { count: 'exact', head: true })
+            .contains('curator_ids', [user.id])
+            .eq('status', 'draft');
+
+        if (draftError) throw draftError;
 
         // Update mobile menu draft badge
         const mobileDraftBadge = document.getElementById('mobile-draft-badge');
@@ -44,22 +43,25 @@ export async function updateMenuBadges(user) {
         }
 
         // Get count of pending tributes across all memorials
-        const memorialsQuery = query(
-            collection(db, 'memorials'),
-            where('curatorIds', 'array-contains', user.uid)
-        );
-        const memorialsSnapshot = await getDocs(memorialsQuery);
-        const memorialIds = memorialsSnapshot.docs.map(doc => doc.id);
+        const { data: memorials, error: memorialsError } = await supabase
+            .from('memorials')
+            .select('id')
+            .contains('curator_ids', [user.id]);
+
+        if (memorialsError) throw memorialsError;
+
+        const memorialIds = memorials.map(m => m.id);
 
         let totalTributes = 0;
         if (memorialIds.length > 0) {
-            const tributeQueries = memorialIds.map(id => {
-                const tributesRef = collection(db, `memorials/${id}/tributes`);
-                return getCountFromServer(query(tributesRef, where('status', '==', 'pending')));
-            });
+            const { count, error: tributeError } = await supabase
+                .from('tributes')
+                .select('*', { count: 'exact', head: true })
+                .in('memorial_id', memorialIds)
+                .eq('status', 'pending');
 
-            const tributeCounts = await Promise.all(tributeQueries);
-            totalTributes = tributeCounts.reduce((sum, snapshot) => sum + snapshot.data().count, 0);
+            if (tributeError) throw tributeError;
+            totalTributes = count || 0;
         }
 
         // Update mobile menu tribute badge

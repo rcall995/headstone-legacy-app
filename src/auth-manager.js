@@ -1,20 +1,16 @@
-// /js/auth-manager.js
+// /js/auth-manager.js - Supabase Auth
 
-import {
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    updateProfile,
-    setPersistence,
-    browserLocalPersistence
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { auth, db } from '/js/firebase-config.js';
+import { supabase } from '/js/supabase-client.js';
 import { showToast } from '/js/utils/toasts.js';
 
 export async function signIn(email, password) {
     try {
-        await setPersistence(auth, browserLocalPersistence);
-        await signInWithEmailAndPassword(auth, email, password);
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error("Sign-in error:", error);
@@ -25,20 +21,81 @@ export async function signIn(email, password) {
 
 export async function signUp(name, email, password) {
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        await updateProfile(user, { displayName: name });
-        await setDoc(doc(db, "users", user.uid), {
-            name,
+        const { data, error } = await supabase.auth.signUp({
             email,
-            createdAt: serverTimestamp(),
-            isScout: false,
-            isAdmin: false
+            password,
+            options: {
+                data: {
+                    name: name,
+                    display_name: name
+                }
+            }
         });
+
+        if (error) throw error;
+
+        // Create profile in profiles table
+        if (data.user) {
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({
+                    id: data.user.id,
+                    email: email,
+                    name: name,
+                    is_scout: false,
+                    is_admin: false
+                });
+
+            if (profileError) {
+                console.error("Profile creation error:", profileError);
+                // Don't fail signup if profile creation fails - it can be created later
+            }
+        }
+
         return true;
     } catch (error) {
         console.error("Sign-up error:", error);
         showToast(`Could not create account: ${error.message}`, 'error');
         return false;
     }
+}
+
+export async function signOut() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        console.error("Sign-out error:", error);
+        showToast("Failed to sign out.", 'error');
+        return false;
+    }
+}
+
+export async function signInWithGoogle() {
+    try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/memorial-list?status=published'
+            }
+        });
+
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        console.error("Google sign-in error:", error);
+        showToast("Failed to sign in with Google.", 'error');
+        return false;
+    }
+}
+
+export async function getCurrentUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
+}
+
+export async function getSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
 }

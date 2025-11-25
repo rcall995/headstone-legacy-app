@@ -1,16 +1,9 @@
-import { auth, functions } from '/js/firebase-config.js';
-import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { db } from '/js/firebase-config.js';
+import { supabase } from '/js/supabase-client.js';
 import { showToast } from '/js/utils/toasts.js';
-
-// The cloud function to call for creating a Square payment link.
-const createSquarePaymentLink = httpsCallable(functions, 'createSquarePaymentLink');
 
 async function handleCheckout(memorialId, memorialName) {
     const checkoutButton = document.getElementById('checkout-button');
 
-    // Add null check before accessing button properties
     if (!checkoutButton) {
         console.error('Checkout button not found');
         showToast('Error: Button not found', 'error');
@@ -21,12 +14,31 @@ async function handleCheckout(memorialId, memorialName) {
     checkoutButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Redirecting to Checkout...`;
 
     try {
-        const result = await createSquarePaymentLink({ memorialId, memorialName });
-        const paymentUrl = result.data.url;
+        // Get session for API call
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            throw new Error('You must be signed in to checkout');
+        }
 
-        if (paymentUrl) {
+        const response = await fetch('/api/payments/create-square-link', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ memorialId, memorialName })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Payment link creation failed');
+        }
+
+        const { url } = await response.json();
+
+        if (url) {
             // Redirect the user to the Square Checkout page.
-            window.location.href = paymentUrl;
+            window.location.href = url;
         } else {
             throw new Error("Payment URL was not returned from the server.");
         }
@@ -45,11 +57,13 @@ export async function loadOrderTagPage(appRoot, memorialId) {
         if (!response.ok) throw new Error('HTML content not found');
         appRoot.innerHTML = await response.text();
 
-        if (!auth.currentUser || auth.currentUser.isAnonymous) {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
             showToast('You must be signed in to order a tag.', 'error');
             appRoot.innerHTML = `<div class="container py-5 text-center">
                 <h2>Authentication Required</h2>
-                <p>Please <a href="/curator-panel">sign in</a> to order a physical tag for your memorial.</p>
+                <p>Please <a href="/login">sign in</a> to order a physical tag for your memorial.</p>
             </div>`;
             return;
         }
@@ -59,24 +73,26 @@ export async function loadOrderTagPage(appRoot, memorialId) {
             return;
         }
 
-        const memorialRef = doc(db, 'memorials', memorialId);
-        const memorialSnap = await getDoc(memorialRef);
+        const { data: memorial, error } = await supabase
+            .from('memorials')
+            .select('name')
+            .eq('id', memorialId)
+            .single();
 
-        if (!memorialSnap.exists()) {
+        if (error || !memorial) {
             appRoot.innerHTML = `<p class="text-danger text-center">Memorial not found.</p>`;
             return;
         }
 
-        const memorialData = memorialSnap.data();
         const orderMemorialNameEl = document.getElementById('order-memorial-name');
         if(orderMemorialNameEl) {
-            orderMemorialNameEl.textContent = `For: ${memorialData.name}`;
+            orderMemorialNameEl.textContent = `For: ${memorial.name}`;
         }
-        
+
         const checkoutButton = document.getElementById('checkout-button');
         if(checkoutButton) {
             checkoutButton.addEventListener('click', () => {
-                handleCheckout(memorialId, memorialData.name);
+                handleCheckout(memorialId, memorial.name);
             });
         }
 

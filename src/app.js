@@ -1,6 +1,6 @@
-// /js/app.js
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { auth } from '/js/firebase-config.js';
+// /js/app.js - Supabase Auth
+import { supabase } from '/js/supabase-client.js';
+import { signOut } from '/js/auth-manager.js';
 import { showToast } from '/js/utils/toasts.js';
 import { updateMenuBadges } from '/js/utils/badge-updater.js';
 
@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentUnloadListener = null;
   let currentPageCleanup = null;
   let authInitialized = false;
+  let currentUser = null;
 
   const menuToggleBtn    = document.getElementById('mobile-menu-trigger');
   const cardMenuCloseBtn = document.getElementById('card-menu-close-btn');
@@ -64,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <p class="mt-3 text-muted">Loading application...</p>
         </div>
       `;
-      return; // Wait for onAuthStateChanged to call router again
+      return; // Wait for onAuthStateChange to call router again
     }
 
     // Call previous page cleanup if it exists
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (path === '/scout-mode') {
         setPageTitle('Scout Mode');
         const { loadScoutModePage } = await import('./pages/scout-mode.js');
-        currentPageCleanup = await loadScoutModePage(appRoot, auth.currentUser);
+        currentPageCleanup = await loadScoutModePage(appRoot, currentUser);
       } else if (path === '/curator-panel') {
         // Redirect to memorial list instead of showing dashboard
         handleNavigation('/memorial-list?status=published');
@@ -146,6 +147,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setPageTitle('Family Tree');
         const { loadFamilyTreePage } = await import('./pages/family-tree.js');
         await loadFamilyTreePage(appRoot, urlParams.get('id'));
+      } else if (path === '/admin') {
+        setPageTitle('Admin Dashboard');
+        const { loadAdminPage } = await import('./pages/admin.js');
+        await loadAdminPage(appRoot);
       } else if (path === '/tributes-list') {
         // TODO: Create dedicated tributes management page
         // For now, redirect to memorials where tributes can be managed
@@ -266,8 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
     el?.classList.remove('spotlight-active');
   });
 
-  onAuthStateChanged(auth, async (user) => {
-    const isLoggedIn = !!(user && !user.isAnonymous);
+  // Supabase Auth State Listener
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    const user = session?.user || null;
+    currentUser = user;
+    const isLoggedIn = !!user;
 
     // Toggle desktop navigation (marketing vs curator)
     document.getElementById('marketing-nav-desktop')?.classList.toggle('d-none', isLoggedIn);
@@ -302,14 +310,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sign out handlers
   document.getElementById('signOutLink-desktop')?.addEventListener('click', async (e) => {
     e.preventDefault();
-    await signOut(auth);
+    await signOut();
     showToast('Signed out successfully.', 'success');
     handleNavigation('/login');
   });
 
   document.getElementById('signOutLink-menu')?.addEventListener('click', async (e) => {
     e.preventDefault();
-    await signOut(auth);
+    await signOut();
     showToast('Signed out successfully.', 'success');
     closeCardMenu();
     handleNavigation('/login');

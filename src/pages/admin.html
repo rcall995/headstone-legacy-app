@@ -1,0 +1,321 @@
+<!-- Admin Dashboard -->
+<div class="admin-page py-4">
+    <div class="container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">Admin Dashboard</h1>
+                <p class="text-muted mb-0">Manage your memorial platform</p>
+            </div>
+            <a href="/memorial-list?status=published" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Site
+            </a>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-subtitle mb-1 opacity-75">Total Memorials</h6>
+                                <h2 class="card-title mb-0" id="stat-memorials">-</h2>
+                            </div>
+                            <i class="fas fa-monument fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-subtitle mb-1 opacity-75">Published</h6>
+                                <h2 class="card-title mb-0" id="stat-published">-</h2>
+                            </div>
+                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-warning text-dark h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-subtitle mb-1 opacity-75">Candles Lit</h6>
+                                <h2 class="card-title mb-0" id="stat-candles">-</h2>
+                            </div>
+                            <i class="fas fa-fire fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-subtitle mb-1 opacity-75">Tributes</h6>
+                                <h2 class="card-title mb-0" id="stat-tributes">-</h2>
+                            </div>
+                            <i class="fas fa-heart fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes-panel" type="button" role="tab">
+                    <i class="fas fa-sticky-note me-2"></i>Project Notes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="roadmap-tab" data-bs-toggle="tab" data-bs-target="#roadmap-panel" type="button" role="tab">
+                    <i class="fas fa-road me-2"></i>Roadmap
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="memorials-tab" data-bs-toggle="tab" data-bs-target="#memorials-panel" type="button" role="tab">
+                    <i class="fas fa-list me-2"></i>Recent Memorials
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="adminTabContent">
+            <!-- Project Notes Panel -->
+            <div class="tab-pane fade show active" id="notes-panel" role="tabpanel">
+                <!-- Add Note Form -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Add New Note</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="add-note-form">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="note-title" required placeholder="Note title...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Category</label>
+                                    <select class="form-select" id="note-category">
+                                        <option value="general">General</option>
+                                        <option value="feature">Feature Idea</option>
+                                        <option value="bug">Bug</option>
+                                        <option value="idea">Idea</option>
+                                        <option value="decision">Decision</option>
+                                        <option value="meeting">Meeting Notes</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Tags (comma separated)</label>
+                                    <input type="text" class="form-control" id="note-tags" placeholder="tag1, tag2">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Content</label>
+                                    <textarea class="form-control" id="note-content" rows="3" required placeholder="Write your note..."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="note-pinned">
+                                        <label class="form-check-label" for="note-pinned">Pin this note</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save Note
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Notes List -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Notes</h5>
+                        <select class="form-select form-select-sm w-auto" id="notes-filter">
+                            <option value="all">All Categories</option>
+                            <option value="feature">Features</option>
+                            <option value="bug">Bugs</option>
+                            <option value="idea">Ideas</option>
+                            <option value="decision">Decisions</option>
+                            <option value="meeting">Meetings</option>
+                        </select>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="notes-list" class="list-group list-group-flush">
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Loading notes...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Roadmap Panel -->
+            <div class="tab-pane fade" id="roadmap-panel" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Feature Roadmap</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Phase 1 -->
+                        <h6 class="text-primary mb-3"><i class="fas fa-flag me-2"></i>Phase 1: Engagement Features</h6>
+                        <div class="mb-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-candles">
+                                <label class="form-check-label" for="feature-candles">
+                                    <strong>Virtual Candle Lighting</strong> - Let visitors light candles on memorials
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-reminders">
+                                <label class="form-check-label" for="feature-reminders">
+                                    <strong>Anniversary Reminders</strong> - Email family on important dates
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-tributes">
+                                <label class="form-check-label" for="feature-tributes">
+                                    <strong>Enhanced Tributes</strong> - Photos, moderation, notifications
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Phase 2 -->
+                        <h6 class="text-success mb-3"><i class="fas fa-flag me-2"></i>Phase 2: Rich Media</h6>
+                        <div class="mb-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-voice">
+                                <label class="form-check-label" for="feature-voice">
+                                    <strong>Voice Recordings</strong> - Upload audio memories
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-video">
+                                <label class="form-check-label" for="feature-video">
+                                    <strong>Video Tributes</strong> - Upload and embed videos
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-timeline">
+                                <label class="form-check-label" for="feature-timeline">
+                                    <strong>Life Timeline</strong> - Visual timeline of milestones
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Phase 3 -->
+                        <h6 class="text-warning mb-3"><i class="fas fa-flag me-2"></i>Phase 3: AI Features</h6>
+                        <div class="mb-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-ai-bio">
+                                <label class="form-check-label" for="feature-ai-bio">
+                                    <strong>AI Biography Generator</strong> - Auto-write from prompts
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-photo-restore">
+                                <label class="form-check-label" for="feature-photo-restore">
+                                    <strong>Photo Restoration</strong> - AI-powered old photo enhancement
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Phase 4 -->
+                        <h6 class="text-danger mb-3"><i class="fas fa-flag me-2"></i>Phase 4: Monetization</h6>
+                        <div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-subscriptions">
+                                <label class="form-check-label" for="feature-subscriptions">
+                                    <strong>Subscription Tiers</strong> - Free/Premium/Legacy plans
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-funeral-dash">
+                                <label class="form-check-label" for="feature-funeral-dash">
+                                    <strong>Funeral Home Dashboard</strong> - B2B white-label portal
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-memorial-book">
+                                <label class="form-check-label" for="feature-memorial-book">
+                                    <strong>Printable Memorial Book</strong> - PDF generation + print orders
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Memorials Panel -->
+            <div class="tab-pane fade" id="memorials-panel" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-monument me-2"></i>Recent Memorials</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Status</th>
+                                        <th>Candles</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="memorials-table-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-page .card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.admin-page .nav-tabs .nav-link {
+    border: none;
+    color: #666;
+    padding: 0.75rem 1.25rem;
+}
+.admin-page .nav-tabs .nav-link.active {
+    color: #0d6efd;
+    border-bottom: 2px solid #0d6efd;
+    background: transparent;
+}
+.admin-page .list-group-item {
+    border-left: none;
+    border-right: none;
+}
+.admin-page .badge-category {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+.note-pinned {
+    background-color: #fffbeb !important;
+    border-left: 3px solid #f59e0b !important;
+}
+</style>

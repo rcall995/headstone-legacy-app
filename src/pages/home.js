@@ -1,9 +1,5 @@
-// /js/pages/home.js
-import { db } from '/js/firebase-config.js';
-import {
-  collection, doc, getDoc, getDocs, query, where
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+// /js/pages/home.js - Supabase version
+import { supabase } from '/js/supabase-client.js';
 import { config } from '/js/config.js';
 import { showToast } from '/js/utils/toasts.js';
 
@@ -20,17 +16,20 @@ async function loadFeaturedMemorials() {
   ];
 
   try {
-    getAuth(); // ensures auth SDK is loaded (not directly used here)
-    const snaps = await Promise.all(featuredIds.map(id => getDoc(doc(db, "memorials", id))));
-    const memorials = snaps.map(s => (s.exists() ? { id: s.id, ...s.data() } : null)).filter(Boolean);
+    const { data: memorials, error } = await supabase
+      .from('memorials')
+      .select('id, name, main_photo')
+      .in('id', featuredIds);
 
-    if (memorials.length === 0) {
+    if (error) throw error;
+
+    if (!memorials || memorials.length === 0) {
       container.innerHTML = '<p class="text-muted text-center w-100">No featured memorials found.</p>';
       return;
     }
 
     const cards = memorials.map(m => {
-      const photoUrl = m.mainPhoto || '/images/placeholder.png';
+      const photoUrl = m.main_photo || '/images/placeholder.png';
       return (
         '<div class="col-6 col-md-4 col-lg-3">' +
           `<a href="/memorial?id=${m.id}" class="card text-decoration-none text-dark shadow-sm recent-memorial-card">` +
@@ -47,12 +46,7 @@ async function loadFeaturedMemorials() {
     container.innerHTML = cards;
   } catch (error) {
     console.error("Error loading featured memorials:", error);
-    if (error && error.code === 'permission-denied') {
-      container.innerHTML = '<p class="text-danger text-center w-100">Insufficient permissions. Please sign in.</p>';
-      showToast('Sign in for full access.', 'info');
-    } else {
-      container.innerHTML = '<p class="text-danger text-center w-100">Could not load featured memorials.</p>';
-    }
+    container.innerHTML = '<p class="text-danger text-center w-100">Could not load featured memorials.</p>';
   }
 }
 
@@ -75,7 +69,6 @@ async function fitToPinsOrGeolocate() {
 
   const feats = featureCollection.features;
   if (feats.length === 0) {
-    // No pins → attempt browser geolocation
     if (!navigator.geolocation) {
       showToast('No memorial pins yet and geolocation is unavailable.', 'info');
       return;
@@ -105,7 +98,6 @@ async function fitToPinsOrGeolocate() {
   if (b) map.fitBounds(b, { padding: 80, maxZoom: 12, duration: 1000 });
 }
 
-/* Custom crosshair on TOP-LEFT that refits the view */
 class FitToPinsControl {
   onAdd(m) {
     this._map = m;
@@ -135,7 +127,6 @@ class FitToPinsControl {
 }
 
 async function initializeHomepageMap() {
-  // Resolve container safely (no comma list in selector)
   let mapContainer = document.getElementById('homepage-map-container');
   if (!mapContainer) {
     mapContainer = document.getElementById('homepage-map');
@@ -146,7 +137,6 @@ async function initializeHomepageMap() {
   }
 
   try {
-    // Check if Mapbox GL is loaded
     if (typeof mapboxgl === 'undefined') {
       console.error('Mapbox GL library is not loaded');
       mapContainer.innerHTML = '<div class="alert alert-warning">Map library failed to load. Please refresh the page.</div>';
@@ -165,37 +155,31 @@ async function initializeHomepageMap() {
       zoom: 3.5
     });
 
-    // Keep only +/− on top-right
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    // Our only crosshair on top-left
     map.addControl(new FitToPinsControl(), 'top-left');
 
     map.on('load', async function() {
-      const memorialsRef = collection(db, "memorials");
-      const statuses = ['approved', 'published'];
-      const dedup = new Map();
+      // Fetch published/approved memorials with location data
+      const { data: memorials, error } = await supabase
+        .from('memorials')
+        .select('id, name, location_lat, location_lng, cemetery_lat, cemetery_lng')
+        .in('status', ['approved', 'published']);
 
-      for (let i = 0; i < statuses.length; i++) {
-        const status = statuses[i];
-        try {
-          const snap = await getDocs(query(memorialsRef, where('status', '==', status)));
-          snap.forEach(function(d) {
-            dedup.set(d.id, { id: d.id, ...d.data() });
-          });
-        } catch (err) {
-          console.error('[home] Query failed for status=' + status + ':', err);
-        }
+      if (error) {
+        console.error('[home] Query failed:', error);
+        return;
       }
 
       const features = [];
       let total = 0;
       let withLoc = 0;
 
-      dedup.forEach(function(m) {
+      memorials.forEach(function(m) {
         total++;
-        const loc = m && m.location;
-        const lat = loc && typeof loc.latitude === 'number' ? loc.latitude : null;
-        const lng = loc && typeof loc.longitude === 'number' ? loc.longitude : null;
+        // Use location_lat/lng or cemetery_lat/lng
+        const lat = m.location_lat || m.cemetery_lat;
+        const lng = m.location_lng || m.cemetery_lng;
+
         if (lat !== null && lng !== null) {
           withLoc++;
           const coords = [lng, lat];
@@ -228,7 +212,6 @@ async function initializeHomepageMap() {
         });
       }
 
-      // Popups (use normal strings to avoid stray back-ticks)
       map.on('click', 'memorial-points', function(e) {
         const f = e && e.features && e.features[0];
         if (!f) return;
@@ -249,7 +232,6 @@ async function initializeHomepageMap() {
       map.on('mouseenter', 'memorial-points', function() { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', 'memorial-points', function() { map.getCanvas().style.cursor = ''; });
 
-      // Initial fit
       fitToPinsOrGeolocate();
 
       setTimeout(function() { map.resize(); }, 150);
@@ -259,9 +241,7 @@ async function initializeHomepageMap() {
   }
 }
 
-/* ------------------- Cleanup function ------------------- */
 function cleanupHomePage() {
-  // Clean up map instance to prevent memory leak
   if (map) {
     try {
       map.remove();
@@ -272,9 +252,7 @@ function cleanupHomePage() {
   }
 }
 
-/* ------------------- Public entry ------------------- */
 export async function loadHomePage(appRoot) {
-  // Clean up any existing map instance first
   cleanupHomePage();
 
   try {
@@ -282,7 +260,6 @@ export async function loadHomePage(appRoot) {
     if (!response.ok) throw new Error('Could not load home.html');
     appRoot.innerHTML = await response.text();
 
-    // Removed featured memorials section - focusing on QR tag value proposition instead
     await initializeHomepageMap();
   } catch (error) {
     console.error('Failed to load home page:', error);

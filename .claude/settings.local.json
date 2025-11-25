@@ -13,7 +13,19 @@
       "Bash(git push:*)",
       "Bash(git remote set-url:*)",
       "Bash(git config:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(nul)",
+      "Bash(NUL)",
+      "Bash(del nul 2)",
+      "WebSearch",
+      "Bash(firebase projects:list:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(firebase hosting:sites:list:*)",
+      "Bash(firebase hosting:channel:deploy:*)",
+      "Bash(vercel --version:*)",
+      "Bash(vercel:*)",
+      "Bash(del \"C:\\Users\\rich\\headstone-project-New-Start-11-17\\src\\firebase-config.js\")",
+      "Bash(del \"C:\\Users\\rich\\headstone-project-New-Start-11-17\\dist\\js\\firebase-config.js\" 2)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,4 @@
-import { db } from '/js/firebase-config.js';
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { supabase } from '/js/supabase-client.js';
 
 export async function loadWelcomePage(appRoot, memorialId) {
     try {
@@ -15,7 +14,6 @@ export async function loadWelcomePage(appRoot, memorialId) {
         const viewMemorialLink = appRoot.querySelector('#view-memorial-link');
         const memorialNameSpan = appRoot.querySelector('#welcome-memorial-name');
 
-        // Check if elements exist before accessing properties
         if (!viewMemorialLink || !memorialNameSpan) {
             console.error('Required elements not found in welcome.html');
             appRoot.innerHTML = `<p class="text-center text-danger">Error: Page elements missing.</p>`;
@@ -24,11 +22,14 @@ export async function loadWelcomePage(appRoot, memorialId) {
 
         viewMemorialLink.href = `/memorial?id=${memorialId}`;
 
-        const docRef = doc(db, "memorials", memorialId);
-        const docSnap = await getDoc(docRef);
+        const { data: memorial, error } = await supabase
+            .from('memorials')
+            .select('name')
+            .eq('id', memorialId)
+            .single();
 
-        if (docSnap.exists()) {
-            memorialNameSpan.textContent = docSnap.data().name;
+        if (memorial) {
+            memorialNameSpan.textContent = memorial.name;
         } else {
             memorialNameSpan.textContent = "a loved one";
         }

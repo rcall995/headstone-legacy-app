@@ -1,7 +1,5 @@
-// /js/pages/scout-mode.js
-import { db, auth, storage } from '/js/firebase-config.js';
-import { collection, addDoc, serverTimestamp, GeoPoint } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+// /js/pages/scout-mode.js - Supabase version
+import { supabase } from '/js/supabase-client.js';
 import { config } from '/js/config.js';
 import { showToast } from '/js/utils/toasts.js';
 
@@ -10,11 +8,10 @@ let addPinModalInstance = null;
 let currentPinCoords = null;
 let currentPhotoFiles = [];
 let pinnedRelatives = [];
-let resizeListener = null; // Track resize listener for cleanup
+let resizeListener = null;
 
-const DEFAULT_CENTER = [-98.5, 39.8]; // fallback center (USA)
+const DEFAULT_CENTER = [-98.5, 39.8];
 
-/* ---------------- styles for full-screen map + HUD ---------------- */
 function ensureScoutStyles() {
   if (document.getElementById('scout-style-tag')) return;
   const css = `
@@ -59,34 +56,26 @@ function ensureScoutStyles() {
   document.head.appendChild(style);
 }
 
-/* ---------------- cleanup ---------------- */
 function cleanupScoutMode() {
-  // Remove resize listener to prevent memory leak
   if (resizeListener) {
     window.removeEventListener('resize', resizeListener);
     resizeListener = null;
   }
 
-  // Remove mapbox map instance
   try { scoutMap?.remove(); } catch {}
   scoutMap = null;
 
-  // Remove HUD + CTA
   document.getElementById('scout-hud')?.remove();
   document.querySelector('.scout-cta')?.remove();
 
-  // If we created #scout-map, remove it
   const createdMap = document.getElementById('scout-map');
   createdMap?.parentElement?.removeChild(createdMap);
 
-  // If page had an existing #map, drop full-screen class
   const existingMap = document.getElementById('map');
   existingMap?.classList.remove('scout-active');
 
-  // Remove scout-active class from body
   document.body.classList.remove('scout-active');
 
-  // Modal + state
   addPinModalInstance?.hide?.();
   addPinModalInstance = null;
   currentPinCoords = null;
@@ -94,7 +83,6 @@ function cleanupScoutMode() {
   pinnedRelatives = [];
 }
 
-/* ---------------- map helpers ---------------- */
 function getOrCreateMapEl() {
   let el = document.getElementById('map') || document.getElementById('scout-map');
   if (!el) {
@@ -104,6 +92,7 @@ function getOrCreateMapEl() {
   }
   return el;
 }
+
 function activateMapFullScreen() {
   const el = document.getElementById('map') || document.getElementById('scout-map');
   el?.classList.add('scout-active');
@@ -112,7 +101,6 @@ function activateMapFullScreen() {
 function initScoutMap(center) {
   if (scoutMap) return;
 
-  // Check if Mapbox GL is loaded
   if (typeof mapboxgl === 'undefined') {
     console.error('Mapbox GL library is not loaded');
     showToast('Map library failed to load. Please refresh the page.', 'error');
@@ -130,9 +118,7 @@ function initScoutMap(center) {
       interactive: true
     });
 
-    // Controls
     scoutMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    // Crosshair / recenter control
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true,
@@ -142,7 +128,6 @@ function initScoutMap(center) {
 
     scoutMap.on('load', () => setTimeout(() => scoutMap?.resize(), 0));
 
-    // Store resize listener reference for cleanup
     resizeListener = () => scoutMap?.resize();
     window.addEventListener('resize', resizeListener);
 
@@ -153,7 +138,6 @@ function initScoutMap(center) {
   }
 }
 
-/* ---------------- Center Pin HUD (used by both modes) ---------------- */
 function showCenterPinHUD() {
   if (!document.getElementById('scout-hud')) {
     const hud = document.createElement('div');
@@ -164,12 +148,9 @@ function showCenterPinHUD() {
   }
 }
 
-/* ---------------- Single-pin HUD + Confirm CTA ---------------- */
 function showSinglePinHUDAndCTA() {
-  // Show center pin HUD
   showCenterPinHUD();
 
-  // Confirm CTA (always visible)
   let ctaBtn = document.getElementById('scout-confirm-fallback');
   if (!ctaBtn) {
     const wrap = document.createElement('div');
@@ -185,19 +166,17 @@ function showSinglePinHUDAndCTA() {
     if (!scoutMap) return showToast('Map not ready yet.', 'error');
     const c = scoutMap.getCenter();
     const path = `/memorial-form?new=true&lat=${c.lat}&lng=${c.lng}`;
-    cleanupScoutMode(); // ensure no overlay blocks the form
+    cleanupScoutMode();
     window.dispatchEvent(new CustomEvent('navigate', { detail: path }));
   };
 }
 
-/* ---------------- Multi-pin helpers ---------------- */
 function renderPinnedRelatives() {
   const listEl = document.getElementById('pinned-relatives-list');
   if (!listEl) return;
   if (pinnedRelatives.length === 0) {
     listEl.innerHTML = '<p class="text-muted small">No relatives pinned yet.</p>';
   } else {
-    // Helper function to escape HTML and prevent XSS
     const escapeHtml = (text) => {
       const div = document.createElement('div');
       div.textContent = text;
@@ -220,7 +199,7 @@ function renderPinnedRelatives() {
 }
 
 async function saveAllPins() {
-  const user = auth.currentUser;
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return showToast('You must be signed in to save pins.', 'error');
   if (!pinnedRelatives.length) return;
 
@@ -228,25 +207,29 @@ async function saveAllPins() {
   if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Saving...`; }
 
   try {
-    await Promise.all(pinnedRelatives.map(pin => {
-      const data = {
-        name: pin.name,
-        name_lowercase: pin.name.toLowerCase(),
-        location: new GeoPoint(pin.coords.lat, pin.coords.lng),
-        isLocationExact: true,
-        status: 'draft',
-        tier: 'memorial',
-        curatorIds: [user.uid],
-        curators: [{ uid: user.uid, email: user.email }],
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        mainPhoto: pin.photoUrl || null
-      };
-      return addDoc(collection(db, 'memorials'), data);
+    const memorialsToInsert = pinnedRelatives.map(pin => ({
+      id: `scout-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      name: pin.name,
+      name_lowercase: pin.name.toLowerCase(),
+      location_lat: pin.coords.lat,
+      location_lng: pin.coords.lng,
+      is_location_exact: true,
+      status: 'draft',
+      tier: 'memorial',
+      curator_ids: [user.id],
+      curators: [{ uid: user.id, email: user.email }],
+      main_photo: pin.photoUrl || null
     }));
+
+    const { error } = await supabase
+      .from('memorials')
+      .insert(memorialsToInsert);
+
+    if (error) throw error;
+
     showToast(`${pinnedRelatives.length} pinned memorial(s) saved as drafts.`, 'success');
     cleanupScoutMode();
-    window.dispatchEvent(new CustomEvent('navigate', { detail: '/curator-panel' }));
+    window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=draft' }));
   } catch (e) {
     console.error('[scout-mode] save pins failed:', e);
     showToast('An error occurred while saving the pins.', 'error');
@@ -254,7 +237,6 @@ async function saveAllPins() {
   }
 }
 
-/* ---------------- Page entry ---------------- */
 export async function loadScoutModePage(appRoot) {
   cleanupScoutMode();
   ensureScoutStyles();
@@ -264,21 +246,18 @@ export async function loadScoutModePage(appRoot) {
     if (!resp.ok) throw new Error('Could not load scout-mode.html');
     appRoot.innerHTML = await resp.text();
 
-    // Make helper text readable on dark
     document.querySelectorAll('#step-1 p, #step-2 p, #scout-choice-screen p').forEach(p => {
       p.classList.remove('text-muted');
       p.classList.add('text-light');
       p.style.opacity = '0.9';
     });
 
-    // Back button in header (if present)
     document.getElementById('back-to-dashboard-btn')?.addEventListener('click', (e) => {
       e.preventDefault();
       cleanupScoutMode();
-      window.dispatchEvent(new CustomEvent('navigate', { detail: '/curator-panel' }));
+      window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=published' }));
     });
 
-    // Modal (multi-pin)
     const addPinModalEl = document.getElementById('addPinModal');
     if (addPinModalEl && window.bootstrap?.Modal) {
       addPinModalInstance = new bootstrap.Modal(addPinModalEl);
@@ -294,7 +273,6 @@ export async function loadScoutModePage(appRoot) {
         if (mode === 'single') {
           showSinglePinHUDAndCTA();
         } else {
-          // Multi-pin mode: show center pin HUD + UI controls
           showCenterPinHUD();
           document.getElementById('multi-pin-ui')?.classList.remove('d-none');
           renderPinnedRelatives();
@@ -312,14 +290,11 @@ export async function loadScoutModePage(appRoot) {
       }
     };
 
-    // Choice buttons
     document.getElementById('single-pin-btn')?.addEventListener('click', () => start('single'));
     document.getElementById('multi-pin-btn')?.addEventListener('click', () => start('multi'));
-    // Optional alternate ids (if present)
     document.getElementById('single-pin-mode-btn')?.addEventListener('click', () => start('single'));
     document.getElementById('multi-pin-mode-btn')?.addEventListener('click', () => start('multi'));
 
-    // Confirm button that may exist inside the wizard template
     document.getElementById('confirm-location-btn')?.addEventListener('click', () => {
       if (!scoutMap) return showToast('Map not ready yet.', 'error');
       const c = scoutMap.getCenter();
@@ -327,7 +302,6 @@ export async function loadScoutModePage(appRoot) {
       window.dispatchEvent(new CustomEvent('navigate', { detail: `/memorial-form?new=true&lat=${c.lat}&lng=${c.lng}` }));
     });
 
-    // Multi-pin flow
     document.getElementById('add-pin-btn')?.addEventListener('click', () => {
       if (!scoutMap) return showToast('Map not ready yet.', 'error');
       currentPinCoords = scoutMap.getCenter();
@@ -359,12 +333,21 @@ export async function loadScoutModePage(appRoot) {
       let photoUrl = null;
       if (currentPhotoFiles.length) {
         try {
-          const user = auth.currentUser;
+          const { data: { user } } = await supabase.auth.getUser();
           const f = currentPhotoFiles[0];
-          const p = `scouted-photos/${user?.uid || 'anonymous'}/${Date.now()}-${f.name}`;
-          const sref = ref(storage, p);
-          const snap = await uploadBytes(sref, f);
-          photoUrl = await getDownloadURL(snap.ref);
+          const filePath = `${user?.id || 'anonymous'}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('scouted-photos')
+            .upload(filePath, f);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('scouted-photos')
+            .getPublicUrl(filePath);
+
+          photoUrl = publicUrl;
         } catch (e) {
           console.warn('[scout-mode] photo upload failed:', e);
           showToast('Photo upload failed. Pin saved without photo.', 'error');

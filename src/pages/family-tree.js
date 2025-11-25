@@ -1,6 +1,4 @@
-import { db, auth } from '/js/firebase-config.js';
-import { doc, getDocs, query, where, collection, documentId } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { supabase } from '/js/supabase-client.js';
 import { config } from '/js/config.js';
 import { showToast } from '/js/utils/toasts.js';
 
@@ -31,21 +29,34 @@ async function getFamilyData(startId, maxDepth = 5) { // Increased search depth
     const people = new Map();
     const queue = [{ id: startId, depth: 0 }];
     const fetchedIds = new Set([startId]);
-    const batchSize = 10; // Firestore `in` query limit
 
     while (queue.length > 0) {
-        const batch = queue.splice(0, batchSize).filter(item => item.id && typeof item.id === 'string');
+        const batch = queue.splice(0, 50).filter(item => item.id && typeof item.id === 'string');
         const idsToFetch = batch.map(item => item.id);
         if (idsToFetch.length === 0) continue;
 
         try {
-            const q = query(collection(db, 'memorials'), where(documentId(), 'in', idsToFetch));
-            const docs = await getDocs(q);
+            const { data: memorials, error } = await supabase
+                .from('memorials')
+                .select('id, name, main_photo, birth_date, death_date, cemetery_address, bio, relatives')
+                .in('id', idsToFetch);
 
-            docs.forEach(doc => {
-                const person = { id: doc.id, ...doc.data(), relatives: Array.isArray(doc.data().relatives) ? doc.data().relatives : [] };
+            if (error) throw error;
+
+            memorials.forEach(doc => {
+                // Map snake_case to camelCase for compatibility with visualization code
+                const person = {
+                    id: doc.id,
+                    name: doc.name,
+                    mainPhoto: doc.main_photo,
+                    birthDate: doc.birth_date,
+                    deathDate: doc.death_date,
+                    cemeteryAddress: doc.cemetery_address,
+                    bio: doc.bio,
+                    relatives: Array.isArray(doc.relatives) ? doc.relatives : []
+                };
                 people.set(doc.id, person);
-                
+
                 const currentDepth = batch.find(item => item.id === doc.id)?.depth || 0;
                 if (currentDepth < maxDepth) {
                     person.relatives.forEach(relative => {
@@ -72,7 +83,7 @@ async function getFamilyData(startId, maxDepth = 5) { // Increased search depth
             if (relative.memorialId && people.has(relative.memorialId)) {
                 const relatedPerson = people.get(relative.memorialId);
                 const reciprocalRel = reciprocalMap[relative.relationship];
-                
+
                 if (reciprocalRel && !relatedPerson.relatives.some(r => r.memorialId === personId)) {
                      relatedPerson.relatives.push({
                         memorialId: personId,
@@ -196,10 +207,10 @@ function drawTree(root, containerSelector) {
     const container = d3.select(containerSelector);
     container.html('');
 
-    onAuthStateChanged(auth, user => {
+    // Check auth for image access (non-blocking)
+    supabase.auth.getUser().then(({ data: { user } }) => {
         if (!user) {
             console.warn('User not authenticated, image access may be restricted');
-            showToast('Sign in to access all images.', 'info');
         }
     });
 

@@ -1,9 +1,8 @@
-import { auth, db } from '/js/firebase-config.js';
-import { collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { supabase } from '/js/supabase-client.js';
 import { showToast } from '/js/utils/toasts.js';
 
 function renderMemorials(container, memorials, template) {
-    container.innerHTML = ''; 
+    container.innerHTML = '';
     if (memorials.length === 0) {
         const emptyTemplate = template.ownerDocument.getElementById('empty-state-template').content.cloneNode(true);
         container.appendChild(emptyTemplate);
@@ -17,7 +16,7 @@ function renderMemorials(container, memorials, template) {
     memorials.forEach(memorial => {
         const item = template.content.cloneNode(true);
         item.querySelector('.memorial-name').textContent = memorial.name;
-        const dates = `${memorial.birthDate || ''} - ${memorial.deathDate || ''}`;
+        const dates = `${memorial.birth_date || ''} - ${memorial.death_date || ''}`;
         item.querySelector('.memorial-dates').textContent = dates === ' - ' ? 'No dates provided' : dates;
         item.querySelector('.view-link').href = `/memorial?id=${memorial.id}`;
         item.querySelector('.edit-link').href = `/memorial-form?id=${memorial.id}`;
@@ -26,7 +25,9 @@ function renderMemorials(container, memorials, template) {
 }
 
 export async function loadMemorialsPage(appRoot, urlParams) {
-    if (!auth.currentUser) {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
         showToast('You must be signed in to view your memorials.', 'error');
         window.dispatchEvent(new CustomEvent('navigate', { detail: '/login' }));
         return;
@@ -51,18 +52,17 @@ export async function loadMemorialsPage(appRoot, urlParams) {
             listSubtitle.textContent = 'Your creative legacy.';
         }
 
-        const memorialsRef = collection(db, 'memorials');
-        const q = query(
-            memorialsRef,
-            where('curatorIds', 'array-contains', auth.currentUser.uid),
-            where('status', '==', status),
-            orderBy('updatedAt', 'desc')
-        );
+        // Query memorials where user is a curator
+        const { data: memorials, error } = await supabase
+            .from('memorials')
+            .select('*')
+            .contains('curator_ids', [user.id])
+            .eq('status', status)
+            .order('updated_at', { ascending: false });
 
-        const snapshot = await getDocs(q);
-        const memorials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (error) throw error;
 
-        renderMemorials(listContainer, memorials, memorialItemTemplate);
+        renderMemorials(listContainer, memorials || [], memorialItemTemplate);
 
     } catch (error) {
         console.error('Error loading memorials page:', error);
