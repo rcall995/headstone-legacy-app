@@ -8,6 +8,7 @@ const commonRelationships = ["Spouse", "Parent", "Father", "Mother", "Son", "Dau
 let originalAddress = '';
 let cemeteryLocation = null; // Store geocoded cemetery location { lat, lng }
 let cemeteryMapPreview = null; // Map instance for preview
+let isGeocoding = false; // Prevent duplicate geocoding requests
 
 function navigateToStep(stepNumber) {
     currentStep = stepNumber;
@@ -69,7 +70,89 @@ function generateSlugId(name) {
 }
 
 // --- Cemetery Geocoding Functions ---
+
+// Use GPS to get current location and reverse geocode to address
+async function useMyLocation(appRoot) {
+    const locationBtn = appRoot.querySelector('#use-my-location-btn');
+    const addressInput = appRoot.querySelector('#memorial-cemetery-address');
+    const statusEl = appRoot.querySelector('#geocode-status');
+
+    if (!navigator.geolocation) {
+        showToast('Geolocation is not supported by your browser', 'error');
+        return;
+    }
+
+    locationBtn.disabled = true;
+    locationBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    statusEl.textContent = 'Getting your location...';
+
+    try {
+        // Get current position
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        });
+
+        const { latitude, longitude } = position.coords;
+        statusEl.textContent = 'Finding address...';
+
+        // Get session for API call
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            throw new Error('You must be signed in to use location services');
+        }
+
+        // Reverse geocode using Mapbox API via our backend
+        const response = await fetch('/api/geo/reverse', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ lat: latitude, lng: longitude })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Could not find address');
+        }
+
+        const { address } = await response.json();
+
+        if (address) {
+            addressInput.value = address;
+            cemeteryLocation = { lat: latitude, lng: longitude };
+            statusEl.innerHTML = '<i class="fas fa-check-circle text-success"></i> Location found';
+            showToast('Location found! You can edit the address if needed.', 'success');
+            showCemeteryMapPreview(appRoot, latitude, longitude, address);
+        } else {
+            throw new Error('No address found for this location');
+        }
+    } catch (error) {
+        console.error('Location error:', error);
+        if (error.code === 1) {
+            showToast('Location access denied. Please enable location services.', 'error');
+        } else if (error.code === 2) {
+            showToast('Could not determine your location. Please try again.', 'error');
+        } else if (error.code === 3) {
+            showToast('Location request timed out. Please try again.', 'error');
+        } else {
+            showToast(error.message || 'Could not get your location', 'error');
+        }
+        statusEl.innerHTML = '<i class="fas fa-exclamation-circle text-danger"></i> Location failed';
+    } finally {
+        locationBtn.disabled = false;
+        locationBtn.innerHTML = '<i class="fas fa-crosshairs"></i>';
+    }
+}
+
 async function geocodeCemeteryAddress(appRoot) {
+    // Prevent duplicate requests
+    if (isGeocoding) return;
+
     const addressInput = appRoot.querySelector('#memorial-cemetery-address');
     const geocodeBtn = appRoot.querySelector('#geocode-cemetery-btn');
     const statusEl = appRoot.querySelector('#geocode-status');
@@ -80,8 +163,9 @@ async function geocodeCemeteryAddress(appRoot) {
         return;
     }
 
+    isGeocoding = true;
     geocodeBtn.disabled = true;
-    geocodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Locating...';
+    geocodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
     statusEl.textContent = '';
 
     try {
@@ -121,8 +205,9 @@ async function geocodeCemeteryAddress(appRoot) {
         statusEl.innerHTML = '<i class="fas fa-exclamation-circle text-danger"></i> Location not found';
         cemeteryLocation = null;
     } finally {
+        isGeocoding = false;
         geocodeBtn.disabled = false;
-        geocodeBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Verify Location';
+        geocodeBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Verify';
     }
 }
 
@@ -330,7 +415,6 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
         const memorialData = {
             id: newMemorialId,
             name: memorialName,
-            name_lowercase: memorialName.toLowerCase(),
             title: appRoot.querySelector('#memorial-title').value,
             birth_date: appRoot.querySelector('#memorial-birth-date').value,
             death_date: appRoot.querySelector('#memorial-death-date').value,
@@ -623,7 +707,8 @@ async function initializePage(appRoot, urlParams) {
     appRoot.querySelector('#add-relative-button')?.addEventListener('click', () => addDynamicField(appRoot, 'relatives'));
     appRoot.querySelector('#add-residence-button')?.addEventListener('click', () => addDynamicField(appRoot, 'residences'));
 
-    // Wire up cemetery geocoding button
+    // Wire up cemetery location buttons
+    appRoot.querySelector('#use-my-location-btn')?.addEventListener('click', () => useMyLocation(appRoot));
     appRoot.querySelector('#geocode-cemetery-btn')?.addEventListener('click', () => geocodeCemeteryAddress(appRoot));
 
     // Auto-geocode when user leaves the address field (if address changed and not empty)

@@ -1,5 +1,5 @@
 /* serviceworker.js */
-const CACHE_VERSION = 'v25'; // Updated for Supabase migration
+const CACHE_VERSION = 'v27'; // Fixed email confirmation redirect
 const CACHE_NAME = `headstone-memorial-cache-${CACHE_VERSION}`;
 
 const urlsToCache = [

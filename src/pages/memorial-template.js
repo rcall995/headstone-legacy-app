@@ -543,15 +543,15 @@ async function lightCandle(memorialId, name, message) {
 
         if (error) throw error;
 
-        // Update the memorial's candle count
-        const { data: memorial } = await supabase
-            .from('memorials')
-            .select('candle_count')
-            .eq('id', memorialId)
-            .single();
+        // Get the actual count from candles table (more reliable than stored count)
+        const { count, error: countError } = await supabase
+            .from('candles')
+            .select('*', { count: 'exact', head: true })
+            .eq('memorial_id', memorialId);
 
-        const newCount = (memorial?.candle_count || 0) + 1;
+        const newCount = count || 1;
 
+        // Update the memorial's candle count to stay in sync
         await supabase
             .from('memorials')
             .update({ candle_count: newCount })

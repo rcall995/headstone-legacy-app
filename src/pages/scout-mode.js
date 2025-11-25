@@ -210,7 +210,6 @@ async function saveAllPins() {
     const memorialsToInsert = pinnedRelatives.map(pin => ({
       id: `scout-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
       name: pin.name,
-      name_lowercase: pin.name.toLowerCase(),
       location_lat: pin.coords.lat,
       location_lng: pin.coords.lng,
       is_location_exact: true,

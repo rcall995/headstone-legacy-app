@@ -6,10 +6,6 @@ function renderMemorials(container, memorials, template) {
     if (memorials.length === 0) {
         const emptyTemplate = template.ownerDocument.getElementById('empty-state-template').content.cloneNode(true);
         container.appendChild(emptyTemplate);
-        const status = new URLSearchParams(window.location.search).get('status');
-        if (status === 'draft') {
-            container.querySelector('.create-memorial-link').style.display = 'inline-block';
-        }
         return;
     }
 

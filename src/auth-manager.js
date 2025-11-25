@@ -25,6 +25,7 @@ export async function signUp(name, email, password) {
             email,
             password,
             options: {
+                emailRedirectTo: window.location.origin + '/login',
                 data: {
                     name: name,
                     display_name: name
@@ -62,13 +63,22 @@ export async function signUp(name, email, password) {
 
 export async function signOut() {
     try {
-        const { error } = await supabase.auth.signOut();
+        console.log('[Auth] Calling supabase.auth.signOut()');
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Sign out timed out')), 5000)
+        );
+        const signOutPromise = supabase.auth.signOut({ scope: 'local' });
+
+        const { error } = await Promise.race([signOutPromise, timeoutPromise]);
+        console.log('[Auth] signOut result:', error ? error : 'success');
         if (error) throw error;
         return true;
     } catch (error) {
-        console.error("Sign-out error:", error);
-        showToast("Failed to sign out.", 'error');
-        return false;
+        console.error("[Auth] Sign-out error:", error);
+        // Even on error, clear local storage and return true to allow redirect
+        localStorage.removeItem('sb-wsgxvhcdpyrjxyuhlnnw-auth-token');
+        return true;
     }
 }
 

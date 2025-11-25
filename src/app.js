@@ -7,7 +7,7 @@ import { updateMenuBadges } from '/js/utils/badge-updater.js';
 document.addEventListener('DOMContentLoaded', () => {
   /* ---------- Service Worker: simple, no auto-reload ---------- */
   if ('serviceWorker' in navigator) {
-    const SW_VERSION = 'v25';            // bump this when you deploy
+    const SW_VERSION = 'v27';            // bump this when you deploy
     const SW_URL = `/serviceworker.js?sw=${SW_VERSION}`;
 
     navigator.serviceWorker.register(SW_URL, { scope: '/' })
@@ -54,9 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
   async function router() {
     const path = window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
+    console.log('[Router] router() called for:', path);
 
     // Show loading screen until auth is initialized (prevent race condition)
     if (!authInitialized) {
+      console.log('[Router] Auth not initialized, showing loading...');
       appRoot.innerHTML = `
         <div class="container mt-5 text-center">
           <div class="spinner-border text-primary" role="status">
@@ -209,28 +211,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Handle navigation via link clicks
-  document.body.addEventListener('click', e => {
+  // Handle navigation via link clicks - use capture phase to ensure we catch all clicks
+  document.addEventListener('click', e => {
     const { target } = e;
-    const isLink = target.matches('a[data-route], a[data-route] *');
-    const isMobileNav = target.matches('a[data-route-mobile], a[data-route-mobile] *');
+    const link = target.closest('a[data-route], a[data-route-mobile]');
 
-    if (isLink || isMobileNav) {
+    if (link) {
       e.preventDefault();
-      const href = target.closest('a').getAttribute('href');
+      e.stopPropagation();
+      const href = link.getAttribute('href');
+      console.log('[Router] Navigating to:', href);
       handleNavigation(href);
 
       // Close mobile menu on click
-      if (isMobileNav) closeCardMenu();
+      if (link.hasAttribute('data-route-mobile')) closeCardMenu();
     }
-  });
+  }, true); // Use capture phase
 
   // Handle browser back/forward
   window.addEventListener('popstate', router);
 
   // Function to handle navigation
   function handleNavigation(path) {
-    if (window.location.pathname !== path) {
+    const currentFull = window.location.pathname + window.location.search;
+    if (currentFull !== path) {
       window.history.pushState({}, path, path);
     }
     router();
@@ -272,7 +276,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Supabase Auth State Listener
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('[Auth] State change:', event, session ? 'logged in' : 'logged out');
     const user = session?.user || null;
     currentUser = user;
     const isLoggedIn = !!user;
@@ -287,40 +292,68 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mobile-signin-btn')?.classList.toggle('d-none', isLoggedIn);
     document.getElementById('curator-nav-menu-items')?.classList.toggle('d-none', !isLoggedIn);
 
-    // Update notification badges when logged in
+    // Update notification badges when logged in (non-blocking)
     if (isLoggedIn) {
-      await updateMenuBadges(user);
+      updateMenuBadges(user).catch(err => console.warn('[Auth] Badge update failed:', err));
     }
 
     if (!authInitialized) {
       authInitialized = true;
       const initialPath = window.location.pathname;
-      const initialFull = initialPath + window.location.search;
 
-      if (isLoggedIn && initialPath === '/login') handleNavigation('/memorial-list?status=published');
-      if (isLoggedIn && initialPath === '/signup') handleNavigation('/memorial-list?status=published');
-      if (!isLoggedIn && initialPath === '/curator-panel') handleNavigation('/login');
-      if (!isLoggedIn && initialPath === '/memorial-form') handleNavigation('/login');
-      if (!isLoggedIn && initialPath === '/memorial-list') handleNavigation('/login');
-      if (!isLoggedIn && initialPath === '/scout-mode') handleNavigation('/login');
-      router();
+      if (isLoggedIn && initialPath === '/login') {
+        handleNavigation('/memorial-list?status=published');
+        return; // handleNavigation calls router()
+      }
+      if (isLoggedIn && initialPath === '/signup') {
+        handleNavigation('/memorial-list?status=published');
+        return;
+      }
+      if (!isLoggedIn && initialPath === '/curator-panel') {
+        handleNavigation('/login');
+        return;
+      }
+      if (!isLoggedIn && initialPath === '/memorial-form') {
+        handleNavigation('/login');
+        return;
+      }
+      if (!isLoggedIn && initialPath === '/memorial-list') {
+        handleNavigation('/login');
+        return;
+      }
+      if (!isLoggedIn && initialPath === '/scout-mode') {
+        handleNavigation('/login');
+        return;
+      }
     }
+
+    // Call router for initial page load
+    console.log('[Router] Calling router for path:', window.location.pathname);
+    router();
   });
 
   // Sign out handlers
-  document.getElementById('signOutLink-desktop')?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    await signOut();
-    showToast('Signed out successfully.', 'success');
-    handleNavigation('/login');
-  });
+  const signOutDesktop = document.getElementById('signOutLink-desktop');
+  const signOutMenu = document.getElementById('signOutLink-menu');
 
-  document.getElementById('signOutLink-menu')?.addEventListener('click', async (e) => {
+  async function handleSignOut(e) {
     e.preventDefault();
-    await signOut();
-    showToast('Signed out successfully.', 'success');
-    closeCardMenu();
-    handleNavigation('/login');
-  });
+    e.stopPropagation();
+    console.log('[Auth] Sign out clicked');
+    const success = await signOut();
+    if (success) {
+      showToast('Signed out successfully.', 'success');
+      closeCardMenu();
+      // Force page reload to clear all state
+      window.location.href = '/login';
+    }
+  }
+
+  if (signOutDesktop) {
+    signOutDesktop.addEventListener('click', handleSignOut);
+  }
+  if (signOutMenu) {
+    signOutMenu.addEventListener('click', handleSignOut);
+  }
 
 });

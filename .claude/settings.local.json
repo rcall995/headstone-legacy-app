@@ -25,7 +25,10 @@
       "Bash(vercel --version:*)",
       "Bash(vercel:*)",
       "Bash(del \"C:\\Users\\rich\\headstone-project-New-Start-11-17\\src\\firebase-config.js\")",
-      "Bash(del \"C:\\Users\\rich\\headstone-project-New-Start-11-17\\dist\\js\\firebase-config.js\" 2)"
+      "Bash(del \"C:\\Users\\rich\\headstone-project-New-Start-11-17\\dist\\js\\firebase-config.js\" 2)",
+      "WebFetch(domain:www.headstonelegacy.com)",
+      "WebFetch(domain:rcall995-headstone-legacy-qadaxh7yf-richs-projects-6e159a3a.vercel.app)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
