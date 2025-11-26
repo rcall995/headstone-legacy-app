@@ -6,6 +6,7 @@ let currentUser = null;
 let wsDetailModal = null;
 let currentWsFilter = 'pending';
 let currentTribFilter = 'pending';
+let currentOrderFilter = 'paid';
 
 // ==================== UTILITY FUNCTIONS ====================
 function escapeHtml(text) {
@@ -624,6 +625,204 @@ async function rejectTribute(tributeId) {
     }
 }
 
+// ==================== ORDERS ====================
+async function loadOrders(filter = 'paid') {
+    currentOrderFilter = filter;
+    const loading = document.getElementById('orders-loading');
+    const empty = document.getElementById('orders-empty');
+    const table = document.getElementById('orders-table-container');
+    const tbody = document.getElementById('orders-tbody');
+
+    // Update filter buttons
+    document.querySelectorAll('[id^="order-filter-"]').forEach(btn => {
+        btn.classList.remove('active', 'btn-info', 'btn-warning', 'btn-success', 'btn-secondary');
+        btn.classList.add('btn-outline-' + (btn.dataset.filter === 'paid' ? 'info' :
+            btn.dataset.filter === 'pending' ? 'warning' :
+            btn.dataset.filter === 'shipped' ? 'success' : 'secondary'));
+    });
+
+    const activeBtn = document.getElementById(`order-filter-${filter}`);
+    if (activeBtn) {
+        activeBtn.classList.remove('btn-outline-info', 'btn-outline-warning', 'btn-outline-success', 'btn-outline-secondary');
+        activeBtn.classList.add('active', filter === 'paid' ? 'btn-info' :
+            filter === 'pending' ? 'btn-warning' :
+            filter === 'shipped' ? 'btn-success' : 'btn-secondary');
+    }
+
+    loading.style.display = '';
+    empty.style.display = 'none';
+    table.style.display = 'none';
+
+    try {
+        let query = supabase
+            .from('orders')
+            .select('*, memorials(id, name)')
+            .order('created_at', { ascending: false });
+
+        if (filter !== 'all') {
+            query = query.eq('status', filter);
+        }
+
+        const { data, error } = await query;
+
+        loading.style.display = 'none';
+
+        if (error) throw error;
+
+        // Update stats
+        const allOrders = await supabase.from('orders').select('status, amount_cents');
+        const pending = allOrders.data?.filter(o => o.status === 'pending').length || 0;
+        const paid = allOrders.data?.filter(o => o.status === 'paid').length || 0;
+        const shipped = allOrders.data?.filter(o => o.status === 'shipped' || o.status === 'delivered').length || 0;
+        const revenue = allOrders.data?.filter(o => o.status !== 'pending' && o.status !== 'cancelled')
+            .reduce((sum, o) => sum + (o.amount_cents || 0), 0) || 0;
+
+        document.getElementById('orders-pending').textContent = pending;
+        document.getElementById('orders-paid').textContent = paid;
+        document.getElementById('orders-shipped').textContent = shipped;
+        document.getElementById('orders-revenue').textContent = '$' + (revenue / 100).toFixed(2);
+
+        // Update badge
+        if (paid > 0) {
+            document.getElementById('orders-badge').textContent = paid;
+            document.getElementById('orders-badge').style.display = '';
+        } else {
+            document.getElementById('orders-badge').style.display = 'none';
+        }
+
+        if (!data || data.length === 0) {
+            empty.style.display = '';
+            return;
+        }
+
+        table.style.display = '';
+        tbody.innerHTML = data.map(order => {
+            const addr = order.shipping_address;
+            const addressHtml = addr ? `
+                <small>
+                    ${escapeHtml(addr.name || order.customer_name || '')}<br>
+                    ${escapeHtml(addr.line1 || '')}${addr.line2 ? '<br>' + escapeHtml(addr.line2) : ''}<br>
+                    ${escapeHtml(addr.city || '')}, ${escapeHtml(addr.state || '')} ${escapeHtml(addr.postal_code || '')}
+                </small>
+            ` : '<span class="text-muted">-</span>';
+
+            const statusColors = {
+                pending: 'warning',
+                paid: 'info',
+                shipped: 'primary',
+                delivered: 'success',
+                cancelled: 'danger'
+            };
+
+            return `
+                <tr data-id="${order.id}">
+                    <td>
+                        <code>${order.id.substring(0, 8).toUpperCase()}</code>
+                    </td>
+                    <td>
+                        <a href="/memorial?id=${order.memorial_id}" class="text-decoration-none" data-route>
+                            ${escapeHtml(order.memorials?.name || 'Unknown')}
+                        </a>
+                    </td>
+                    <td>
+                        ${escapeHtml(order.customer_name || '-')}<br>
+                        <small class="text-muted">${escapeHtml(order.customer_email || '')}</small>
+                    </td>
+                    <td>${addressHtml}</td>
+                    <td><strong>$${((order.amount_cents || 0) / 100).toFixed(2)}</strong></td>
+                    <td>
+                        <span class="badge bg-${statusColors[order.status] || 'secondary'}">
+                            ${order.status}
+                        </span>
+                    </td>
+                    <td class="small text-muted">${formatDate(order.created_at)}</td>
+                    <td class="text-end">
+                        ${order.qr_code_url ? `
+                            <a href="${order.qr_code_url}" target="_blank" class="btn btn-sm btn-success" download="qr-${order.id.substring(0,8)}.png">
+                                <i class="fas fa-qrcode me-1"></i>Download
+                            </a>
+                        ` : `
+                            <button class="btn btn-sm btn-outline-secondary generate-qr-btn" data-id="${order.id}" data-memorial="${order.memorial_id}">
+                                <i class="fas fa-sync me-1"></i>Generate
+                            </button>
+                        `}
+                        ${order.status === 'paid' ? `
+                            <button class="btn btn-sm btn-primary mark-shipped-btn ms-1" data-id="${order.id}">
+                                <i class="fas fa-truck"></i>
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        loading.style.display = 'none';
+        empty.innerHTML = `<p class="text-danger">Error loading orders</p>`;
+        empty.style.display = '';
+    }
+}
+
+async function markOrderShipped(orderId) {
+    const trackingNumber = prompt('Enter tracking number (optional):');
+
+    try {
+        const { error } = await supabase
+            .from('orders')
+            .update({
+                status: 'shipped',
+                shipped_at: new Date().toISOString(),
+                tracking_number: trackingNumber || null,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', orderId);
+
+        if (error) throw error;
+
+        showToast('Order marked as shipped!', 'success');
+        loadOrders(currentOrderFilter);
+    } catch (error) {
+        console.error('Error updating order:', error);
+        showToast('Error updating order', 'error');
+    }
+}
+
+async function generateQRCode(orderId, memorialId) {
+    const btn = document.querySelector(`[data-id="${orderId}"].generate-qr-btn`);
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const response = await fetch('/api/orders/generate-qr', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ orderId })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to generate QR code');
+        }
+
+        showToast('QR code generated!', 'success');
+        loadOrders(currentOrderFilter);
+    } catch (error) {
+        console.error('Error generating QR:', error);
+        showToast('Error generating QR code', 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sync me-1"></i>Generate';
+        }
+    }
+}
+
 // ==================== NOTES ====================
 async function loadNotes(filter = 'all') {
     const notesList = document.getElementById('notes-list');
@@ -794,6 +993,23 @@ function setupEventHandlers() {
     document.getElementById('notes-list')?.addEventListener('click', (e) => {
         const deleteBtn = e.target.closest('.delete-note-btn');
         if (deleteBtn) deleteNote(deleteBtn.dataset.id);
+    });
+
+    // Orders tab
+    document.getElementById('orders-tab')?.addEventListener('shown.bs.tab', () => loadOrders());
+
+    // Orders filter buttons
+    document.querySelectorAll('[id^="order-filter-"]').forEach(btn => {
+        btn.addEventListener('click', () => loadOrders(btn.dataset.filter));
+    });
+
+    // Orders actions (delegated)
+    document.getElementById('orders-tbody')?.addEventListener('click', (e) => {
+        const shippedBtn = e.target.closest('.mark-shipped-btn');
+        const generateBtn = e.target.closest('.generate-qr-btn');
+
+        if (shippedBtn) markOrderShipped(shippedBtn.dataset.id);
+        if (generateBtn) generateQRCode(generateBtn.dataset.id, generateBtn.dataset.memorial);
     });
 }
 
