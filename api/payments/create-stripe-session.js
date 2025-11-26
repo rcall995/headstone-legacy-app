@@ -16,9 +16,9 @@ const PRODUCTS = {
     price: 2900, // $29.00 in cents
   },
   premium: {
-    name: 'QR Memorial Tag - Premium',
-    description: 'Stainless steel tag with mounting screws',
-    price: 4900, // $49.00 in cents
+    name: 'Stainless Steel QR Tag',
+    description: 'Laser-engraved stainless steel with lifetime guarantee',
+    price: 3900, // $39.00 in cents
   },
   deluxe: {
     name: 'QR Memorial Tag - Deluxe',
