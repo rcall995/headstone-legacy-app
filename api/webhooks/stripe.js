@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { buffer } from 'micro';
+import { generateQRForOrder } from '../orders/generate-qr.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -102,13 +103,21 @@ async function handleCheckoutComplete(session) {
 
     console.log('Order updated to paid:', orderId);
 
+    // Generate QR code for the order
+    const qrResult = await generateQRForOrder(orderId, metadata.memorialId);
+    if (qrResult.success) {
+      console.log('QR code generated:', qrResult.qrUrl);
+    } else {
+      console.error('Failed to generate QR code:', qrResult.error);
+    }
+
     // Handle referral conversion if applicable
     if (metadata.partnerId) {
       await handleReferralConversion(order, metadata);
     }
 
-    // TODO: Send confirmation email
-    // await sendOrderConfirmationEmail(order);
+    // TODO: Send confirmation email with QR code
+    // await sendOrderConfirmationEmail(order, qrResult.qrUrl);
 
   } catch (error) {
     console.error('Error handling checkout complete:', error);
