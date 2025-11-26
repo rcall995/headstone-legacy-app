@@ -1,160 +1,610 @@
-/* --- Memorial Form Wizard & Tier Selection Styles --- */
-.wizard-step { display: none; animation: fadeIn 0.5s ease-in-out; }
-.wizard-step.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* ========== MEMORIAL FORM APP STYLES ========== */
+.memorial-form-app {
+    background: #f5f7f9;
+    min-height: 100vh;
+    padding-bottom: 100px; /* Space for fixed nav bar */
+}
+
+/* ========== WIZARD PROGRESS ========== */
+.wizard-progress-container {
+    background: white;
+    padding: 16px;
+    position: sticky;
+    top: 70px;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
 
 .wizard-progress {
-  display: flex;
-  list-style: none;
-  padding: 0;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    max-width: 600px;
+    margin: 0 auto;
+    background: #f0f2f5;
+    border-radius: 12px;
+    padding: 4px;
 }
+
 .wizard-progress-step {
-  flex: 1;
-  text-align: center;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  color: #6c757d;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-size: 0.9rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
 }
+
+.wizard-progress-step:hover {
+    background: rgba(0, 95, 96, 0.05);
+}
+
 .wizard-progress-step .step-number {
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
     border-radius: 50%;
-    background-color: #fff;
-    border: 2px solid #E9ECEF;
-    margin: 0 auto 0.5rem auto;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-    font-weight: bold;
+    background: white;
+    border: 2px solid #d1d5db;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
 }
+
+.wizard-progress-step .step-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
 .wizard-progress-step.active {
-  background-color: #fff;
-  color: #000;
-  font-weight: bold;
-  border-bottom: 2px solid #005F60;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
 .wizard-progress-step.active .step-number {
+    background: linear-gradient(135deg, #005F60 0%, #007a7a 100%);
     border-color: #005F60;
-    background-color: #005F60;
-    color: #fff;
+    color: white;
 }
+
+.wizard-progress-step.active .step-label {
+    color: #005F60;
+    font-weight: 600;
+}
+
 .wizard-progress-step.completed .step-number {
+    background: #e8f5f5;
     border-color: #005F60;
-    background-color: #fff;
     color: #005F60;
 }
-.wizard-progress-step.completed {
-  background-color: #e9ecef;
-  color: #495057;
-}
-.wizard-navigation { display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; border-top: 1px solid #E9ECEF; }
 
-#memorial-tier-heading {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.45rem;
-  color: #113242;
-  margin-bottom: .25rem;
-}
-.tier-select {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+.wizard-progress-step.completed .step-label {
+    color: #005F60;
 }
 
-/* Prevent tier card overflow on very small screens */
-@media (max-width: 480px) {
-  .tier-select {
-    grid-template-columns: 1fr;
-  }
-}
-.tier-card {
-  border: 2px solid #dee2e6;
-  border-radius: 14px;
-  padding: 14px 16px;
-  background: #fff;
-  color: #343A40;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-  cursor: pointer;
-  user-select: none;
-}
-.tier-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-}
-.tier-card.selected {
-  border-color: #005F60;
-  box-shadow: 0 0 0 3px rgba(0, 95, 96, 0.15);
-}
-.tier-name {
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin-bottom: 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #005F60;
-}
-.tier-desc {
-  opacity: .92;
-  font-size: .95rem;
-  color: #6c757d;
-}
-.tier-badge {
-  display: inline-block;
-  font-weight: 700;
-  letter-spacing: .02em;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: #005F60;
-  color: #fff;
-  font-size: .78rem;
+/* ========== WIZARD STEPS ========== */
+.wizard-step {
+    display: none;
+    animation: fadeIn 0.3s ease;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
-/* Mobile Responsive Breakpoints */
-@media (max-width: 576px) {
-  .form-label {
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== FORM SECTIONS ========== */
+.form-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: #1a1a2e;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    color: #005F60;
+}
+
+.section-subtitle {
+    color: #6b7280;
     font-size: 0.9rem;
-  }
+    margin: 0 0 20px 0;
+}
 
-  .form-control {
-    padding: 0.75rem;
+/* ========== FORM GRID ========== */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.form-control {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 14px;
     font-size: 0.95rem;
-  }
+    transition: all 0.2s ease;
+}
 
-  .wizard-progress-step {
-    font-size: 0.75rem;
-  }
+.form-control:focus {
+    border-color: #005F60;
+    box-shadow: 0 0 0 3px rgba(0, 95, 96, 0.1);
+}
 
-  .wizard-progress-step .step-number {
-    width: 32px;
-    height: 32px;
+.form-control::placeholder {
+    color: #9ca3af;
+}
+
+/* ========== HEADSTONE PHOTO CARD ========== */
+.headstone-photo-card {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.headstone-photo-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.headstone-photo-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #005F60 0%, #007a7a 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.headstone-photo-title h5 {
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.headstone-photo-title p {
+    margin: 0;
     font-size: 0.85rem;
-  }
+    color: rgba(255, 255, 255, 0.7);
+}
 
-  .tier-card {
-    padding: 0.75rem;
-  }
+.headstone-photo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
 
-  .tier-name {
+.headstone-upload-area {
+    position: relative;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    min-height: 180px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.headstone-upload-area:hover {
+    border-color: #00a0a0;
+    background: rgba(0, 160, 160, 0.1);
+}
+
+.headstone-upload-area.has-image {
+    border-style: solid;
+    border-color: #005F60;
+}
+
+.headstone-file-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.headstone-upload-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.headstone-upload-content i {
+    font-size: 2.5rem;
+}
+
+.headstone-preview-img {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    display: block;
+}
+
+.headstone-remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px;
+    background: rgba(220, 53, 69, 0.2);
+    border: 1px solid rgba(220, 53, 69, 0.5);
+    border-radius: 8px;
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.headstone-remove-btn:hover {
+    background: rgba(220, 53, 69, 0.3);
+}
+
+/* ========== TIER SELECTION ========== */
+.tier-select {
+    display: grid;
+    gap: 12px;
+}
+
+.tier-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tier-card:hover {
+    border-color: #005F60;
+    box-shadow: 0 4px 12px rgba(0, 95, 96, 0.1);
+}
+
+.tier-card.selected {
+    border-color: #005F60;
+    background: linear-gradient(135deg, rgba(0, 95, 96, 0.05) 0%, rgba(0, 122, 122, 0.05) 100%);
+    box-shadow: 0 0 0 3px rgba(0, 95, 96, 0.15);
+}
+
+.tier-name {
+    font-weight: 700;
     font-size: 1rem;
-  }
+    color: #005F60;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
 
-  .tier-desc {
+.tier-badge {
+    background: linear-gradient(135deg, #005F60 0%, #007a7a 100%);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.tier-desc {
+    color: #6b7280;
     font-size: 0.85rem;
-  }
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ========== MAP PREVIEW ========== */
+.map-preview {
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 16px;
+    display: none;
+}
+
+.life-path-map {
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 16px;
+    display: none;
+    background: #f0f2f5;
+}
+
+/* ========== STORY TEXTAREA ========== */
+.story-textarea {
+    min-height: 300px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+/* ========== PHOTO UPLOAD ========== */
+.photo-upload-area {
+    margin-bottom: 12px;
+}
+
+.photo-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.photo-preview-grid .col-md-3 {
+    width: 100%;
+}
+
+.photo-preview-grid .img-thumbnail {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ========== DYNAMIC FIELDS ========== */
+.dynamic-fields-container {
+    margin-bottom: 16px;
+}
+
+.dynamic-input-group {
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.add-field-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 2px dashed #d1d5db;
+    border-radius: 10px;
+    color: #6b7280;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-field-btn:hover {
+    border-color: #005F60;
+    color: #005F60;
+    background: rgba(0, 95, 96, 0.05);
+}
+
+/* ========== BOTTOM NAVIGATION BAR ========== */
+.wizard-nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+}
+
+.nav-center-btns {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 48px;
+}
+
+.nav-btn i {
+    font-size: 0.85rem;
+}
+
+.nav-btn span {
+    white-space: nowrap;
+}
+
+.nav-btn.primary {
+    background: linear-gradient(135deg, #005F60 0%, #007a7a 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 95, 96, 0.3);
+}
+
+.nav-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 95, 96, 0.4);
+}
+
+.nav-btn.primary.publish {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.nav-btn.primary.publish:hover {
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+}
+
+.nav-btn.secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.nav-btn.secondary:hover {
+    background: #e5e7eb;
+}
+
+.nav-btn.outline {
+    background: white;
+    color: #005F60;
+    border: 2px solid #005F60;
+}
+
+.nav-btn.outline:hover {
+    background: rgba(0, 95, 96, 0.05);
+}
+
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .wizard-progress-container {
+        padding: 12px;
+    }
+
+    .wizard-progress-step {
+        padding: 8px 4px;
+    }
+
+    .wizard-progress-step .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+
+    .wizard-progress-step .step-label {
+        font-size: 0.6rem;
+    }
+
+    .wizard-step {
+        padding: 16px;
+    }
+
+    .form-section {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .wizard-nav-bar {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    .nav-btn {
+        padding: 10px 14px;
+        font-size: 0.8rem;
+        min-height: 44px;
+    }
+
+    .nav-btn span {
+        display: none;
+    }
+
+    .nav-btn.primary span,
+    .nav-btn.primary.publish span {
+        display: inline;
+    }
+
+    .nav-center-btns {
+        gap: 6px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+    }
+
+    .ai-scanner-header {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+
+    .tier-select {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-btn.outline span {
+        display: none;
+    }
+
+    .nav-btn.outline {
+        padding: 10px 12px;
+    }
+}
+
+/* ========== INPUT GROUP FIXES ========== */
+.input-group .btn {
+    border-radius: 0;
+}
+
+.input-group .btn:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.input-group .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
 }

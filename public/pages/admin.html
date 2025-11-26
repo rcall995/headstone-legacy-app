@@ -1,0 +1,531 @@
+<!-- Admin Dashboard -->
+<div class="admin-dashboard">
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1"><i class="fas fa-cog me-2"></i>Admin Dashboard</h1>
+                <p class="text-muted mb-0">Manage your Headstone Legacy platform</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" id="refresh-all-btn">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                </button>
+                <a href="/" class="btn btn-outline-secondary" data-route>
+                    <i class="fas fa-arrow-left me-2"></i>Back to Site
+                </a>
+            </div>
+        </div>
+
+        <!-- Top Stats Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-2">
+                <div class="stat-card bg-primary">
+                    <i class="fas fa-monument stat-icon"></i>
+                    <div class="stat-value" id="stat-memorials">-</div>
+                    <div class="stat-label">Memorials</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="stat-card bg-success">
+                    <i class="fas fa-eye stat-icon"></i>
+                    <div class="stat-value" id="stat-views">-</div>
+                    <div class="stat-label">Total Views</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="stat-card bg-warning">
+                    <i class="fas fa-fire stat-icon"></i>
+                    <div class="stat-value" id="stat-candles">-</div>
+                    <div class="stat-label">Candles Lit</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="stat-card bg-info">
+                    <i class="fas fa-building stat-icon"></i>
+                    <div class="stat-value" id="stat-wholesale">-</div>
+                    <div class="stat-label">Wholesale Apps</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="stat-card bg-purple">
+                    <i class="fas fa-handshake stat-icon"></i>
+                    <div class="stat-value" id="stat-partners">-</div>
+                    <div class="stat-label">Partners</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="stat-card bg-danger">
+                    <i class="fas fa-bell stat-icon"></i>
+                    <div class="stat-value" id="stat-pending">-</div>
+                    <div class="stat-label">Pending Actions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <ul class="nav nav-tabs admin-tabs mb-4" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="wholesale-tab" data-bs-toggle="tab" data-bs-target="#wholesale-panel" type="button">
+                    <i class="fas fa-building me-2"></i>Wholesale
+                    <span class="badge bg-danger ms-2" id="wholesale-badge" style="display: none;">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="partners-tab" data-bs-toggle="tab" data-bs-target="#partners-panel" type="button">
+                    <i class="fas fa-handshake me-2"></i>Partners
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="memorials-tab" data-bs-toggle="tab" data-bs-target="#memorials-panel" type="button">
+                    <i class="fas fa-monument me-2"></i>Memorials
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tributes-tab" data-bs-toggle="tab" data-bs-target="#tributes-panel" type="button">
+                    <i class="fas fa-heart me-2"></i>Tributes
+                    <span class="badge bg-warning ms-2" id="tributes-badge" style="display: none;">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes-panel" type="button">
+                    <i class="fas fa-sticky-note me-2"></i>Notes
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabContent">
+            <!-- ==================== WHOLESALE PANEL ==================== -->
+            <div class="tab-pane fade show active" id="wholesale-panel" role="tabpanel">
+                <!-- Filter Buttons -->
+                <div class="d-flex gap-2 mb-4">
+                    <button class="btn btn-warning active" data-filter="pending" id="ws-filter-pending">
+                        <i class="fas fa-clock me-2"></i>Pending <span class="badge bg-dark ms-1" id="ws-pending-count">0</span>
+                    </button>
+                    <button class="btn btn-outline-success" data-filter="approved" id="ws-filter-approved">
+                        <i class="fas fa-check me-2"></i>Approved
+                    </button>
+                    <button class="btn btn-outline-danger" data-filter="rejected" id="ws-filter-rejected">
+                        <i class="fas fa-times me-2"></i>Rejected
+                    </button>
+                    <button class="btn btn-outline-secondary" data-filter="all" id="ws-filter-all">
+                        <i class="fas fa-list me-2"></i>All
+                    </button>
+                </div>
+
+                <!-- Wholesale Applications List -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Wholesale Applications</h5>
+                        <div class="input-group" style="max-width: 250px;">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" placeholder="Search..." id="ws-search">
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="wholesale-loading" class="text-center py-5">
+                            <div class="spinner-border text-primary"></div>
+                            <p class="mt-2 text-muted">Loading applications...</p>
+                        </div>
+                        <div id="wholesale-empty" class="text-center py-5" style="display: none;">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5>No Applications</h5>
+                            <p class="text-muted">No wholesale applications match this filter.</p>
+                        </div>
+                        <div class="table-responsive" id="wholesale-table-container" style="display: none;">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Business</th>
+                                        <th>Contact</th>
+                                        <th>Type</th>
+                                        <th>Volume</th>
+                                        <th>Submitted</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="wholesale-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== PARTNERS PANEL ==================== -->
+            <div class="tab-pane fade" id="partners-panel" role="tabpanel">
+                <div class="row g-4">
+                    <!-- Partners Stats -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                                <h3 id="partners-total">0</h3>
+                                <p class="text-muted mb-0">Total Partners</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-link fa-3x text-success mb-3"></i>
+                                <h3 id="partners-clicks">0</h3>
+                                <p class="text-muted mb-0">Total Referral Clicks</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-dollar-sign fa-3x text-warning mb-3"></i>
+                                <h3 id="partners-conversions">0</h3>
+                                <p class="text-muted mb-0">Total Conversions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Partners List -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Active Partners</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="partners-loading" class="text-center py-5">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                        <div id="partners-empty" class="text-center py-5" style="display: none;">
+                            <i class="fas fa-handshake fa-3x text-muted mb-3"></i>
+                            <h5>No Partners Yet</h5>
+                            <p class="text-muted">Partners will appear here when they sign up.</p>
+                        </div>
+                        <div class="table-responsive" id="partners-table-container" style="display: none;">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Partner</th>
+                                        <th>Referral Code</th>
+                                        <th>Clicks</th>
+                                        <th>Conversions</th>
+                                        <th>Commission Rate</th>
+                                        <th>Joined</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="partners-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== MEMORIALS PANEL ==================== -->
+            <div class="tab-pane fade" id="memorials-panel" role="tabpanel">
+                <!-- Memorial Stats -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h4 class="mb-0" id="mem-total">0</h4>
+                                <small class="text-muted">Total</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h4 class="mb-0 text-success" id="mem-published">0</h4>
+                                <small class="text-muted">Published</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h4 class="mb-0 text-warning" id="mem-drafts">0</h4>
+                                <small class="text-muted">Drafts</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h4 class="mb-0 text-info" id="mem-views-total">0</h4>
+                                <small class="text-muted">Total Views</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memorials Table -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">All Memorials</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="mem-status-filter" style="width: auto;">
+                                <option value="all">All Status</option>
+                                <option value="published">Published</option>
+                                <option value="draft">Drafts</option>
+                            </select>
+                            <input type="text" class="form-control form-control-sm" placeholder="Search..." id="mem-search" style="width: 200px;">
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Memorial</th>
+                                        <th>Status</th>
+                                        <th>Views</th>
+                                        <th>Candles</th>
+                                        <th>Tributes</th>
+                                        <th>Created</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="memorials-tbody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TRIBUTES PANEL ==================== -->
+            <div class="tab-pane fade" id="tributes-panel" role="tabpanel">
+                <div class="d-flex gap-2 mb-4">
+                    <button class="btn btn-warning active" data-filter="pending" id="trib-filter-pending">
+                        <i class="fas fa-clock me-2"></i>Pending Review
+                    </button>
+                    <button class="btn btn-outline-success" data-filter="approved" id="trib-filter-approved">
+                        <i class="fas fa-check me-2"></i>Approved
+                    </button>
+                    <button class="btn btn-outline-secondary" data-filter="all" id="trib-filter-all">
+                        <i class="fas fa-list me-2"></i>All
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Tributes</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="tributes-loading" class="text-center py-5">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                        <div id="tributes-empty" class="text-center py-5" style="display: none;">
+                            <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                            <h5>No Tributes</h5>
+                            <p class="text-muted">No tributes match this filter.</p>
+                        </div>
+                        <div id="tributes-list" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== NOTES PANEL ==================== -->
+            <div class="tab-pane fade" id="notes-panel" role="tabpanel">
+                <!-- Add Note Form -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Add Note</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="add-note-form">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" id="note-title" placeholder="Note title..." required>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="note-category">
+                                        <option value="general">General</option>
+                                        <option value="feature">Feature</option>
+                                        <option value="bug">Bug</option>
+                                        <option value="idea">Idea</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="note-pinned">
+                                        <label class="form-check-label" for="note-pinned">Pin note</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <textarea class="form-control" id="note-content" rows="2" placeholder="Note content..." required></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save Note
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Notes List -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">All Notes</h5>
+                        <select class="form-select form-select-sm w-auto" id="notes-filter">
+                            <option value="all">All</option>
+                            <option value="feature">Features</option>
+                            <option value="bug">Bugs</option>
+                            <option value="idea">Ideas</option>
+                        </select>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="notes-list" class="list-group list-group-flush">
+                            <div class="text-center py-4 text-muted">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Wholesale Application Detail Modal -->
+<div class="modal fade" id="wsDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Application Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="ws-detail-content">
+                <!-- Populated by JavaScript -->
+            </div>
+            <div class="modal-footer" id="ws-detail-actions">
+                <!-- Action buttons populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-dashboard {
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.stat-card {
+    border-radius: 12px;
+    padding: 1.25rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card .stat-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2.5rem;
+    opacity: 0.3;
+}
+
+.stat-card .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-card .stat-label {
+    font-size: 0.75rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+}
+
+.bg-purple {
+    background: #7c3aed !important;
+}
+
+.admin-tabs .nav-link {
+    border: none;
+    color: #666;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px 8px 0 0;
+}
+
+.admin-tabs .nav-link.active {
+    color: #0d6efd;
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+
+.admin-tabs .nav-link .badge {
+    font-size: 0.65rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border-radius: 12px;
+}
+
+.card-header {
+    background: white;
+    border-bottom: 1px solid #eee;
+    padding: 1rem 1.25rem;
+}
+
+.table th {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+}
+
+.ws-app-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: white;
+}
+
+.ws-app-card.pending {
+    border-left: 4px solid #ffc107;
+}
+
+.ws-app-card.approved {
+    border-left: 4px solid #28a745;
+}
+
+.ws-app-card.rejected {
+    border-left: 4px solid #dc3545;
+}
+
+.tribute-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.tribute-card.pending {
+    background: #fffbeb;
+    border-left: 4px solid #ffc107;
+}
+
+.note-pinned {
+    background: #fffbeb !important;
+    border-left: 3px solid #f59e0b !important;
+}
+
+.badge-category {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+}
+</style>

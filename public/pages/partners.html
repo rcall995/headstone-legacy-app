@@ -1,0 +1,211 @@
+<div class="page-wrapper">
+  <!-- Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="page-hero-title">Partner With Headstone Legacy</h1>
+      <p class="page-hero-subtitle">Earn $15 for every QR tag sold through your referral</p>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="partner-benefits-section">
+    <div class="container">
+      <div class="partner-benefits-grid">
+        <div class="partner-benefit-card">
+          <div class="partner-benefit-icon">
+            <i class="fas fa-link"></i>
+          </div>
+          <h4>Get Your Link</h4>
+          <p>Sign up and receive your unique referral link instantly</p>
+        </div>
+        <div class="partner-benefit-card">
+          <div class="partner-benefit-icon accent">
+            <i class="fas fa-share-alt"></i>
+          </div>
+          <h4>Share With Families</h4>
+          <p>Recommend our service to families you work with</p>
+        </div>
+        <div class="partner-benefit-card">
+          <div class="partner-benefit-icon">
+            <i class="fas fa-dollar-sign"></i>
+          </div>
+          <h4>Earn Commission</h4>
+          <p>Get $15 for every QR tag purchased through your link</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Signup Form -->
+  <section class="partner-signup-section">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-11 col-md-8 col-lg-6">
+          <div class="partner-signup-card">
+            <div class="partner-signup-header">
+              <h3>Become a Partner</h3>
+              <p>Free to join. No inventory or risk.</p>
+            </div>
+
+            <form id="partner-signup-form" novalidate>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label for="business-name" class="form-label">Business Name *</label>
+                  <input type="text" class="form-control form-control-lg" id="business-name" required placeholder="Smith Funeral Home">
+                </div>
+
+                <div class="col-md-6">
+                  <label for="contact-name" class="form-label">Your Name *</label>
+                  <input type="text" class="form-control form-control-lg" id="contact-name" required placeholder="John Smith">
+                </div>
+
+                <div class="col-md-6">
+                  <label for="business-type" class="form-label">Business Type *</label>
+                  <select class="form-select form-select-lg" id="business-type" required>
+                    <option value="">Select type...</option>
+                    <option value="funeral_home">Funeral Home</option>
+                    <option value="cemetery">Cemetery</option>
+                    <option value="monument_company">Monument/Headstone Company</option>
+                    <option value="church">Church/Religious Organization</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="email" class="form-label">Email Address *</label>
+                  <input type="email" class="form-control form-control-lg" id="email" required placeholder="john@smithfuneral.com">
+                </div>
+
+                <div class="col-md-6">
+                  <label for="phone" class="form-label">Phone Number</label>
+                  <input type="tel" class="form-control form-control-lg" id="phone" placeholder="(555) 123-4567">
+                </div>
+
+                <div class="col-12">
+                  <label for="website" class="form-label">Website (optional)</label>
+                  <input type="url" class="form-control form-control-lg" id="website" placeholder="https://smithfuneral.com">
+                </div>
+
+                <div class="col-12">
+                  <hr class="my-3">
+                  <h5 class="mb-3">Payment Information</h5>
+                  <p class="text-muted small mb-3">How should we send your commissions? (Paid monthly for balances over $50)</p>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="payment-method" class="form-label">Payment Method *</label>
+                  <select class="form-select form-select-lg" id="payment-method" required>
+                    <option value="">Select method...</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="venmo">Venmo</option>
+                    <option value="check">Check (mailed)</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="payment-email" class="form-label">PayPal/Venmo Email</label>
+                  <input type="email" class="form-control form-control-lg" id="payment-email" placeholder="payment@email.com">
+                  <small class="form-text">Required for PayPal/Venmo</small>
+                </div>
+
+                <div class="col-12 mt-4">
+                  <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="agree-terms" required>
+                    <label class="form-check-label" for="agree-terms">
+                      I agree to the <a href="/terms" target="_blank">Partner Terms</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary-unified btn-lg w-100" id="partner-submit-btn">
+                    <i class="fas fa-handshake"></i>
+                    <span>Join Partner Program</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- Success Message (hidden by default) -->
+            <div id="partner-success" class="partner-success-message" style="display: none;">
+              <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <h4>Welcome to the Partner Program!</h4>
+              <p>Your referral code is:</p>
+              <div class="referral-code-display" id="referral-code-display">LOADING</div>
+              <p class="mt-3">Your referral link:</p>
+              <div class="referral-link-box">
+                <input type="text" class="form-control" id="referral-link" readonly>
+                <button type="button" class="btn btn-secondary-unified" id="copy-link-btn">
+                  <i class="fas fa-copy"></i>
+                </button>
+              </div>
+              <p class="text-muted mt-3 small">Share this link with families. You'll earn $15 for every QR tag they purchase.</p>
+              <a href="/partner-dashboard" class="btn btn-primary-unified mt-3" data-route>
+                <i class="fas fa-chart-line"></i>
+                <span>Go to Dashboard</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Partner -->
+  <section class="partner-why-section">
+    <div class="container">
+      <h2 class="section-title">Why Partner With Us?</h2>
+      <div class="partner-why-grid">
+        <div class="partner-why-item">
+          <i class="fas fa-hand-holding-usd"></i>
+          <h5>$15 Per Sale</h5>
+          <p>Earn commission on every QR tag sold through your link</p>
+        </div>
+        <div class="partner-why-item">
+          <i class="fas fa-box"></i>
+          <h5>No Inventory</h5>
+          <p>We handle all production, shipping, and customer support</p>
+        </div>
+        <div class="partner-why-item">
+          <i class="fas fa-heart"></i>
+          <h5>Help Families</h5>
+          <p>Offer a meaningful service that preserves memories forever</p>
+        </div>
+        <div class="partner-why-item">
+          <i class="fas fa-chart-line"></i>
+          <h5>Track Everything</h5>
+          <p>Real-time dashboard shows clicks, conversions, and earnings</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="partner-faq-section">
+    <div class="container">
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="partner-faq-item">
+            <h5>How does the referral link work?</h5>
+            <p>When someone visits our site through your link, we track them for 30 days. If they purchase a QR tag during that time, you earn the commission.</p>
+          </div>
+          <div class="partner-faq-item">
+            <h5>When do I get paid?</h5>
+            <p>Commissions are paid monthly via your chosen method (PayPal, Venmo, or check) for balances over $50. Smaller balances roll over to the next month.</p>
+          </div>
+          <div class="partner-faq-item">
+            <h5>Is there a cost to join?</h5>
+            <p>No! The partner program is completely free. There's no inventory to buy, no fees, and no risk.</p>
+          </div>
+          <div class="partner-faq-item">
+            <h5>Can I customize my referral page?</h5>
+            <p>Top-performing partners can upgrade to co-branded landing pages with your logo and branding. Contact us after your first 10 referrals.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

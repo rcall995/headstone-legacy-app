@@ -1,0 +1,170 @@
+<div class="page-wrapper">
+  <section class="dashboard-theme-wrapper">
+    <div class="container py-5">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h2 mb-1"><i class="fas fa-building me-2"></i>Wholesale Dashboard</h1>
+          <p class="text-muted mb-0" id="ws-business-name-display">Loading...</p>
+        </div>
+        <div>
+          <span class="badge bg-success" id="ws-tier-badge">Active</span>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="row g-4 mb-5">
+        <div class="col-md-3">
+          <div class="card-unified text-center">
+            <div class="h2 text-primary mb-1" id="ws-total-licenses">0</div>
+            <div class="text-muted small">Total Licenses</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card-unified text-center">
+            <div class="h2 text-success mb-1" id="ws-available-licenses">0</div>
+            <div class="text-muted small">Available</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card-unified text-center">
+            <div class="h2 text-info mb-1" id="ws-used-licenses">0</div>
+            <div class="text-muted small">Used</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card-unified text-center">
+            <div class="h2 text-warning mb-1" id="ws-price-per-license">$0</div>
+            <div class="text-muted small">Your Price</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="card-unified mb-5">
+        <h4 class="mb-4"><i class="fas fa-bolt me-2"></i>Quick Actions</h4>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <button class="btn btn-primary-unified w-100 btn-lg" id="ws-buy-licenses-btn">
+              <i class="fas fa-shopping-cart me-2"></i>Buy More Licenses
+            </button>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-secondary-unified w-100 btn-lg" id="ws-create-memorial-btn">
+              <i class="fas fa-plus me-2"></i>Create Memorial
+            </button>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-outline-primary w-100 btn-lg" id="ws-download-all-btn">
+              <i class="fas fa-download me-2"></i>Download All QR Codes
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Memorials / QR Codes Table -->
+      <div class="card-unified">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="mb-0"><i class="fas fa-qrcode me-2"></i>Your Memorial QR Codes</h4>
+          <div class="input-group" style="max-width: 300px;">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="text" class="form-control" placeholder="Search memorials..." id="ws-search-input">
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="ws-loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 text-muted">Loading your memorials...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="ws-empty" class="text-center py-5" style="display: none;">
+          <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+          <h5>No Memorials Yet</h5>
+          <p class="text-muted">Create your first memorial to get started with QR codes.</p>
+          <button class="btn btn-primary" id="ws-create-first-btn">
+            <i class="fas fa-plus me-2"></i>Create Memorial
+          </button>
+        </div>
+
+        <!-- Memorials List -->
+        <div id="ws-memorials-list" style="display: none;">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Memorial</th>
+                  <th>Created</th>
+                  <th>Status</th>
+                  <th>Views</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ws-memorials-tbody">
+                <!-- Populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- QR Code Preview Modal -->
+      <div class="modal fade" id="qrPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="qr-preview-title">QR Code Preview</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+              <div id="qr-preview-container" class="mb-3">
+                <!-- QR code rendered here -->
+              </div>
+              <p class="small text-muted mb-3" id="qr-preview-url"></p>
+              <div class="d-flex gap-2 justify-content-center">
+                <button class="btn btn-outline-primary" id="qr-download-svg-btn">
+                  <i class="fas fa-file-code me-2"></i>Download SVG
+                </button>
+                <button class="btn btn-outline-primary" id="qr-download-png-btn">
+                  <i class="fas fa-file-image me-2"></i>Download PNG
+                </button>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                SVG recommended for laser etching. PNG for digital use.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sizing Guide Info -->
+      <div class="card-unified mt-5">
+        <h4 class="mb-3"><i class="fas fa-ruler-combined me-2"></i>Laser Etching Guide</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Recommended Sizes</h6>
+            <ul class="list-unstyled">
+              <li><i class="fas fa-check text-success me-2"></i><strong>Minimum:</strong> 1" x 1" (25mm x 25mm)</li>
+              <li><i class="fas fa-check text-success me-2"></i><strong>Recommended:</strong> 1.5" x 1.5" (38mm x 38mm)</li>
+              <li><i class="fas fa-check text-success me-2"></i><strong>Large/Distance:</strong> 2" x 2" (50mm x 50mm)</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6>Best Practices</h6>
+            <ul class="list-unstyled">
+              <li><i class="fas fa-lightbulb text-warning me-2"></i>Use high contrast (black on light stone)</li>
+              <li><i class="fas fa-lightbulb text-warning me-2"></i>Include quiet zone (white border)</li>
+              <li><i class="fas fa-lightbulb text-warning me-2"></i>Test scan before final etch</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

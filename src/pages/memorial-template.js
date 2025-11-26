@@ -61,6 +61,92 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// --- OG META TAG UPDATES ---
+function updateOpenGraphTags(data) {
+    const baseUrl = 'https://www.headstonelegacy.com';
+    const memorialUrl = `${baseUrl}/memorial?id=${data.id}`;
+    const title = `${data.name || 'Memorial'} - Headstone Legacy`;
+    const description = data.story
+        ? data.story.substring(0, 160) + (data.story.length > 160 ? '...' : '')
+        : `View the memorial page for ${data.name || 'a loved one'}. Light a candle, leave a tribute, and explore their life story.`;
+    const image = data.main_photo || `${baseUrl}/images/og-image.jpg`;
+
+    // Update document title
+    document.title = title;
+
+    // Helper to update or create meta tags
+    function setMeta(property, content, isProperty = true) {
+        const attr = isProperty ? 'property' : 'name';
+        let meta = document.querySelector(`meta[${attr}="${property}"]`);
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute(attr, property);
+            document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', content);
+    }
+
+    // Open Graph tags
+    setMeta('og:title', title);
+    setMeta('og:description', description);
+    setMeta('og:image', image);
+    setMeta('og:url', memorialUrl);
+    setMeta('og:type', 'profile');
+
+    // Twitter Card tags
+    setMeta('twitter:title', title, false);
+    setMeta('twitter:description', description, false);
+    setMeta('twitter:image', image, false);
+
+    // Update canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', memorialUrl);
+}
+
+// --- VIEW COUNT FUNCTIONS ---
+async function incrementViewCount(memorialId) {
+    // Use session storage to prevent counting multiple views in same session
+    const viewKey = `memorial_viewed_${memorialId}`;
+    if (sessionStorage.getItem(viewKey)) {
+        console.log('[Views] Already counted this session');
+        return;
+    }
+
+    try {
+        const { error } = await supabase.rpc('increment_view_count', { memorial_id: memorialId });
+        if (error) {
+            // Fallback to direct update if RPC doesn't exist
+            if (error.code === '42883') { // function does not exist
+                const { error: updateError } = await supabase
+                    .from('memorials')
+                    .update({ view_count: supabase.raw('view_count + 1') })
+                    .eq('id', memorialId);
+                if (!updateError) {
+                    sessionStorage.setItem(viewKey, 'true');
+                }
+            } else {
+                console.warn('[Views] Error incrementing:', error);
+            }
+        } else {
+            sessionStorage.setItem(viewKey, 'true');
+        }
+    } catch (err) {
+        console.warn('[Views] Failed to increment view count:', err);
+    }
+}
+
+function renderViewCount(count) {
+    const viewCountEl = document.getElementById('view-count');
+    if (viewCountEl) {
+        viewCountEl.textContent = (count || 0).toLocaleString();
+    }
+}
+
 function getYear(dateString) {
     if (!dateString || typeof dateString !== 'string') return null;
     if (/^\d{4}$/.test(dateString)) return parseInt(dateString);
@@ -1617,6 +1703,13 @@ async function initializePage(appRoot, memorialId) {
 
     // Store memorial data for reminder functions
     currentMemorialData = data;
+
+    // Update Open Graph meta tags for social sharing
+    updateOpenGraphTags(data);
+
+    // Render and increment view count
+    renderViewCount(data.view_count);
+    incrementViewCount(memorialId);
 
     // Render candle count and set up handlers
     renderCandleCount(data.candle_count || 0);

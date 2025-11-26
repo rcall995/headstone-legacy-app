@@ -8,7 +8,9 @@ const commonRelationships = ["Spouse", "Parent", "Father", "Mother", "Son", "Dau
 let originalAddress = '';
 let cemeteryLocation = null; // Store geocoded cemetery location { lat, lng }
 let cemeteryMapPreview = null; // Map instance for preview
+let lifePathMapInstance = null; // Map instance for life journey
 let isGeocoding = false; // Prevent duplicate geocoding requests
+let headstonePhotoFile = null; // Store the headstone photo
 
 function navigateToStep(stepNumber) {
     currentStep = stepNumber;
@@ -260,6 +262,184 @@ function cleanupCemeteryMapPreview() {
     }
 }
 
+function cleanupLifePathMap() {
+    if (lifePathMapInstance) {
+        try {
+            lifePathMapInstance.remove();
+        } catch (err) {
+            console.error('Error removing life path map:', err);
+        }
+        lifePathMapInstance = null;
+    }
+}
+
+// --- Headstone Photo Upload ---
+function setupHeadstonePhoto(appRoot) {
+    const fileInput = appRoot.querySelector('#headstone-photo-input');
+    const preview = appRoot.querySelector('#headstone-preview');
+    const uploadContent = appRoot.querySelector('#headstone-upload-content');
+    const uploadArea = appRoot.querySelector('#headstone-upload-area');
+    const removeBtn = appRoot.querySelector('#headstone-remove-btn');
+
+    if (!fileInput) return;
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            headstonePhotoFile = file;
+            const url = URL.createObjectURL(file);
+            preview.src = url;
+            preview.classList.remove('d-none');
+            uploadContent.style.display = 'none';
+            uploadArea.classList.add('has-image');
+            removeBtn.classList.remove('d-none');
+        }
+    });
+
+    removeBtn?.addEventListener('click', () => {
+        headstonePhotoFile = null;
+        preview.src = '';
+        preview.classList.add('d-none');
+        uploadContent.style.display = 'flex';
+        uploadArea.classList.remove('has-image');
+        removeBtn.classList.add('d-none');
+        fileInput.value = '';
+    });
+}
+
+
+// --- Life Path Map Functions ---
+async function updateLifePathMap(appRoot) {
+    const residences = getDynamicFieldValues(appRoot, 'residences');
+    const mapContainer = appRoot.querySelector('#life-path-map');
+
+    if (!mapContainer || residences.length === 0) {
+        if (mapContainer) mapContainer.style.display = 'none';
+        return;
+    }
+
+    // Geocode all addresses
+    const locations = [];
+    const { data: { session } } = await supabase.auth.getSession();
+
+    for (const residence of residences) {
+        if (!residence.address) continue;
+
+        try {
+            const response = await fetch('/api/geo/geocode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token || ''}`
+                },
+                body: JSON.stringify({ address: residence.address })
+            });
+
+            if (response.ok) {
+                const { lat, lng } = await response.json();
+                locations.push({
+                    ...residence,
+                    lat,
+                    lng
+                });
+            }
+        } catch (error) {
+            console.warn('Could not geocode:', residence.address);
+        }
+    }
+
+    if (locations.length === 0) {
+        mapContainer.style.display = 'none';
+        return;
+    }
+
+    mapContainer.style.display = 'block';
+
+    // Clean up existing map
+    cleanupLifePathMap();
+
+    try {
+        const configModule = await import('/js/config.js');
+        mapboxgl.accessToken = configModule.config.MAPBOX_ACCESS_TOKEN;
+
+        // Calculate bounds
+        const bounds = new mapboxgl.LngLatBounds();
+        locations.forEach(loc => bounds.extend([loc.lng, loc.lat]));
+
+        lifePathMapInstance = new mapboxgl.Map({
+            container: mapContainer,
+            style: 'mapbox://styles/mapbox/light-v11',
+            bounds: bounds,
+            fitBoundsOptions: { padding: 50 }
+        });
+
+        lifePathMapInstance.on('load', () => {
+            // Add markers for each location
+            locations.forEach((loc, index) => {
+                const el = document.createElement('div');
+                el.className = 'life-path-marker';
+                el.innerHTML = `<span>${index + 1}</span>`;
+                el.style.cssText = `
+                    width: 30px;
+                    height: 30px;
+                    background: linear-gradient(135deg, #005F60, #007a7a);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 12px;
+                    border: 3px solid white;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                `;
+
+                new mapboxgl.Marker(el)
+                    .setLngLat([loc.lng, loc.lat])
+                    .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+                        <strong>${loc.address}</strong><br>
+                        ${loc.startYear ? loc.startYear : ''} ${loc.startYear && loc.endYear ? '-' : ''} ${loc.endYear ? loc.endYear : ''}
+                    `))
+                    .addTo(lifePathMapInstance);
+            });
+
+            // Draw line connecting locations if more than one
+            if (locations.length > 1) {
+                lifePathMapInstance.addSource('route', {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: locations.map(loc => [loc.lng, loc.lat])
+                        }
+                    }
+                });
+
+                lifePathMapInstance.addLayer({
+                    id: 'route',
+                    type: 'line',
+                    source: 'route',
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': '#005F60',
+                        'line-width': 3,
+                        'line-dasharray': [2, 2]
+                    }
+                });
+            }
+        });
+
+        lifePathMapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    } catch (err) {
+        console.error('Error creating life path map:', err);
+    }
+}
+
 // --- Photo Upload Functions (Supabase Storage) ---
 async function uploadPhotoToStorage(file, memorialId, photoType = 'main') {
     if (!file) return null;
@@ -303,6 +483,11 @@ async function handlePhotoUploads(appRoot, memorialId) {
     const uploadedPhotos = {};
 
     try {
+        // Upload headstone photo if captured
+        if (headstonePhotoFile) {
+            uploadedPhotos.headstonePhoto = await uploadPhotoToStorage(headstonePhotoFile, memorialId, 'headstone');
+        }
+
         // Upload main photo if selected
         if (mainPhotoInput && mainPhotoInput.files.length > 0) {
             const mainPhoto = mainPhotoInput.files[0];
@@ -418,7 +603,7 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
             title: appRoot.querySelector('#memorial-title').value,
             birth_date: appRoot.querySelector('#memorial-birth-date').value,
             death_date: appRoot.querySelector('#memorial-death-date').value,
-            story: appRoot.querySelector('#memorial-story').value,
+            bio: appRoot.querySelector('#memorial-story').value,
             cemetery_name: appRoot.querySelector('#memorial-cemetery-name').value,
             cemetery_address: appRoot.querySelector('#memorial-cemetery-address').value,
             relatives: getDynamicFieldValues(appRoot, 'relatives'),
@@ -444,13 +629,28 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
         const uploadedPhotos = await handlePhotoUploads(appRoot, newMemorialId);
 
         // Add photo URLs to memorial data
+        if (uploadedPhotos.headstonePhoto) memorialData.headstone_photo = uploadedPhotos.headstonePhoto;
         if (uploadedPhotos.mainPhoto) memorialData.main_photo = uploadedPhotos.mainPhoto;
         if (uploadedPhotos.photos) memorialData.photos = uploadedPhotos.photos;
 
-        // Save/update memorial using upsert
-        const { error } = await supabase
-            .from('memorials')
-            .upsert(memorialData, { onConflict: 'id' });
+        // Use INSERT for new memorials, UPDATE for existing ones
+        // (upsert doesn't work well with RLS policies that check curator_ids)
+        let error;
+        if (!memorialId) {
+            // New memorial - INSERT
+            const result = await supabase
+                .from('memorials')
+                .insert(memorialData);
+            error = result.error;
+        } else {
+            // Existing memorial - UPDATE (don't send id in the update data)
+            const { id, ...updateData } = memorialData;
+            const result = await supabase
+                .from('memorials')
+                .update(updateData)
+                .eq('id', memorialId);
+            error = result.error;
+        }
 
         if (error) throw error;
 
@@ -465,7 +665,12 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
         }
     } catch (error) {
         console.error("Error saving memorial:", error);
-        showToast(`Error saving memorial: ${error.message}`, 'error');
+        // Provide clearer error messages for common issues
+        if (error.code === '42501' || error.message?.includes('row-level security')) {
+            showToast("You don't have permission to edit this memorial. Only curators can make changes.", 'error');
+        } else {
+            showToast(`Error saving memorial: ${error.message}`, 'error');
+        }
     } finally {
         saveButton.disabled = false;
         saveButton.innerHTML = desiredStatus === 'draft' ? 'Save Draft' : 'Publish';
@@ -503,6 +708,19 @@ function showSuccessModal(appRoot, memorialId, memorialName) {
         emailBtn.href = `mailto:?subject=${subject}&body=${body}`;
     }
 
+    // Helper to clean up modal and navigate
+    function cleanupAndNavigate(path) {
+        // Hide modal first
+        modal.hide();
+        // Remove any leftover modal backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+        // Navigate after cleanup
+        window.dispatchEvent(new CustomEvent('navigate', { detail: path }));
+    }
+
     // View memorial button
     const viewBtn = appRoot.querySelector('#view-memorial-btn');
     if (viewBtn) {
@@ -510,8 +728,7 @@ function showSuccessModal(appRoot, memorialId, memorialName) {
         viewBtn.setAttribute('data-route', '');
         viewBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            modal.hide();
-            window.dispatchEvent(new CustomEvent('navigate', { detail: `/memorial?id=${memorialId}` }));
+            cleanupAndNavigate(`/memorial?id=${memorialId}`);
         });
     }
 
@@ -522,8 +739,7 @@ function showSuccessModal(appRoot, memorialId, memorialName) {
         orderTagBtn.setAttribute('data-route', '');
         orderTagBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            modal.hide();
-            window.dispatchEvent(new CustomEvent('navigate', { detail: `/order-tag?id=${memorialId}` }));
+            cleanupAndNavigate(`/order-tag?id=${memorialId}`);
         });
     }
 
@@ -618,7 +834,7 @@ function populateForm(data, appRoot) {
     appRoot.querySelector('#memorial-title').value = data.title || '';
     appRoot.querySelector('#memorial-birth-date').value = data.birth_date || '';
     appRoot.querySelector('#memorial-death-date').value = data.death_date || '';
-    appRoot.querySelector('#memorial-story').value = data.story || '';
+    appRoot.querySelector('#memorial-story').value = data.bio || data.story || '';
     appRoot.querySelector('#memorial-cemetery-name').value = data.cemetery_name || '';
     appRoot.querySelector('#memorial-cemetery-address').value = data.cemetery_address || '';
     originalAddress = data.cemetery_address || '';
@@ -668,6 +884,22 @@ function populateForm(data, appRoot) {
     if (data.residences && Array.isArray(data.residences)) {
         data.residences.forEach(residence => addDynamicField(appRoot, 'residences', residence));
     }
+
+    // Load existing headstone photo if present
+    if (data.headstone_photo) {
+        const preview = appRoot.querySelector('#headstone-preview');
+        const uploadContent = appRoot.querySelector('#headstone-upload-content');
+        const uploadArea = appRoot.querySelector('#headstone-upload-area');
+        const removeBtn = appRoot.querySelector('#headstone-remove-btn');
+
+        if (preview && uploadContent) {
+            preview.src = data.headstone_photo;
+            preview.classList.remove('d-none');
+            uploadContent.style.display = 'none';
+            uploadArea?.classList.add('has-image');
+            removeBtn?.classList.remove('d-none');
+        }
+    }
 }
 
 async function initializePage(appRoot, urlParams) {
@@ -705,7 +937,15 @@ async function initializePage(appRoot, urlParams) {
 
     appRoot.querySelector('#add-milestone-button')?.addEventListener('click', () => addDynamicField(appRoot, 'milestones'));
     appRoot.querySelector('#add-relative-button')?.addEventListener('click', () => addDynamicField(appRoot, 'relatives'));
-    appRoot.querySelector('#add-residence-button')?.addEventListener('click', () => addDynamicField(appRoot, 'residences'));
+    appRoot.querySelector('#add-residence-button')?.addEventListener('click', () => {
+        addDynamicField(appRoot, 'residences');
+        // Debounce map update
+        clearTimeout(window.lifePathMapTimeout);
+        window.lifePathMapTimeout = setTimeout(() => updateLifePathMap(appRoot), 1000);
+    });
+
+    // Setup headstone photo upload
+    setupHeadstonePhoto(appRoot);
 
     // Wire up cemetery location buttons
     appRoot.querySelector('#use-my-location-btn')?.addEventListener('click', () => useMyLocation(appRoot));
@@ -734,7 +974,9 @@ async function initializePage(appRoot, urlParams) {
 // Cleanup on page unload
 export function cleanupMemorialForm() {
     cleanupCemeteryMapPreview();
+    cleanupLifePathMap();
     cemeteryLocation = null;
+    headstonePhotoFile = null;
 }
 
 export async function loadMemorialForm(appRoot, urlParams) {

@@ -3,11 +3,12 @@ import { supabase } from '/js/supabase-client.js';
 import { signOut } from '/js/auth-manager.js';
 import { showToast } from '/js/utils/toasts.js';
 import { updateMenuBadges } from '/js/utils/badge-updater.js';
+import { initReferralTracking } from '/js/utils/referral-tracker.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ---------- Service Worker: simple, no auto-reload ---------- */
   if ('serviceWorker' in navigator) {
-    const SW_VERSION = 'v27';            // bump this when you deploy
+    const SW_VERSION = 'v28';            // bump this when you deploy
     const SW_URL = `/serviceworker.js?sw=${SW_VERSION}`;
 
     navigator.serviceWorker.register(SW_URL, { scope: '/' })
@@ -18,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(err => console.warn('[SW] register failed:', err));
   }
+
+  /* ---------- Referral Tracking ---------- */
+  initReferralTracking();
 
   /* ---------- App state ---------- */
   const appRoot = document.getElementById('app-root');
@@ -82,6 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
       currentUnloadListener = null;
     }
 
+    // Clean up any stale Bootstrap modal backdrops from previous pages
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+
     // Set body classes for page-specific styling
     document.body.classList.remove('dashboard-page-active', 'memorial-page-active', 'scout-active');
     if (path.startsWith('/curator') || path.startsWith('/memorial-list') || path.startsWith('/memorial-form') || path.startsWith('/tributes')) {
@@ -121,6 +131,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setPageTitle('Scout Mode');
         const { loadScoutModePage } = await import('./pages/scout-mode.js');
         currentPageCleanup = await loadScoutModePage(appRoot, currentUser);
+      } else if (path === '/scout-leaderboard') {
+        setPageTitle('Scout Leaderboard');
+        const { loadScoutLeaderboardPage } = await import('./pages/scout-leaderboard.js');
+        await loadScoutLeaderboardPage(appRoot);
       } else if (path === '/curator-panel') {
         // Redirect to memorial list instead of showing dashboard
         handleNavigation('/memorial-list?status=published');
@@ -137,10 +151,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const { loadMemorialPage, setOnUnload } = await import('./pages/memorial-template.js');
         await loadMemorialPage(appRoot, urlParams.get('id'));
         currentUnloadListener = setOnUnload(urlParams.get('id'));
-      } else if (path === '/order-tag') {
+      } else if (path === '/order-tag' || path.startsWith('/order-tag/')) {
         setPageTitle('Order Tag');
         const { loadOrderTagPage } = await import('./pages/order-tag.js');
-        await loadOrderTagPage(appRoot, urlParams.get('id'));
+        // Support both /order-tag?id=xxx and /order-tag/xxx formats
+        const memorialIdOrSlug = path.startsWith('/order-tag/')
+          ? decodeURIComponent(path.split('/order-tag/')[1])
+          : urlParams.get('id');
+        await loadOrderTagPage(appRoot, memorialIdOrSlug);
       } else if (path === '/welcome') {
         setPageTitle('Welcome');
         const { loadWelcomePage } = await import('./pages/welcome.js');
@@ -154,22 +172,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const { loadAdminPage } = await import('./pages/admin.js');
         await loadAdminPage(appRoot);
       } else if (path === '/tributes-list') {
-        // TODO: Create dedicated tributes management page
-        // For now, redirect to memorials where tributes can be managed
         setPageTitle('Pending Tributes');
-        appRoot.innerHTML = `
-          <div class="container mt-5 text-center">
-            <div class="alert alert-info" role="alert">
-              <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Tributes Management</h4>
-              <p>The dedicated tributes management page is coming soon!</p>
-              <hr>
-              <p class="mb-0">For now, you can view and approve tributes by visiting each memorial individually.</p>
-            </div>
-            <a href="/memorial-list?status=published" class="btn btn-primary mt-3" data-route>
-              <i class="fas fa-book-open me-2"></i>Go to My Memorials
-            </a>
-          </div>
-        `;
+        const { loadTributesListPage } = await import('./pages/tributes-list.js');
+        await loadTributesListPage(appRoot);
+      } else if (path === '/partners') {
+        setPageTitle('Partner Program');
+        const { loadPartnersPage } = await import('./pages/partners.js');
+        await loadPartnersPage(appRoot);
+      } else if (path === '/partner-dashboard') {
+        setPageTitle('Partner Dashboard');
+        const { loadPartnerDashboardPage } = await import('./pages/partner-dashboard.js');
+        await loadPartnerDashboardPage(appRoot);
+      } else if (path === '/order-success') {
+        setPageTitle('Order Confirmed');
+        const { loadOrderSuccessPage } = await import('./pages/order-success.js');
+        await loadOrderSuccessPage(appRoot);
+      } else if (path === '/wholesale') {
+        setPageTitle('Wholesale Program');
+        const { loadWholesalePage } = await import('./pages/wholesale.js');
+        await loadWholesalePage(appRoot);
+      } else if (path === '/wholesale-dashboard') {
+        setPageTitle('Wholesale Dashboard');
+        const { loadWholesaleDashboardPage } = await import('./pages/wholesale-dashboard.js');
+        await loadWholesaleDashboardPage(appRoot);
       } else {
         setPageTitle('404 Not Found');
         appRoot.innerHTML = `<p class="text-center text-danger">404: Page not found.</p>`;

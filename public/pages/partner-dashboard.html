@@ -1,0 +1,106 @@
+<div class="page-wrapper">
+  <!-- Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="page-hero-title">Partner Dashboard</h1>
+      <p class="page-hero-subtitle" id="partner-business-name">Loading...</p>
+    </div>
+  </section>
+
+  <!-- Dashboard Content -->
+  <section class="partner-dashboard-section">
+    <div class="container">
+      <!-- Not a partner message (hidden by default) -->
+      <div id="not-partner-message" class="card-unified text-center py-5" style="display: none;">
+        <h3>You're not a partner yet</h3>
+        <p class="text-muted">Join our affiliate program to start earning commissions.</p>
+        <a href="/partners" class="btn btn-primary-unified" data-route>
+          <i class="fas fa-handshake"></i>
+          <span>Become a Partner</span>
+        </a>
+      </div>
+
+      <!-- Dashboard content (shown when partner) -->
+      <div id="partner-dashboard-content" style="display: none;">
+        <!-- Stats Grid -->
+        <div class="partner-stats-grid">
+          <div class="partner-stat-card">
+            <div class="partner-stat-value" id="stat-clicks">0</div>
+            <div class="partner-stat-label">Total Clicks</div>
+          </div>
+          <div class="partner-stat-card">
+            <div class="partner-stat-value" id="stat-conversions">0</div>
+            <div class="partner-stat-label">Conversions</div>
+          </div>
+          <div class="partner-stat-card">
+            <div class="partner-stat-value success" id="stat-earnings">$0</div>
+            <div class="partner-stat-label">Total Earnings</div>
+          </div>
+          <div class="partner-stat-card">
+            <div class="partner-stat-value" id="stat-pending">$0</div>
+            <div class="partner-stat-label">Pending Payout</div>
+          </div>
+        </div>
+
+        <!-- Referral Link Box -->
+        <div class="partner-referral-box">
+          <h4><i class="fas fa-link"></i> Your Referral Link</h4>
+          <div class="referral-link-box mb-3">
+            <input type="text" class="form-control form-control-lg" id="dashboard-referral-link" readonly>
+            <button type="button" class="btn btn-primary-unified" id="dashboard-copy-btn">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+          <p class="text-muted small mb-0">Share this link to earn $15 for every QR tag purchased.</p>
+        </div>
+
+        <!-- Recent Referrals Table -->
+        <div class="partner-referrals-table">
+          <h4><i class="fas fa-history"></i> Recent Activity</h4>
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Commission</th>
+                </tr>
+              </thead>
+              <tbody id="referrals-table-body">
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">
+                    <i class="fas fa-info-circle"></i> No activity yet. Share your link to get started!
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Payout Info -->
+        <div class="card-unified mt-4">
+          <h5><i class="fas fa-wallet"></i> Payout Information</h5>
+          <div class="row">
+            <div class="col-md-6">
+              <p class="mb-1"><strong>Payment Method:</strong> <span id="payout-method">-</span></p>
+              <p class="mb-1"><strong>Payment Email:</strong> <span id="payout-email">-</span></p>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1"><strong>Minimum Payout:</strong> $50</p>
+              <p class="mb-0"><strong>Payout Schedule:</strong> Monthly (1st of each month)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="partner-loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Loading your dashboard...</p>
+      </div>
+    </div>
+  </section>
+</div>

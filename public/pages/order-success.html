@@ -1,0 +1,143 @@
+<div class="page-wrapper">
+  <!-- Hero -->
+  <section class="page-hero success-hero">
+    <div class="container">
+      <div class="success-icon-large">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h1 class="page-hero-title">Order Confirmed!</h1>
+      <p class="page-hero-subtitle">Thank you for your purchase</p>
+    </div>
+  </section>
+
+  <!-- Order Details -->
+  <section class="order-success-section">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-11 col-md-8 col-lg-6">
+          <!-- Order Summary Card -->
+          <div class="success-card">
+            <div class="success-card-header">
+              <h3><i class="fas fa-receipt"></i> Order Summary</h3>
+            </div>
+            <div class="success-card-body">
+              <div class="success-detail-row">
+                <span class="detail-label">Order Number</span>
+                <span class="detail-value" id="order-number">Loading...</span>
+              </div>
+              <div class="success-detail-row">
+                <span class="detail-label">Memorial</span>
+                <span class="detail-value" id="order-memorial">Loading...</span>
+              </div>
+              <div class="success-detail-row">
+                <span class="detail-label">Product</span>
+                <span class="detail-value" id="order-product">QR Memorial Tag</span>
+              </div>
+              <div class="success-detail-row">
+                <span class="detail-label">Quantity</span>
+                <span class="detail-value" id="order-quantity">1</span>
+              </div>
+              <hr>
+              <div class="success-detail-row total">
+                <span class="detail-label">Total Paid</span>
+                <span class="detail-value" id="order-total">$39.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipping Info -->
+          <div class="success-card">
+            <div class="success-card-header">
+              <h3><i class="fas fa-truck"></i> Shipping Information</h3>
+            </div>
+            <div class="success-card-body">
+              <div id="shipping-address">
+                <p class="text-muted">Loading shipping details...</p>
+              </div>
+              <hr>
+              <div class="shipping-timeline">
+                <div class="timeline-item active">
+                  <div class="timeline-icon"><i class="fas fa-check"></i></div>
+                  <div class="timeline-content">
+                    <strong>Order Placed</strong>
+                    <span id="order-date">Just now</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-icon"><i class="fas fa-box"></i></div>
+                  <div class="timeline-content">
+                    <strong>Processing</strong>
+                    <span>1-2 business days</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-icon"><i class="fas fa-shipping-fast"></i></div>
+                  <div class="timeline-content">
+                    <strong>Shipped</strong>
+                    <span>3-5 business days</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-icon"><i class="fas fa-home"></i></div>
+                  <div class="timeline-content">
+                    <strong>Delivered</strong>
+                    <span>Estimated 5-7 business days total</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- What's Next -->
+          <div class="success-card">
+            <div class="success-card-header">
+              <h3><i class="fas fa-lightbulb"></i> What's Next?</h3>
+            </div>
+            <div class="success-card-body">
+              <div class="next-steps">
+                <div class="next-step-item">
+                  <div class="next-step-icon"><i class="fas fa-envelope"></i></div>
+                  <div class="next-step-content">
+                    <strong>Confirmation Email</strong>
+                    <p>You'll receive an email confirmation shortly with your order details.</p>
+                  </div>
+                </div>
+                <div class="next-step-item">
+                  <div class="next-step-icon"><i class="fas fa-edit"></i></div>
+                  <div class="next-step-content">
+                    <strong>Complete Your Memorial</strong>
+                    <p>Add more photos, stories, and family connections while you wait for your tag.</p>
+                  </div>
+                </div>
+                <div class="next-step-item">
+                  <div class="next-step-icon"><i class="fas fa-qrcode"></i></div>
+                  <div class="next-step-content">
+                    <strong>Install Your Tag</strong>
+                    <p>When your tag arrives, follow the included instructions to attach it to the headstone.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="success-actions">
+            <a href="/memorial?id=" id="view-memorial-btn" class="btn btn-primary-unified btn-lg" data-route>
+              <i class="fas fa-eye"></i>
+              <span>View Memorial</span>
+            </a>
+            <a href="/memorial-list" class="btn btn-secondary-unified btn-lg" data-route>
+              <i class="fas fa-list"></i>
+              <span>My Memorials</span>
+            </a>
+          </div>
+
+          <!-- Support -->
+          <div class="success-support">
+            <p>Questions about your order? Contact us at <a href="mailto:support@headstonelegacy.com">support@headstonelegacy.com</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

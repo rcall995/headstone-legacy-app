@@ -1,131 +1,223 @@
 <link rel="stylesheet" href="/css/memorial-form.css">
 
-<div class="container py-5">
+<div class="memorial-form-app">
     <form id="memorialForm" novalidate>
-        <div class="d-flex justify-content-center mb-4">
+        <!-- Wizard Progress -->
+        <div class="wizard-progress-container">
             <div class="wizard-progress">
                 <div class="wizard-progress-step" data-step="1">
                     <div class="step-number">1</div>
-                    Essentials
+                    <span class="step-label">Essentials</span>
                 </div>
                 <div class="wizard-progress-step" data-step="2">
                     <div class="step-number">2</div>
-                    Story
+                    <span class="step-label">Story</span>
                 </div>
                 <div class="wizard-progress-step" data-step="3">
                     <div class="step-number">3</div>
-                    Media
+                    <span class="step-label">Media</span>
                 </div>
                 <div class="wizard-progress-step" data-step="4">
                     <div class="step-number">4</div>
-                    Family
+                    <span class="step-label">Family</span>
                 </div>
                 <div class="wizard-progress-step" data-step="5">
                     <div class="step-number">5</div>
-                    Advanced
+                    <span class="step-label">Advanced</span>
                 </div>
             </div>
         </div>
 
+        <!-- Step 1: Essentials -->
         <div class="wizard-step" data-step="1">
-            <h4 id="memorial-tier-heading">Choose a Memorial Tier</h4>
-            <div class="tier-select mb-4">
-                <label class="tier-card">
-                    <input type="radio" name="tier" value="memorial" class="d-none" required>
-                    <div class="tier-name">Memorial</div>
-                    <p class="tier-desc">A beautiful page with biography, photos, and tributes.</p>
-                </label>
-                <label class="tier-card">
-                    <input type="radio" name="tier" value="storyteller" class="d-none" required>
-                    <div class="tier-name">Storyteller <span class="tier-badge">Popular</span></div>
-                    <p class="tier-desc">Adds an interactive timeline and enhanced styling.</p>
-                </label>
-                <label class="tier-card">
-                    <input type="radio" name="tier" value="historian" class="d-none" required>
-                    <div class="tier-name">Historian</div>
-                    <p class="tier-desc">Includes mapping, family tree, and a digital archive.</p>
-                </label>
-            </div>
-            
-            <hr class="my-4">
-
-            <div class="row g-3">
-                <div class="col-12">
-                    <label for="memorial-name" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="memorial-name" required>
-                </div>
-                <div class="col-12">
-                    <label for="memorial-title" class="form-label">Title or Epitaph (e.g., "Loving Father and Husband")</label>
-                    <input type="text" class="form-control" id="memorial-title">
-                </div>
-                <div class="col-md-6">
-                    <label for="memorial-birth-date" class="form-label">Date of Birth</label>
-                    <input type="date" class="form-control" id="memorial-birth-date">
-                </div>
-                <div class="col-md-6">
-                    <label for="memorial-death-date" class="form-label">Date of Death</label>
-                    <input type="date" class="form-control" id="memorial-death-date">
-                </div>
-                 <div class="col-md-6">
-                    <label for="memorial-cemetery-name" class="form-label">Cemetery Name</label>
-                    <input type="text" class="form-control" id="memorial-cemetery-name">
-                </div>
-                <div class="col-md-6">
-                    <label for="memorial-cemetery-address" class="form-label">Cemetery Address</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="memorial-cemetery-address" placeholder="Full address including city, state">
-                        <button class="btn btn-outline-primary" type="button" id="use-my-location-btn" title="Use current GPS location">
-                            <i class="fas fa-crosshairs"></i>
-                        </button>
-                        <button class="btn btn-outline-secondary" type="button" id="geocode-cemetery-btn">
-                            <i class="fas fa-map-marker-alt"></i> Verify
-                        </button>
+            <!-- Headstone Photo -->
+            <div class="headstone-photo-card">
+                <div class="headstone-photo-header">
+                    <div class="headstone-photo-icon">
+                        <i class="fas fa-monument"></i>
                     </div>
-                    <small class="text-muted" id="geocode-status"></small>
+                    <div class="headstone-photo-title">
+                        <h5>Headstone Photo</h5>
+                        <p>Capture the headstone or grave marker (optional)</p>
+                    </div>
                 </div>
-                <div class="col-12">
-                    <div id="cemetery-map-preview" style="height: 250px; display: none; margin-top: 15px; border-radius: 8px; overflow: hidden;"></div>
+                <div class="headstone-photo-body">
+                    <div class="headstone-upload-area" id="headstone-upload-area">
+                        <input type="file" id="headstone-photo-input" accept="image/*" class="headstone-file-input">
+                        <div class="headstone-upload-content" id="headstone-upload-content">
+                            <i class="fas fa-camera"></i>
+                            <span>Tap to take or choose photo</span>
+                        </div>
+                        <img id="headstone-preview" class="headstone-preview-img d-none" alt="Headstone preview">
+                    </div>
+                    <button type="button" class="headstone-remove-btn d-none" id="headstone-remove-btn">
+                        <i class="fas fa-times"></i> Remove Photo
+                    </button>
                 </div>
+            </div>
+
+            <!-- Tier Selection -->
+            <div class="form-section">
+                <h4 class="section-title" id="memorial-tier-heading">Choose a Memorial Tier</h4>
+                <div class="tier-select">
+                    <label class="tier-card">
+                        <input type="radio" name="tier" value="memorial" class="d-none" required>
+                        <div class="tier-name">Memorial</div>
+                        <p class="tier-desc">A beautiful page with biography, photos, and tributes.</p>
+                    </label>
+                    <label class="tier-card">
+                        <input type="radio" name="tier" value="storyteller" class="d-none" required>
+                        <div class="tier-name">Storyteller <span class="tier-badge">Popular</span></div>
+                        <p class="tier-desc">Adds an interactive timeline and enhanced styling.</p>
+                    </label>
+                    <label class="tier-card">
+                        <input type="radio" name="tier" value="historian" class="d-none" required>
+                        <div class="tier-name">Historian</div>
+                        <p class="tier-desc">Includes mapping, family tree, and a digital archive.</p>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h4 class="section-title">Basic Information</h4>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="memorial-name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="memorial-name" placeholder="Enter full name" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="memorial-title" class="form-label">Title or Epitaph</label>
+                        <input type="text" class="form-control" id="memorial-title" placeholder="e.g., Loving Father and Husband">
+                    </div>
+                    <div class="form-group">
+                        <label for="memorial-birth-date" class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" id="memorial-birth-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="memorial-death-date" class="form-label">Date of Death</label>
+                        <input type="date" class="form-control" id="memorial-death-date">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cemetery Location -->
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-map-marker-alt me-2"></i>Cemetery Location</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="memorial-cemetery-name" class="form-label">Cemetery Name</label>
+                        <input type="text" class="form-control" id="memorial-cemetery-name" placeholder="Enter cemetery name">
+                    </div>
+                    <div class="form-group">
+                        <label for="memorial-cemetery-address" class="form-label">Cemetery Address</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="memorial-cemetery-address" placeholder="Full address including city, state">
+                            <button class="btn btn-outline-primary" type="button" id="use-my-location-btn" title="Use current GPS location">
+                                <i class="fas fa-crosshairs"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" type="button" id="geocode-cemetery-btn">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted" id="geocode-status"></small>
+                    </div>
+                </div>
+                <div id="cemetery-map-preview" class="map-preview"></div>
             </div>
         </div>
 
+        <!-- Step 2: Story -->
         <div class="wizard-step" data-step="2">
-            <label for="memorial-story" class="form-label">Biography / Life Story</label>
-            <textarea id="memorial-story" class="form-control" rows="10"></textarea>
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-book-open me-2"></i>Biography / Life Story</h4>
+                <p class="section-subtitle">Share their story, memories, and what made them special</p>
+                <textarea id="memorial-story" class="form-control story-textarea" rows="12" placeholder="Write their story here..."></textarea>
+            </div>
         </div>
-        
+
+        <!-- Step 3: Media -->
         <div class="wizard-step" data-step="3">
-             <div class="mb-3">
-                <label for="main-photo" class="form-label">Main Photo</label>
-                <input type="file" class="form-control" id="main-photo" accept="image/*" capture="environment">
-                <small class="form-text text-muted">Maximum file size: 10MB</small>
-                <div id="main-photo-preview" class="row mt-2"></div>
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-image me-2"></i>Main Photo</h4>
+                <p class="section-subtitle">This will be the primary photo displayed on the memorial</p>
+                <div class="photo-upload-area">
+                    <input type="file" class="form-control" id="main-photo" accept="image/*" capture="environment">
+                    <small class="form-text text-muted">Maximum file size: 10MB</small>
+                </div>
+                <div id="main-photo-preview" class="photo-preview-grid"></div>
             </div>
-            <div class="mb-3">
-                <label for="memorial-photos" class="form-label">Photo Gallery</label>
-                <input type="file" class="form-control" id="memorial-photos" accept="image/*" capture="environment" multiple>
-                <small class="form-text text-muted">Maximum 20 photos, 10MB each</small>
-                <div id="photos-preview" class="row mt-2"></div>
+
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-images me-2"></i>Photo Gallery</h4>
+                <p class="section-subtitle">Add additional photos to create a beautiful gallery</p>
+                <div class="photo-upload-area">
+                    <input type="file" class="form-control" id="memorial-photos" accept="image/*" capture="environment" multiple>
+                    <small class="form-text text-muted">Maximum 20 photos, 10MB each</small>
+                </div>
+                <div id="photos-preview" class="photo-preview-grid"></div>
             </div>
         </div>
 
+        <!-- Step 4: Family -->
         <div class="wizard-step" data-step="4">
-             <div id="relatives-container"></div>
-             <button type="button" class="btn btn-outline-secondary mt-2" id="add-relative-button">Add Relative</button>
-        </div>
-
-        <div class="wizard-step" data-step="5">
-            <div id="milestones-container"></div>
-            <button type="button" class="btn btn-outline-secondary mt-2 mb-4" id="add-milestone-button">Add Milestone</button>
-        </div>
-
-        <div class="wizard-navigation mt-4 pt-4 border-top">
-            <button type="button" class="btn btn-secondary" id="prev-step-btn">Previous</button>
-            <div class="d-flex gap-2">
-                 <button type="button" class="btn btn-outline-primary" id="save-draft-button">Save Draft</button>
-                 <button type="button" class="btn btn-primary" id="publish-button">Publish</button>
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-users me-2"></i>Family Connections</h4>
+                <p class="section-subtitle">Link family members to build a connected family tree</p>
+                <div id="relatives-container" class="dynamic-fields-container"></div>
+                <button type="button" class="add-field-btn" id="add-relative-button">
+                    <i class="fas fa-plus"></i>
+                    Add Family Member
+                </button>
             </div>
-            <button type="button" class="btn btn-primary" id="next-step-btn">Next</button>
+        </div>
+
+        <!-- Step 5: Advanced (Historian Tier) -->
+        <div class="wizard-step" data-step="5">
+            <!-- Life Journey / Residences -->
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-route me-2"></i>Life Journey</h4>
+                <p class="section-subtitle">Add places they lived to create a map of their life's journey</p>
+                <div id="residences-container" class="dynamic-fields-container"></div>
+                <button type="button" class="add-field-btn" id="add-residence-button">
+                    <i class="fas fa-plus"></i>
+                    Add Residence
+                </button>
+                <div id="life-path-map" class="life-path-map"></div>
+            </div>
+
+            <!-- Milestones -->
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-star me-2"></i>Life Milestones</h4>
+                <p class="section-subtitle">Document important events and achievements</p>
+                <div id="milestones-container" class="dynamic-fields-container"></div>
+                <button type="button" class="add-field-btn" id="add-milestone-button">
+                    <i class="fas fa-plus"></i>
+                    Add Milestone
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation Bar -->
+        <div class="wizard-nav-bar">
+            <button type="button" class="nav-btn secondary" id="prev-step-btn">
+                <i class="fas fa-chevron-left"></i>
+                <span>Previous</span>
+            </button>
+            <div class="nav-center-btns">
+                <button type="button" class="nav-btn outline" id="save-draft-button">
+                    <i class="fas fa-save"></i>
+                    <span>Save Draft</span>
+                </button>
+                <button type="button" class="nav-btn primary publish" id="publish-button">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Publish</span>
+                </button>
+            </div>
+            <button type="button" class="nav-btn primary" id="next-step-btn">
+                <span>Next</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
     </form>
 </div>
@@ -139,21 +231,19 @@
                     <div class="mb-4">
                         <i class="fas fa-check-circle text-white" style="font-size: 4rem;"></i>
                     </div>
-                    <h2 class="text-white fw-bold mb-3">🎉 Memorial Published!</h2>
+                    <h2 class="text-white fw-bold mb-3">Memorial Published!</h2>
                     <p class="text-white lead mb-0" id="success-memorial-name">Memorial created successfully</p>
                 </div>
 
                 <div class="p-5">
                     <h5 class="fw-bold mb-4">What's Next?</h5>
 
-                    <!-- Primary Action - View Memorial -->
                     <div class="d-grid mb-4">
                         <a href="#" class="btn btn-primary btn-lg shadow-sm" id="view-memorial-btn">
                             <i class="fas fa-eye me-2"></i>View Your Memorial
                         </a>
                     </div>
 
-                    <!-- Secondary Action - Share -->
                     <div class="card border-0 bg-light mb-3">
                         <div class="card-body">
                             <h6 class="fw-bold mb-2"><i class="fas fa-share-alt text-primary me-2"></i>Share with Family</h6>
@@ -172,7 +262,6 @@
                         </div>
                     </div>
 
-                    <!-- QR Tag Upsell -->
                     <div class="card border-primary mb-3">
                         <div class="card-body">
                             <div class="d-flex align-items-start">
@@ -190,7 +279,6 @@
                         </div>
                     </div>
 
-                    <!-- Back Link -->
                     <div class="text-center mt-4">
                         <a href="/memorial-list?status=published" class="text-muted text-decoration-none" data-route data-bs-dismiss="modal">
                             <i class="fas fa-arrow-left me-1"></i>Back to My Memorials

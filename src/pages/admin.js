@@ -1,23 +1,55 @@
-// /js/pages/admin.js - Admin Dashboard
+// /js/pages/admin.js - Comprehensive Admin Dashboard
 import { supabase } from '/js/supabase-client.js';
 import { showToast } from '/js/utils/toasts.js';
 
 let currentUser = null;
+let wsDetailModal = null;
+let currentWsFilter = 'pending';
+let currentTribFilter = 'pending';
 
-// Category colors for badges
+// ==================== UTILITY FUNCTIONS ====================
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric'
+    });
+}
+
+function formatDateTime(dateStr) {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+    });
+}
+
 const categoryColors = {
     general: 'secondary',
     feature: 'primary',
     bug: 'danger',
-    idea: 'success',
-    decision: 'warning',
-    meeting: 'info'
+    idea: 'success'
 };
 
+const businessTypeLabels = {
+    monument_company: 'Monument Company',
+    funeral_home: 'Funeral Home',
+    cemetery: 'Cemetery',
+    retailer: 'Retailer',
+    other: 'Other'
+};
+
+// ==================== AUTH CHECK ====================
 async function checkAdminAccess() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-        showToast('You must be signed in to access the admin dashboard.', 'error');
+        showToast('Please sign in to access admin dashboard.', 'error');
         window.dispatchEvent(new CustomEvent('navigate', { detail: '/login' }));
         return false;
     }
@@ -25,41 +57,574 @@ async function checkAdminAccess() {
     return true;
 }
 
+// ==================== STATS LOADING ====================
 async function loadStats() {
     try {
-        // Get memorial counts
+        // Memorials
         const { count: totalMemorials } = await supabase
             .from('memorials')
             .select('*', { count: 'exact', head: true });
 
-        const { count: publishedMemorials } = await supabase
+        // Views & Candles
+        const { data: memorialData } = await supabase
             .from('memorials')
+            .select('view_count, candle_count');
+
+        const totalViews = memorialData?.reduce((sum, m) => sum + (m.view_count || 0), 0) || 0;
+        const totalCandles = memorialData?.reduce((sum, m) => sum + (m.candle_count || 0), 0) || 0;
+
+        // Wholesale pending
+        const { count: pendingWholesale } = await supabase
+            .from('wholesale_applications')
             .select('*', { count: 'exact', head: true })
-            .in('status', ['published', 'approved']);
+            .eq('status', 'pending');
 
-        // Get candle count
-        const { data: candleData } = await supabase
-            .from('memorials')
-            .select('candle_count');
-
-        const totalCandles = candleData?.reduce((sum, m) => sum + (m.candle_count || 0), 0) || 0;
-
-        // Get tribute count
-        const { count: totalTributes } = await supabase
-            .from('tributes')
+        // Partners
+        const { count: totalPartners } = await supabase
+            .from('partners')
             .select('*', { count: 'exact', head: true });
+
+        // Pending tributes
+        const { count: pendingTributes } = await supabase
+            .from('tributes')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending');
 
         // Update UI
         document.getElementById('stat-memorials').textContent = totalMemorials || 0;
-        document.getElementById('stat-published').textContent = publishedMemorials || 0;
-        document.getElementById('stat-candles').textContent = totalCandles;
-        document.getElementById('stat-tributes').textContent = totalTributes || 0;
+        document.getElementById('stat-views').textContent = totalViews.toLocaleString();
+        document.getElementById('stat-candles').textContent = totalCandles.toLocaleString();
+        document.getElementById('stat-wholesale').textContent = pendingWholesale || 0;
+        document.getElementById('stat-partners').textContent = totalPartners || 0;
+        document.getElementById('stat-pending').textContent = (pendingWholesale || 0) + (pendingTributes || 0);
+
+        // Update badges
+        if (pendingWholesale > 0) {
+            document.getElementById('wholesale-badge').textContent = pendingWholesale;
+            document.getElementById('wholesale-badge').style.display = '';
+            document.getElementById('ws-pending-count').textContent = pendingWholesale;
+        }
+
+        if (pendingTributes > 0) {
+            document.getElementById('tributes-badge').textContent = pendingTributes;
+            document.getElementById('tributes-badge').style.display = '';
+        }
 
     } catch (error) {
         console.error('Error loading stats:', error);
     }
 }
 
+// ==================== WHOLESALE APPLICATIONS ====================
+async function loadWholesaleApplications(filter = 'pending') {
+    currentWsFilter = filter;
+    const loading = document.getElementById('wholesale-loading');
+    const empty = document.getElementById('wholesale-empty');
+    const table = document.getElementById('wholesale-table-container');
+    const tbody = document.getElementById('wholesale-tbody');
+
+    // Update filter buttons
+    document.querySelectorAll('[data-filter]').forEach(btn => {
+        if (btn.id?.startsWith('ws-filter')) {
+            btn.classList.remove('active', 'btn-warning', 'btn-success', 'btn-danger', 'btn-secondary');
+            btn.classList.add('btn-outline-' + (btn.dataset.filter === 'pending' ? 'warning' :
+                btn.dataset.filter === 'approved' ? 'success' :
+                btn.dataset.filter === 'rejected' ? 'danger' : 'secondary'));
+        }
+    });
+
+    const activeBtn = document.getElementById(`ws-filter-${filter}`);
+    if (activeBtn) {
+        activeBtn.classList.remove('btn-outline-warning', 'btn-outline-success', 'btn-outline-danger', 'btn-outline-secondary');
+        activeBtn.classList.add('active', filter === 'pending' ? 'btn-warning' :
+            filter === 'approved' ? 'btn-success' :
+            filter === 'rejected' ? 'btn-danger' : 'btn-secondary');
+    }
+
+    loading.style.display = '';
+    empty.style.display = 'none';
+    table.style.display = 'none';
+
+    try {
+        let query = supabase
+            .from('wholesale_applications')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (filter !== 'all') {
+            query = query.eq('status', filter);
+        }
+
+        const { data, error } = await query;
+
+        loading.style.display = 'none';
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            empty.style.display = '';
+            return;
+        }
+
+        table.style.display = '';
+        tbody.innerHTML = data.map(app => `
+            <tr data-id="${app.id}">
+                <td>
+                    <strong>${escapeHtml(app.business_name)}</strong>
+                    ${app.website ? `<br><a href="${escapeHtml(app.website)}" target="_blank" class="small text-muted">${escapeHtml(app.website)}</a>` : ''}
+                </td>
+                <td>
+                    ${escapeHtml(app.contact_name)}<br>
+                    <a href="mailto:${escapeHtml(app.email)}" class="small">${escapeHtml(app.email)}</a><br>
+                    <span class="small text-muted">${escapeHtml(app.phone)}</span>
+                </td>
+                <td><span class="badge bg-secondary">${businessTypeLabels[app.business_type] || app.business_type}</span></td>
+                <td>${escapeHtml(app.estimated_volume)}</td>
+                <td class="small text-muted">${formatDate(app.created_at)}</td>
+                <td>
+                    <span class="badge bg-${app.status === 'pending' ? 'warning' : app.status === 'approved' ? 'success' : 'danger'}">
+                        ${app.status}
+                    </span>
+                </td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary ws-view-btn" data-id="${app.id}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${app.status === 'pending' ? `
+                        <button class="btn btn-sm btn-success ws-approve-btn" data-id="${app.id}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger ws-reject-btn" data-id="${app.id}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('Error loading wholesale applications:', error);
+        loading.style.display = 'none';
+        empty.innerHTML = `<p class="text-danger">Error loading applications</p>`;
+        empty.style.display = '';
+    }
+}
+
+async function showWholesaleDetail(appId) {
+    try {
+        const { data: app, error } = await supabase
+            .from('wholesale_applications')
+            .select('*')
+            .eq('id', appId)
+            .single();
+
+        if (error) throw error;
+
+        const content = document.getElementById('ws-detail-content');
+        const actions = document.getElementById('ws-detail-actions');
+
+        content.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-2">Business Information</h6>
+                    <table class="table table-sm">
+                        <tr><th>Business Name</th><td>${escapeHtml(app.business_name)}</td></tr>
+                        <tr><th>Type</th><td>${businessTypeLabels[app.business_type] || app.business_type}</td></tr>
+                        <tr><th>Website</th><td>${app.website ? `<a href="${escapeHtml(app.website)}" target="_blank">${escapeHtml(app.website)}</a>` : '-'}</td></tr>
+                        <tr><th>Est. Volume</th><td>${escapeHtml(app.estimated_volume)}</td></tr>
+                        <tr><th>Timeline</th><td>${escapeHtml(app.timeline) || '-'}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-2">Contact Information</h6>
+                    <table class="table table-sm">
+                        <tr><th>Name</th><td>${escapeHtml(app.contact_name)}</td></tr>
+                        <tr><th>Title</th><td>${escapeHtml(app.title) || '-'}</td></tr>
+                        <tr><th>Email</th><td><a href="mailto:${escapeHtml(app.email)}">${escapeHtml(app.email)}</a></td></tr>
+                        <tr><th>Phone</th><td><a href="tel:${escapeHtml(app.phone)}">${escapeHtml(app.phone)}</a></td></tr>
+                    </table>
+                </div>
+            </div>
+            ${app.message ? `
+                <div class="mt-3">
+                    <h6 class="text-muted mb-2">Additional Message</h6>
+                    <div class="bg-light p-3 rounded">${escapeHtml(app.message)}</div>
+                </div>
+            ` : ''}
+            <div class="mt-3">
+                <small class="text-muted">Submitted: ${formatDateTime(app.created_at)}</small>
+                ${app.reviewed_at ? `<br><small class="text-muted">Reviewed: ${formatDateTime(app.reviewed_at)}</small>` : ''}
+            </div>
+        `;
+
+        if (app.status === 'pending') {
+            actions.innerHTML = `
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-danger" id="modal-reject-btn" data-id="${app.id}">
+                    <i class="fas fa-times me-2"></i>Reject
+                </button>
+                <button class="btn btn-success" id="modal-approve-btn" data-id="${app.id}">
+                    <i class="fas fa-check me-2"></i>Approve & Create Account
+                </button>
+            `;
+
+            document.getElementById('modal-approve-btn')?.addEventListener('click', () => approveWholesale(app.id));
+            document.getElementById('modal-reject-btn')?.addEventListener('click', () => rejectWholesale(app.id));
+        } else {
+            actions.innerHTML = `<button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`;
+        }
+
+        wsDetailModal.show();
+
+    } catch (error) {
+        console.error('Error loading wholesale detail:', error);
+        showToast('Error loading application details', 'error');
+    }
+}
+
+async function approveWholesale(appId) {
+    try {
+        // Get the application
+        const { data: app, error: fetchError } = await supabase
+            .from('wholesale_applications')
+            .select('*')
+            .eq('id', appId)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        // Update application status
+        const { error: updateError } = await supabase
+            .from('wholesale_applications')
+            .update({
+                status: 'approved',
+                reviewed_by: currentUser.id,
+                reviewed_at: new Date().toISOString()
+            })
+            .eq('id', appId);
+
+        if (updateError) throw updateError;
+
+        // Determine pricing tier based on volume
+        let pricingTier = 'starter';
+        let pricePerTag = 25.00;
+
+        if (app.estimated_volume?.includes('50') || app.estimated_volume?.includes('100')) {
+            pricingTier = 'enterprise';
+            pricePerTag = 15.00;
+        } else if (app.estimated_volume?.includes('25')) {
+            pricingTier = 'professional';
+            pricePerTag = 20.00;
+        }
+
+        // Create wholesale account
+        const { error: accountError } = await supabase
+            .from('wholesale_accounts')
+            .insert({
+                application_id: appId,
+                business_name: app.business_name,
+                business_type: app.business_type,
+                contact_name: app.contact_name,
+                email: app.email,
+                phone: app.phone,
+                website: app.website,
+                pricing_tier: pricingTier,
+                price_per_tag: pricePerTag,
+                status: 'active'
+            });
+
+        if (accountError) throw accountError;
+
+        wsDetailModal.hide();
+        showToast(`${app.business_name} approved! Account created with ${pricingTier} pricing.`, 'success');
+        loadWholesaleApplications(currentWsFilter);
+        loadStats();
+
+    } catch (error) {
+        console.error('Error approving wholesale:', error);
+        showToast('Error approving application: ' + error.message, 'error');
+    }
+}
+
+async function rejectWholesale(appId) {
+    if (!confirm('Are you sure you want to reject this application?')) return;
+
+    try {
+        const { error } = await supabase
+            .from('wholesale_applications')
+            .update({
+                status: 'rejected',
+                reviewed_by: currentUser.id,
+                reviewed_at: new Date().toISOString()
+            })
+            .eq('id', appId);
+
+        if (error) throw error;
+
+        wsDetailModal.hide();
+        showToast('Application rejected', 'success');
+        loadWholesaleApplications(currentWsFilter);
+        loadStats();
+
+    } catch (error) {
+        console.error('Error rejecting wholesale:', error);
+        showToast('Error rejecting application', 'error');
+    }
+}
+
+// ==================== PARTNERS ====================
+async function loadPartners() {
+    const loading = document.getElementById('partners-loading');
+    const empty = document.getElementById('partners-empty');
+    const table = document.getElementById('partners-table-container');
+    const tbody = document.getElementById('partners-tbody');
+
+    try {
+        const { data, error } = await supabase
+            .from('partners')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        loading.style.display = 'none';
+
+        if (error) throw error;
+
+        // Update stats
+        const totalClicks = data?.reduce((sum, p) => sum + (p.total_clicks || 0), 0) || 0;
+        const totalConversions = data?.reduce((sum, p) => sum + (p.total_conversions || 0), 0) || 0;
+
+        document.getElementById('partners-total').textContent = data?.length || 0;
+        document.getElementById('partners-clicks').textContent = totalClicks.toLocaleString();
+        document.getElementById('partners-conversions').textContent = totalConversions;
+
+        if (!data || data.length === 0) {
+            empty.style.display = '';
+            return;
+        }
+
+        table.style.display = '';
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td>
+                    <strong>${escapeHtml(p.business_name || p.contact_name || 'Partner')}</strong>
+                    <br><small class="text-muted">${escapeHtml(p.email)}</small>
+                </td>
+                <td><code>${escapeHtml(p.referral_code)}</code></td>
+                <td>${(p.total_clicks || 0).toLocaleString()}</td>
+                <td>${p.total_conversions || 0}</td>
+                <td>${p.commission_rate || 10}%</td>
+                <td class="small text-muted">${formatDate(p.created_at)}</td>
+                <td>
+                    <span class="badge bg-${p.status === 'active' ? 'success' : 'secondary'}">
+                        ${p.status || 'active'}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('Error loading partners:', error);
+        loading.style.display = 'none';
+    }
+}
+
+// ==================== MEMORIALS ====================
+async function loadMemorials(filter = 'all', search = '') {
+    const tbody = document.getElementById('memorials-tbody');
+
+    try {
+        let query = supabase
+            .from('memorials')
+            .select('id, name, status, view_count, candle_count, created_at')
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (filter !== 'all') {
+            query = query.eq('status', filter);
+        }
+
+        if (search) {
+            query = query.ilike('name', `%${search}%`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        // Get tribute counts
+        const { data: tributeCounts } = await supabase
+            .from('tributes')
+            .select('memorial_id');
+
+        const tributeMap = {};
+        tributeCounts?.forEach(t => {
+            tributeMap[t.memorial_id] = (tributeMap[t.memorial_id] || 0) + 1;
+        });
+
+        // Update stats
+        const { count: total } = await supabase.from('memorials').select('*', { count: 'exact', head: true });
+        const { count: published } = await supabase.from('memorials').select('*', { count: 'exact', head: true }).eq('status', 'published');
+        const { count: drafts } = await supabase.from('memorials').select('*', { count: 'exact', head: true }).eq('status', 'draft');
+
+        const totalViews = data?.reduce((sum, m) => sum + (m.view_count || 0), 0) || 0;
+
+        document.getElementById('mem-total').textContent = total || 0;
+        document.getElementById('mem-published').textContent = published || 0;
+        document.getElementById('mem-drafts').textContent = drafts || 0;
+        document.getElementById('mem-views-total').textContent = totalViews.toLocaleString();
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No memorials found</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map(m => `
+            <tr>
+                <td>
+                    <a href="/memorial?id=${m.id}" class="text-decoration-none fw-bold" data-route>
+                        ${escapeHtml(m.name || 'Unnamed')}
+                    </a>
+                </td>
+                <td>
+                    <span class="badge bg-${m.status === 'published' ? 'success' : 'warning'}">
+                        ${m.status || 'draft'}
+                    </span>
+                </td>
+                <td><i class="fas fa-eye text-muted me-1"></i>${(m.view_count || 0).toLocaleString()}</td>
+                <td><i class="fas fa-fire text-warning me-1"></i>${m.candle_count || 0}</td>
+                <td><i class="fas fa-heart text-danger me-1"></i>${tributeMap[m.id] || 0}</td>
+                <td class="small text-muted">${formatDate(m.created_at)}</td>
+                <td class="text-end">
+                    <a href="/memorial-form?id=${m.id}" class="btn btn-sm btn-outline-primary" data-route>
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('Error loading memorials:', error);
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger">Error loading memorials</td></tr>`;
+    }
+}
+
+// ==================== TRIBUTES ====================
+async function loadTributes(filter = 'pending') {
+    currentTribFilter = filter;
+    const loading = document.getElementById('tributes-loading');
+    const empty = document.getElementById('tributes-empty');
+    const list = document.getElementById('tributes-list');
+
+    // Update filter buttons
+    document.querySelectorAll('[id^="trib-filter"]').forEach(btn => {
+        btn.classList.remove('active', 'btn-warning', 'btn-success', 'btn-secondary');
+        btn.classList.add('btn-outline-' + (btn.dataset.filter === 'pending' ? 'warning' :
+            btn.dataset.filter === 'approved' ? 'success' : 'secondary'));
+    });
+
+    const activeBtn = document.getElementById(`trib-filter-${filter}`);
+    if (activeBtn) {
+        activeBtn.classList.remove('btn-outline-warning', 'btn-outline-success', 'btn-outline-secondary');
+        activeBtn.classList.add('active', filter === 'pending' ? 'btn-warning' :
+            filter === 'approved' ? 'btn-success' : 'btn-secondary');
+    }
+
+    loading.style.display = '';
+    empty.style.display = 'none';
+    list.style.display = 'none';
+
+    try {
+        let query = supabase
+            .from('tributes')
+            .select('*, memorials(name)')
+            .order('created_at', { ascending: false });
+
+        if (filter !== 'all') {
+            query = query.eq('status', filter);
+        }
+
+        const { data, error } = await query;
+
+        loading.style.display = 'none';
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            empty.style.display = '';
+            return;
+        }
+
+        list.style.display = '';
+        list.innerHTML = data.map(t => `
+            <div class="tribute-card ${t.status}">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <strong>${escapeHtml(t.author_name || 'Anonymous')}</strong>
+                        <span class="badge bg-${t.status === 'pending' ? 'warning' : 'success'} ms-2">${t.status}</span>
+                        <br>
+                        <small class="text-muted">On: ${escapeHtml(t.memorials?.name || 'Unknown memorial')}</small>
+                    </div>
+                    <div>
+                        ${t.status === 'pending' ? `
+                            <button class="btn btn-sm btn-success trib-approve-btn" data-id="${t.id}">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-sm btn-danger trib-reject-btn" data-id="${t.id}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                <p class="mt-2 mb-1">${escapeHtml(t.message)}</p>
+                <small class="text-muted">${formatDateTime(t.created_at)}</small>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('Error loading tributes:', error);
+        loading.style.display = 'none';
+    }
+}
+
+async function approveTribute(tributeId) {
+    try {
+        const { error } = await supabase
+            .from('tributes')
+            .update({ status: 'approved' })
+            .eq('id', tributeId);
+
+        if (error) throw error;
+
+        showToast('Tribute approved', 'success');
+        loadTributes(currentTribFilter);
+        loadStats();
+    } catch (error) {
+        console.error('Error approving tribute:', error);
+        showToast('Error approving tribute', 'error');
+    }
+}
+
+async function rejectTribute(tributeId) {
+    if (!confirm('Delete this tribute?')) return;
+
+    try {
+        const { error } = await supabase
+            .from('tributes')
+            .delete()
+            .eq('id', tributeId);
+
+        if (error) throw error;
+
+        showToast('Tribute removed', 'success');
+        loadTributes(currentTribFilter);
+        loadStats();
+    } catch (error) {
+        console.error('Error rejecting tribute:', error);
+        showToast('Error removing tribute', 'error');
+    }
+}
+
+// ==================== NOTES ====================
 async function loadNotes(filter = 'all') {
     const notesList = document.getElementById('notes-list');
 
@@ -79,235 +644,177 @@ async function loadNotes(filter = 'all') {
         if (error) throw error;
 
         if (!notes || notes.length === 0) {
-            notesList.innerHTML = `
-                <div class="text-center py-4 text-muted">
-                    <i class="fas fa-sticky-note fa-2x mb-2"></i>
-                    <p class="mb-0">No notes yet. Add your first note above!</p>
-                </div>
-            `;
+            notesList.innerHTML = `<div class="text-center py-4 text-muted">No notes yet</div>`;
             return;
         }
 
         notesList.innerHTML = notes.map(note => `
             <div class="list-group-item ${note.is_pinned ? 'note-pinned' : ''}" data-note-id="${note.id}">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center mb-1">
-                            ${note.is_pinned ? '<i class="fas fa-thumbtack text-warning me-2"></i>' : ''}
-                            <h6 class="mb-0 me-2">${escapeHtml(note.title)}</h6>
-                            <span class="badge bg-${categoryColors[note.category] || 'secondary'} badge-category">
-                                ${note.category}
-                            </span>
-                        </div>
-                        <p class="mb-1 text-muted small">${escapeHtml(note.content)}</p>
-                        <div class="d-flex align-items-center">
-                            <small class="text-muted me-3">
-                                <i class="fas fa-clock me-1"></i>${formatDate(note.created_at)}
-                            </small>
-                            ${note.tags && note.tags.length > 0 ? `
-                                <div>
-                                    ${note.tags.map(tag => `<span class="badge bg-light text-dark me-1">${escapeHtml(tag)}</span>`).join('')}
-                                </div>
-                            ` : ''}
-                        </div>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        ${note.is_pinned ? '<i class="fas fa-thumbtack text-warning me-2"></i>' : ''}
+                        <strong>${escapeHtml(note.title)}</strong>
+                        <span class="badge bg-${categoryColors[note.category] || 'secondary'} badge-category ms-2">${note.category}</span>
+                        <p class="mb-1 text-muted small mt-1">${escapeHtml(note.content)}</p>
+                        <small class="text-muted">${formatDate(note.created_at)}</small>
                     </div>
-                    <div class="ms-2">
-                        <button class="btn btn-sm btn-outline-danger delete-note-btn" data-id="${note.id}" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+                    <button class="btn btn-sm btn-outline-danger delete-note-btn" data-id="${note.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             </div>
         `).join('');
 
-        // Add delete handlers
-        notesList.querySelectorAll('.delete-note-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const noteId = btn.dataset.id;
-                if (confirm('Delete this note?')) {
-                    await deleteNote(noteId);
-                }
-            });
-        });
-
     } catch (error) {
         console.error('Error loading notes:', error);
-        notesList.innerHTML = `
-            <div class="text-center py-4 text-danger">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                Error loading notes. Make sure the project_notes table exists.
-            </div>
-        `;
+        notesList.innerHTML = `<div class="text-center py-4 text-danger">Error loading notes</div>`;
     }
 }
 
 async function addNote(noteData) {
     try {
-        const { error } = await supabase
-            .from('project_notes')
-            .insert([noteData]);
-
+        const { error } = await supabase.from('project_notes').insert([noteData]);
         if (error) throw error;
 
-        showToast('Note saved successfully!', 'success');
+        showToast('Note saved!', 'success');
         document.getElementById('add-note-form').reset();
         loadNotes(document.getElementById('notes-filter').value);
-
     } catch (error) {
         console.error('Error adding note:', error);
-        showToast('Failed to save note: ' + error.message, 'error');
+        showToast('Failed to save note', 'error');
     }
 }
 
 async function deleteNote(noteId) {
-    try {
-        const { error } = await supabase
-            .from('project_notes')
-            .delete()
-            .eq('id', noteId);
+    if (!confirm('Delete this note?')) return;
 
+    try {
+        const { error } = await supabase.from('project_notes').delete().eq('id', noteId);
         if (error) throw error;
 
         showToast('Note deleted', 'success');
         loadNotes(document.getElementById('notes-filter').value);
-
     } catch (error) {
         console.error('Error deleting note:', error);
         showToast('Failed to delete note', 'error');
     }
 }
 
-async function loadRecentMemorials() {
-    const tbody = document.getElementById('memorials-table-body');
-
-    try {
-        const { data: memorials, error } = await supabase
-            .from('memorials')
-            .select('id, name, status, candle_count, created_at')
-            .order('created_at', { ascending: false })
-            .limit(20);
-
-        if (error) throw error;
-
-        if (!memorials || memorials.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
-                        No memorials found.
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        const statusColors = {
-            draft: 'warning',
-            published: 'success',
-            approved: 'primary',
-            archived: 'secondary'
-        };
-
-        tbody.innerHTML = memorials.map(m => `
-            <tr>
-                <td>
-                    <a href="/memorial?id=${m.id}" class="text-decoration-none">
-                        ${escapeHtml(m.name)}
-                    </a>
-                </td>
-                <td>
-                    <span class="badge bg-${statusColors[m.status] || 'secondary'}">
-                        ${m.status}
-                    </span>
-                </td>
-                <td>
-                    <i class="fas fa-fire text-warning me-1"></i>${m.candle_count || 0}
-                </td>
-                <td class="text-muted small">${formatDate(m.created_at)}</td>
-                <td>
-                    <a href="/memorial-form?id=${m.id}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                </td>
-            </tr>
-        `).join('');
-
-    } catch (error) {
-        console.error('Error loading memorials:', error);
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="text-center py-4 text-danger">
-                    Error loading memorials.
-                </td>
-            </tr>
-        `;
+// ==================== EVENT HANDLERS ====================
+function setupEventHandlers() {
+    // Initialize modal
+    const modalEl = document.getElementById('wsDetailModal');
+    if (modalEl) {
+        wsDetailModal = new bootstrap.Modal(modalEl);
     }
-}
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+    // Refresh button
+    document.getElementById('refresh-all-btn')?.addEventListener('click', () => {
+        loadStats();
+        loadWholesaleApplications(currentWsFilter);
+        showToast('Data refreshed', 'success');
+    });
 
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
+    // Wholesale filter buttons
+    document.querySelectorAll('[id^="ws-filter-"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            loadWholesaleApplications(btn.dataset.filter);
+        });
+    });
+
+    // Wholesale table actions (delegated)
+    document.getElementById('wholesale-tbody')?.addEventListener('click', (e) => {
+        const viewBtn = e.target.closest('.ws-view-btn');
+        const approveBtn = e.target.closest('.ws-approve-btn');
+        const rejectBtn = e.target.closest('.ws-reject-btn');
+
+        if (viewBtn) showWholesaleDetail(viewBtn.dataset.id);
+        if (approveBtn) approveWholesale(approveBtn.dataset.id);
+        if (rejectBtn) rejectWholesale(rejectBtn.dataset.id);
+    });
+
+    // Wholesale search
+    document.getElementById('ws-search')?.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll('#wholesale-tbody tr').forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+
+    // Partners tab
+    document.getElementById('partners-tab')?.addEventListener('shown.bs.tab', loadPartners);
+
+    // Memorials tab
+    document.getElementById('memorials-tab')?.addEventListener('shown.bs.tab', () => loadMemorials());
+
+    // Memorial filters
+    document.getElementById('mem-status-filter')?.addEventListener('change', (e) => {
+        loadMemorials(e.target.value, document.getElementById('mem-search').value);
+    });
+
+    document.getElementById('mem-search')?.addEventListener('input', (e) => {
+        loadMemorials(document.getElementById('mem-status-filter').value, e.target.value);
+    });
+
+    // Tributes tab & filters
+    document.getElementById('tributes-tab')?.addEventListener('shown.bs.tab', () => loadTributes());
+
+    document.querySelectorAll('[id^="trib-filter-"]').forEach(btn => {
+        btn.addEventListener('click', () => loadTributes(btn.dataset.filter));
+    });
+
+    // Tributes actions (delegated)
+    document.getElementById('tributes-list')?.addEventListener('click', (e) => {
+        const approveBtn = e.target.closest('.trib-approve-btn');
+        const rejectBtn = e.target.closest('.trib-reject-btn');
+
+        if (approveBtn) approveTribute(approveBtn.dataset.id);
+        if (rejectBtn) rejectTribute(rejectBtn.dataset.id);
+    });
+
+    // Notes tab
+    document.getElementById('notes-tab')?.addEventListener('shown.bs.tab', () => loadNotes());
+
+    // Notes form
+    document.getElementById('add-note-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        addNote({
+            title: document.getElementById('note-title').value.trim(),
+            category: document.getElementById('note-category').value,
+            content: document.getElementById('note-content').value.trim(),
+            is_pinned: document.getElementById('note-pinned').checked
+        });
+    });
+
+    // Notes filter
+    document.getElementById('notes-filter')?.addEventListener('change', (e) => loadNotes(e.target.value));
+
+    // Notes delete (delegated)
+    document.getElementById('notes-list')?.addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.delete-note-btn');
+        if (deleteBtn) deleteNote(deleteBtn.dataset.id);
     });
 }
 
+// ==================== MAIN EXPORT ====================
 export async function loadAdminPage(appRoot) {
     try {
         const response = await fetch('/pages/admin.html');
         if (!response.ok) throw new Error('Could not load admin.html');
         appRoot.innerHTML = await response.text();
 
-        // Check admin access
         const hasAccess = await checkAdminAccess();
         if (!hasAccess) return;
 
         // Load initial data
         await Promise.all([
             loadStats(),
-            loadNotes(),
-            loadRecentMemorials()
+            loadWholesaleApplications('pending')
         ]);
 
-        // Set up form submission
-        document.getElementById('add-note-form')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const title = document.getElementById('note-title').value.trim();
-            const category = document.getElementById('note-category').value;
-            const content = document.getElementById('note-content').value.trim();
-            const tagsStr = document.getElementById('note-tags').value.trim();
-            const isPinned = document.getElementById('note-pinned').checked;
-
-            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
-
-            await addNote({
-                title,
-                category,
-                content,
-                tags,
-                is_pinned: isPinned
-            });
-        });
-
-        // Set up filter
-        document.getElementById('notes-filter')?.addEventListener('change', (e) => {
-            loadNotes(e.target.value);
-        });
-
-        // Load memorials when tab is shown
-        document.getElementById('memorials-tab')?.addEventListener('shown.bs.tab', () => {
-            loadRecentMemorials();
-        });
+        // Set up handlers
+        setupEventHandlers();
 
     } catch (error) {
         console.error('Failed to load admin page:', error);
@@ -315,7 +822,7 @@ export async function loadAdminPage(appRoot) {
             <div class="container py-5">
                 <div class="alert alert-danger">
                     <h4>Error Loading Admin Dashboard</h4>
-                    <p>${error.message}</p>
+                    <p>${escapeHtml(error.message)}</p>
                 </div>
             </div>
         `;

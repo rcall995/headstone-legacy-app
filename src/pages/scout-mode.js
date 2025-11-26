@@ -1,7 +1,8 @@
-// /js/pages/scout-mode.js - Supabase version
+// /js/pages/scout-mode.js - Supabase version with App-like UI
 import { supabase } from '/js/supabase-client.js';
 import { config } from '/js/config.js';
 import { showToast } from '/js/utils/toasts.js';
+import { awardPoints, showGamificationToasts } from '/js/utils/scout-gamification.js';
 
 let scoutMap = null;
 let addPinModalInstance = null;
@@ -9,78 +10,68 @@ let currentPinCoords = null;
 let currentPhotoFiles = [];
 let pinnedRelatives = [];
 let resizeListener = null;
+let currentMode = null; // 'single' or 'multi'
 
 const DEFAULT_CENTER = [-98.5, 39.8];
 
-function ensureScoutStyles() {
-  if (document.getElementById('scout-style-tag')) return;
-  const css = `
-  #scout-map.scout-active, #map.scout-active {
-    position: fixed; inset: 0; width: 100%; height: 100vh; min-height: 420px; z-index: 1;
-  }
-  .scout-hud { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
-  .scout-hud .center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%); }
-  .scout-center-pin { font-size: 28px; line-height: 1; pointer-events:none; }
-  .scout-cta {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 20px;
-    bottom: max(20px, env(safe-area-inset-bottom));
-    z-index: 4;
-    pointer-events: auto;
-  }
-  .scout-cta .btn { padding: 12px 20px; font-size: 1.05rem; min-height: 44px; }
-  #multi-pin-ui {
-    position: fixed;
-    top: 20px;
-    top: max(20px, env(safe-area-inset-top));
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 4;
-    pointer-events: auto;
-    max-width: 90%;
-    width: auto;
-  }
-  #pinned-relatives-list {
-    background: rgba(255,255,255,0.95);
-    border-radius: 8px;
-    padding: 1rem;
-    max-height: 200px;
-    overflow-y: auto;
-  }
-  `;
-  const style = document.createElement('style');
-  style.id = 'scout-style-tag';
-  style.textContent = css;
-  document.head.appendChild(style);
-}
-
 function cleanupScoutMode() {
+  // Remove resize listener
   if (resizeListener) {
     window.removeEventListener('resize', resizeListener);
     resizeListener = null;
   }
 
-  try { scoutMap?.remove(); } catch {}
-  scoutMap = null;
+  // Remove mapbox instance properly
+  if (scoutMap) {
+    try {
+      scoutMap.remove();
+    } catch (err) {
+      console.warn('[scout-mode] map cleanup error:', err);
+    }
+    scoutMap = null;
+  }
 
+  // Remove HUD elements
   document.getElementById('scout-hud')?.remove();
-  document.querySelector('.scout-cta')?.remove();
+  document.querySelector('.scout-top-bar')?.remove();
+  document.querySelector('.scout-bottom-bar')?.remove();
+  document.getElementById('multi-pin-ui')?.remove();
 
+  // Remove dynamically created map element
   const createdMap = document.getElementById('scout-map');
-  createdMap?.parentElement?.removeChild(createdMap);
+  if (createdMap && createdMap.parentElement) {
+    createdMap.parentElement.removeChild(createdMap);
+  }
 
+  // Reset any existing map element
   const existingMap = document.getElementById('map');
   existingMap?.classList.remove('scout-active');
 
+  // Remove body class
   document.body.classList.remove('scout-active');
 
-  addPinModalInstance?.hide?.();
-  addPinModalInstance = null;
+  // Properly dispose of Bootstrap modal
+  if (addPinModalInstance) {
+    try {
+      addPinModalInstance.hide();
+      addPinModalInstance.dispose();
+    } catch (err) {
+      console.warn('[scout-mode] modal cleanup error:', err);
+    }
+    addPinModalInstance = null;
+  }
+
+  // Revoke any object URLs to prevent memory leaks
+  const preview = document.getElementById('pin-photo-preview');
+  if (preview && preview.src && preview.src.startsWith('blob:')) {
+    URL.revokeObjectURL(preview.src);
+  }
+
+  // Reset state
   currentPinCoords = null;
   currentPhotoFiles = [];
   pinnedRelatives = [];
+  currentMode = null;
 }
 
 function getOrCreateMapEl() {
@@ -143,59 +134,198 @@ function showCenterPinHUD() {
     const hud = document.createElement('div');
     hud.id = 'scout-hud';
     hud.className = 'scout-hud';
-    hud.innerHTML = `<div class="center"><div class="scout-center-pin" aria-hidden="true">📍</div></div>`;
+    hud.innerHTML = `
+      <div class="center">
+        <div class="scout-center-pin" aria-hidden="true">📍</div>
+      </div>
+    `;
     document.body.appendChild(hud);
   }
 }
 
-function showSinglePinHUDAndCTA() {
+function showSinglePinUI() {
   showCenterPinHUD();
 
-  let ctaBtn = document.getElementById('scout-confirm-fallback');
-  if (!ctaBtn) {
-    const wrap = document.createElement('div');
-    wrap.className = 'scout-cta';
-    wrap.innerHTML = `<button id="scout-confirm-fallback" class="btn btn-success shadow">Set Pin Location</button>`;
-    document.body.appendChild(wrap);
-    ctaBtn = document.getElementById('scout-confirm-fallback');
-  } else {
-    ctaBtn.closest('.scout-cta').style.display = '';
+  // Add top instruction bar
+  if (!document.querySelector('.scout-top-bar')) {
+    const topBar = document.createElement('div');
+    topBar.className = 'scout-top-bar';
+    topBar.innerHTML = `
+      <div class="scout-instruction">
+        <h4><i class="fas fa-crosshairs"></i> Position the Pin</h4>
+        <p>Pan and zoom to place the pin on the exact gravesite</p>
+      </div>
+    `;
+    document.body.appendChild(topBar);
   }
 
-  ctaBtn.onclick = () => {
-    if (!scoutMap) return showToast('Map not ready yet.', 'error');
-    const c = scoutMap.getCenter();
-    const path = `/memorial-form?new=true&lat=${c.lat}&lng=${c.lng}`;
-    cleanupScoutMode();
-    window.dispatchEvent(new CustomEvent('navigate', { detail: path }));
-  };
+  // Add bottom action bar
+  if (!document.querySelector('.scout-bottom-bar')) {
+    const bottomBar = document.createElement('div');
+    bottomBar.className = 'scout-bottom-bar';
+    bottomBar.innerHTML = `
+      <div class="scout-action-buttons">
+        <button id="scout-cancel-btn" class="scout-btn secondary">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+        <button id="scout-confirm-btn" class="scout-btn primary">
+          <i class="fas fa-check"></i>
+          Set Location
+        </button>
+      </div>
+    `;
+    document.body.appendChild(bottomBar);
+
+    // Add event listeners
+    document.getElementById('scout-cancel-btn')?.addEventListener('click', () => {
+      cleanupScoutMode();
+      window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=published' }));
+    });
+
+    document.getElementById('scout-confirm-btn')?.addEventListener('click', () => {
+      if (!scoutMap) return showToast('Map not ready yet.', 'error');
+      const c = scoutMap.getCenter();
+      const path = `/memorial-form?new=true&lat=${c.lat}&lng=${c.lng}`;
+      cleanupScoutMode();
+      window.dispatchEvent(new CustomEvent('navigate', { detail: path }));
+    });
+  }
+}
+
+function showMultiPinUI() {
+  showCenterPinHUD();
+
+  // Create multi-pin UI container
+  if (!document.getElementById('multi-pin-ui')) {
+    const ui = document.createElement('div');
+    ui.id = 'multi-pin-ui';
+    ui.innerHTML = `
+      <div class="multi-pin-header">
+        <div class="multi-pin-title">
+          <i class="fas fa-layer-group"></i>
+          <span>Batch Mode</span>
+          <span class="pin-count-badge" id="pin-count-badge">0 pins</span>
+        </div>
+        <div class="multi-pin-actions">
+          <button id="multi-cancel-btn" class="scout-icon-btn danger" title="Cancel">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div id="pinned-relatives-list"></div>
+    `;
+    document.body.appendChild(ui);
+
+    // Cancel button
+    document.getElementById('multi-cancel-btn')?.addEventListener('click', () => {
+      if (pinnedRelatives.length > 0) {
+        if (!confirm('You have unsaved pins. Are you sure you want to cancel?')) return;
+      }
+      cleanupScoutMode();
+      window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=published' }));
+    });
+  }
+
+  // Add bottom action bar for multi-pin
+  if (!document.querySelector('.scout-bottom-bar')) {
+    const bottomBar = document.createElement('div');
+    bottomBar.className = 'scout-bottom-bar';
+    bottomBar.innerHTML = `
+      <div class="scout-action-buttons">
+        <button id="add-pin-btn" class="scout-btn secondary">
+          <i class="fas fa-plus"></i>
+          Add Pin Here
+        </button>
+        <button id="save-pins-btn" class="scout-btn primary" disabled>
+          <i class="fas fa-save"></i>
+          Save All
+        </button>
+      </div>
+    `;
+    document.body.appendChild(bottomBar);
+
+    // Add pin button
+    document.getElementById('add-pin-btn')?.addEventListener('click', () => {
+      if (!scoutMap) return showToast('Map not ready yet.', 'error');
+      currentPinCoords = scoutMap.getCenter();
+      document.getElementById('addPinForm')?.reset();
+      const preview = document.getElementById('pin-photo-preview');
+      const placeholder = document.getElementById('upload-placeholder');
+      if (preview) {
+        preview.src = '#';
+        preview.classList.add('d-none');
+      }
+      if (placeholder) {
+        placeholder.style.display = '';
+      }
+      currentPhotoFiles = [];
+      addPinModalInstance?.show();
+    });
+
+    // Save all pins button
+    document.getElementById('save-pins-btn')?.addEventListener('click', saveAllPins);
+  }
+
+  renderPinnedRelatives();
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 function renderPinnedRelatives() {
   const listEl = document.getElementById('pinned-relatives-list');
-  if (!listEl) return;
-  if (pinnedRelatives.length === 0) {
-    listEl.innerHTML = '<p class="text-muted small">No relatives pinned yet.</p>';
-  } else {
-    const escapeHtml = (text) => {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    };
-
-    listEl.innerHTML = `
-      <ul class="list-group">
-        ${pinnedRelatives.map((pin, i) => `
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            ${escapeHtml(pin.name)}
-            <button class="btn btn-sm btn-outline-danger remove-pin-btn" data-index="${i}" aria-label="Remove pin">×</button>
-          </li>
-        `).join('')}
-      </ul>
-    `;
-  }
+  const countBadge = document.getElementById('pin-count-badge');
   const saveBtn = document.getElementById('save-pins-btn');
-  if (saveBtn) saveBtn.disabled = pinnedRelatives.length === 0;
+
+  if (!listEl) return;
+
+  // Update count badge
+  if (countBadge) {
+    countBadge.textContent = `${pinnedRelatives.length} pin${pinnedRelatives.length !== 1 ? 's' : ''}`;
+  }
+
+  // Update save button state
+  if (saveBtn) {
+    saveBtn.disabled = pinnedRelatives.length === 0;
+  }
+
+  if (pinnedRelatives.length === 0) {
+    listEl.innerHTML = `
+      <div class="pin-list-empty">
+        <i class="fas fa-map-marker-alt"></i>
+        <p>No pins added yet</p>
+        <small>Tap "Add Pin Here" to mark a location</small>
+      </div>
+    `;
+  } else {
+    listEl.innerHTML = pinnedRelatives.map((pin, i) => `
+      <div class="pin-item">
+        <div class="pin-item-icon">
+          <i class="fas fa-map-pin"></i>
+        </div>
+        <span class="pin-item-name">${escapeHtml(pin.name)}</span>
+        <button class="pin-item-remove remove-pin-btn" data-index="${i}" aria-label="Remove pin">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    `).join('');
+
+    // Add remove handlers
+    listEl.querySelectorAll('.remove-pin-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.index, 10);
+        if (!Number.isNaN(idx)) {
+          pinnedRelatives.splice(idx, 1);
+          renderPinnedRelatives();
+        }
+      });
+    });
+  }
 }
 
 async function saveAllPins() {
@@ -204,7 +334,10 @@ async function saveAllPins() {
   if (!pinnedRelatives.length) return;
 
   const btn = document.getElementById('save-pins-btn');
-  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Saving...`; }
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Saving...`;
+  }
 
   try {
     const memorialsToInsert = pinnedRelatives.map(pin => ({
@@ -226,43 +359,53 @@ async function saveAllPins() {
 
     if (error) throw error;
 
-    showToast(`${pinnedRelatives.length} pinned memorial(s) saved as drafts.`, 'success');
+    // Award scout points for pins and photos
+    const pinsCount = pinnedRelatives.length;
+    const photosCount = pinnedRelatives.filter(p => p.photoUrl).length;
+    const gamificationResult = await awardPoints(user.id, pinsCount, photosCount);
+
+    showToast(`${pinnedRelatives.length} memorial(s) saved as drafts!`, 'success');
+
+    // Show gamification notifications
+    showGamificationToasts(gamificationResult);
+
     cleanupScoutMode();
     window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=draft' }));
   } catch (e) {
     console.error('[scout-mode] save pins failed:', e);
     showToast('An error occurred while saving the pins.', 'error');
-    if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-save me-2"></i>Save Pins & Finish`; }
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fas fa-save"></i> Save All`;
+    }
   }
 }
 
 export async function loadScoutModePage(appRoot) {
   cleanupScoutMode();
-  ensureScoutStyles();
 
   try {
     const resp = await fetch('/pages/scout-mode.html');
     if (!resp.ok) throw new Error('Could not load scout-mode.html');
     appRoot.innerHTML = await resp.text();
 
-    document.querySelectorAll('#step-1 p, #step-2 p, #scout-choice-screen p').forEach(p => {
-      p.classList.remove('text-muted');
-      p.classList.add('text-light');
-      p.style.opacity = '0.9';
-    });
-
+    // Back button handler
     document.getElementById('back-to-dashboard-btn')?.addEventListener('click', (e) => {
       e.preventDefault();
       cleanupScoutMode();
       window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=published' }));
     });
 
+    // Initialize modal
     const addPinModalEl = document.getElementById('addPinModal');
     if (addPinModalEl && window.bootstrap?.Modal) {
       addPinModalInstance = new bootstrap.Modal(addPinModalEl);
     }
 
+    // Mode selection handlers
     const start = (mode) => {
+      currentMode = mode;
+
       const proceed = (center) => {
         document.getElementById('scout-choice-screen')?.classList.add('d-none');
         document.getElementById('scout-wizard-screen')?.classList.remove('d-none');
@@ -270,57 +413,68 @@ export async function loadScoutModePage(appRoot) {
         initScoutMap(center);
 
         if (mode === 'single') {
-          showSinglePinHUDAndCTA();
+          showSinglePinUI();
         } else {
-          showCenterPinHUD();
-          document.getElementById('multi-pin-ui')?.classList.remove('d-none');
-          renderPinnedRelatives();
+          showMultiPinUI();
         }
       };
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          pos => proceed([pos.coords.longitude, pos.coords.latitude]),
-          () => { showToast('Location disabled. Using a default map view.', 'info'); proceed(DEFAULT_CENTER); },
-          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-        );
-      } else {
-        proceed(DEFAULT_CENTER);
+      // Show loading state
+      const btn = mode === 'single' ? document.getElementById('single-pin-btn') : document.getElementById('multi-pin-btn');
+      if (btn) {
+        btn.disabled = true;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        const restoreBtn = () => {
+          btn.disabled = false;
+          btn.innerHTML = originalContent;
+        };
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              restoreBtn();
+              proceed([pos.coords.longitude, pos.coords.latitude]);
+            },
+            () => {
+              restoreBtn();
+              showToast('Location disabled. Using default view.', 'info');
+              proceed(DEFAULT_CENTER);
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+          );
+        } else {
+          restoreBtn();
+          proceed(DEFAULT_CENTER);
+        }
       }
     };
 
     document.getElementById('single-pin-btn')?.addEventListener('click', () => start('single'));
     document.getElementById('multi-pin-btn')?.addEventListener('click', () => start('multi'));
-    document.getElementById('single-pin-mode-btn')?.addEventListener('click', () => start('single'));
-    document.getElementById('multi-pin-mode-btn')?.addEventListener('click', () => start('multi'));
 
-    document.getElementById('confirm-location-btn')?.addEventListener('click', () => {
-      if (!scoutMap) return showToast('Map not ready yet.', 'error');
-      const c = scoutMap.getCenter();
-      cleanupScoutMode();
-      window.dispatchEvent(new CustomEvent('navigate', { detail: `/memorial-form?new=true&lat=${c.lat}&lng=${c.lng}` }));
-    });
-
-    document.getElementById('add-pin-btn')?.addEventListener('click', () => {
-      if (!scoutMap) return showToast('Map not ready yet.', 'error');
-      currentPinCoords = scoutMap.getCenter();
-      document.getElementById('addPinForm')?.reset();
-      const preview = document.getElementById('pin-photo-preview');
-      if (preview) { preview.src = '#'; preview.classList.add('d-none'); }
-      currentPhotoFiles = [];
-      addPinModalInstance?.show();
-    });
-
+    // Photo upload handling
     document.getElementById('pinPhoto')?.addEventListener('change', (e) => {
       const f = e.target.files?.[0];
       currentPhotoFiles = f ? [f] : [];
       const preview = document.getElementById('pin-photo-preview');
-      if (preview) {
-        if (f) { preview.src = URL.createObjectURL(f); preview.classList.remove('d-none'); }
-        else { preview.src = '#'; preview.classList.add('d-none'); }
+      const placeholder = document.getElementById('upload-placeholder');
+
+      if (preview && placeholder) {
+        if (f) {
+          preview.src = URL.createObjectURL(f);
+          preview.classList.remove('d-none');
+          placeholder.style.display = 'none';
+        } else {
+          preview.src = '#';
+          preview.classList.add('d-none');
+          placeholder.style.display = '';
+        }
       }
     });
 
+    // Save pin in modal
     document.getElementById('savePinNameBtn')?.addEventListener('click', async () => {
       const btn = document.getElementById('savePinNameBtn');
       const name = (document.getElementById('pinName')?.value || '').trim();
@@ -357,23 +511,23 @@ export async function loadScoutModePage(appRoot) {
       renderPinnedRelatives();
       addPinModalInstance?.hide();
       btn.disabled = false;
-      btn.innerHTML = 'Save Pin';
+      btn.innerHTML = '<i class="fas fa-plus"></i> Add Pin';
+      showToast(`Added: ${name}`, 'success');
     });
 
-    document.getElementById('pinned-relatives-list')?.addEventListener('click', (e) => {
-      const btn = e.target.closest('.remove-pin-btn');
-      if (!btn) return;
-      const idx = parseInt(btn.dataset.index, 10);
-      if (!Number.isNaN(idx)) {
-        pinnedRelatives.splice(idx, 1);
-        renderPinnedRelatives();
-      }
-    });
-
-    document.getElementById('save-pins-btn')?.addEventListener('click', saveAllPins);
   } catch (error) {
     console.error("Failed to load Scout Mode page:", error);
-    appRoot.innerHTML = `<p class="text-danger text-center">Error loading Scout Mode.</p>`;
+    appRoot.innerHTML = `
+      <div class="container py-5 text-center">
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          Error loading Scout Mode
+        </div>
+        <a href="/memorial-list" class="btn btn-primary" data-route>
+          Return to Dashboard
+        </a>
+      </div>
+    `;
   }
 
   return cleanupScoutMode;

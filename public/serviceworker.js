@@ -1,5 +1,5 @@
 /* serviceworker.js */
-const CACHE_VERSION = 'v27'; // Fixed email confirmation redirect
+const CACHE_VERSION = 'v28'; // Added tributes-list page, fixed featured memorials, XSS fixes
 const CACHE_NAME = `headstone-memorial-cache-${CACHE_VERSION}`;
 
 const urlsToCache = [
@@ -16,12 +16,15 @@ const urlsToCache = [
   '/js/pages/memorial-template.js',
   '/js/pages/curator-panel.js',
   '/js/pages/scout-mode.js',
+  '/js/pages/tributes-list.js',
   '/favicon.png',
   '/logo1.png',
   '/images/icons/icon-192x192.png',
   '/images/icons/icon-512x512.png',
   '/pages/login.html',
-  '/pages/memorial-template.html'
+  '/pages/memorial-template.html',
+  '/pages/tributes-list.html',
+  '/pages/home.html'
 ];
 
 // Install: Pre-cache the app shell

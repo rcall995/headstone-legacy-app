@@ -1,33 +1,137 @@
-<div class="container py-5">
-    <h1 class="display-4 text-center mb-4">Become a Legacy Scout</h1>
-    <div class="row g-4 align-items-center">
-        <div class="col-md-6">
-            <h2>What is a Legacy Scout?</h2>
-            <p class="lead">A Legacy Scout is a dedicated community member who helps map and preserve family histories by locating and pinning gravesites. Your contributions help build a comprehensive digital archive for future generations.</p>
-        </div>
-        <div class="col-md-6 text-center">
-            <i class="fas fa-map-pin fa-6x text-primary"></i>
-        </div>
+<!-- Scout Page - Mobile-First Redesign -->
+<div class="page-wrapper">
+  <!-- Hero -->
+  <section class="page-hero scout-hero">
+    <div class="container">
+      <div class="hero-badge">
+        <i class="fas fa-medal"></i>
+        <span>Join the Community</span>
+      </div>
+      <h1 class="page-hero-title">Become a Legacy Scout</h1>
+      <p class="page-hero-subtitle">Help map and preserve family histories by locating and pinning gravesites in your community.</p>
     </div>
-    <hr class="my-5">
-    <div class="row g-4 align-items-center">
-        <div class="col-md-6 order-md-2">
-            <h2>How to Get Started</h2>
-            <p class="lead">Sign in as a curator, visit the Scout Mode page, and use your device to pin locations and upload photos of headstones. Our AI tools can help transcribe details to streamline the process.</p>
+  </section>
+
+  <!-- Scout Stats Section (shown when logged in) -->
+  <section class="scout-stats-section" id="scout-stats-section" style="display: none;">
+    <div class="container">
+      <div class="scout-stats-card">
+        <div class="scout-level-display">
+          <div class="scout-level-badge" id="scout-level-badge">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <div class="scout-level-info">
+            <h3 id="scout-level-title">Novice Scout</h3>
+            <p id="scout-points-display">0 points</p>
+          </div>
         </div>
-        <div class="col-md-6 text-center order-md-1">
-            <i class="fas fa-camera fa-6x text-primary"></i>
+        <div class="scout-stats-grid">
+          <div class="scout-stat">
+            <span class="scout-stat-value" id="scout-pins-count">0</span>
+            <span class="scout-stat-label">Pins</span>
+          </div>
+          <div class="scout-stat">
+            <span class="scout-stat-value" id="scout-photos-count">0</span>
+            <span class="scout-stat-label">Photos</span>
+          </div>
+          <div class="scout-stat">
+            <span class="scout-stat-value" id="scout-badges-count">0</span>
+            <span class="scout-stat-label">Badges</span>
+          </div>
         </div>
+        <div class="scout-progress-section">
+          <div class="scout-progress-bar">
+            <div class="scout-progress-fill" id="scout-progress-fill" style="width: 0%"></div>
+          </div>
+          <p class="scout-progress-text" id="scout-progress-text">0 points to next level</p>
+        </div>
+        <a href="/scout-leaderboard" class="btn btn-hero-secondary scout-leaderboard-btn" data-route>
+          <i class="fas fa-trophy me-2"></i>View Leaderboard
+        </a>
+      </div>
+
+      <!-- Badges Display -->
+      <div class="scout-badges-card">
+        <h3>Your Badges</h3>
+        <div class="scout-badges-grid" id="scout-badges-grid">
+          <!-- Badges populated by JS -->
+        </div>
+      </div>
     </div>
-    <hr class="my-5">
-    <div class="row g-4 align-items-center">
-        <div class="col-md-6">
-            <h2>Make an Impact</h2>
-            <p class="lead">By joining the Scout Program, you contribute to a growing network of memorials, connecting families and preserving history. Your efforts ensure no story is lost.</p>
-            <a href="/scout-mode" class="btn btn-primary btn-lg mt-3">Start Scouting Now</a>
+  </section>
+
+  <!-- What is a Scout -->
+  <section class="scout-info-section">
+    <div class="container">
+
+      <div class="scout-info-card">
+        <div class="scout-info-icon">
+          <i class="fas fa-map-marker-alt"></i>
         </div>
-        <div class="col-md-6 text-center">
-            <i class="fas fa-users fa-6x text-primary"></i>
+        <div class="scout-info-content">
+          <h2>What is a Legacy Scout?</h2>
+          <p>A Legacy Scout is a dedicated community member who helps map and preserve family histories. Your contributions help build a comprehensive digital archive for future generations.</p>
         </div>
+      </div>
+
+      <div class="scout-info-card">
+        <div class="scout-info-icon accent">
+          <i class="fas fa-camera"></i>
+        </div>
+        <div class="scout-info-content">
+          <h2>How to Get Started</h2>
+          <p>Sign in, visit Scout Mode, and use your device to pin locations and upload photos of headstones. Our AI tools can help transcribe details.</p>
+        </div>
+      </div>
+
+      <div class="scout-info-card">
+        <div class="scout-info-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="scout-info-content">
+          <h2>Make an Impact</h2>
+          <p>By joining the Scout Program, you contribute to a growing network of memorials, connecting families and preserving history.</p>
+        </div>
+      </div>
+
     </div>
+  </section>
+
+  <!-- Scout Benefits -->
+  <section class="scout-benefits-section">
+    <div class="container">
+      <h2 class="section-title">Scout Benefits</h2>
+
+      <div class="scout-benefits-grid">
+        <div class="scout-benefit">
+          <i class="fas fa-star"></i>
+          <span>Recognition badges</span>
+        </div>
+        <div class="scout-benefit">
+          <i class="fas fa-gift"></i>
+          <span>Exclusive rewards</span>
+        </div>
+        <div class="scout-benefit">
+          <i class="fas fa-heart"></i>
+          <span>Help families connect</span>
+        </div>
+        <div class="scout-benefit">
+          <i class="fas fa-history"></i>
+          <span>Preserve history</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="final-cta-section">
+    <div class="cta-content">
+      <h2>Ready to Start Scouting?</h2>
+      <p>Join our community of scouts preserving history.</p>
+      <a class="btn btn-cta-light" href="/scout-mode" data-route>
+        <i class="fas fa-map-marked-alt"></i>
+        Enter Scout Mode
+      </a>
+    </div>
+  </section>
 </div>

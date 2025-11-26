@@ -3,50 +3,74 @@ import { supabase } from '/js/supabase-client.js';
 import { config } from '/js/config.js';
 import { showToast } from '/js/utils/toasts.js';
 
-/* ------------------- Featured cards ------------------- */
-async function loadFeaturedMemorials() {
+/* ------------------- Helper: escape HTML to prevent XSS ------------------- */
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/* ------------------- Helper: format date for display ------------------- */
+function formatDate(dateString) {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: '2-digit',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return dateString;
+  }
+}
+
+/* ------------------- Recent Memorials cards ------------------- */
+async function loadRecentMemorials() {
   const container = document.getElementById('recent-memorials-container');
   if (!container) return;
 
-  const featuredIds = [
-    "benjamin-franklin-v5b8j5",
-    "fq8gALEFexTYPkEEL36C",
-    "yf83kyDHPl32fqYpLnun",
-    "xXwLqdrRel9dE2LMmi5W"
-  ];
-
   try {
+    // Get most recent published memorials
     const { data: memorials, error } = await supabase
       .from('memorials')
-      .select('id, name, main_photo')
-      .in('id', featuredIds);
+      .select('id, name, main_photo, birth_date, death_date')
+      .in('status', ['published', 'approved'])
+      .order('created_at', { ascending: false })
+      .limit(6);
 
     if (error) throw error;
 
     if (!memorials || memorials.length === 0) {
-      container.innerHTML = '<p class="text-muted text-center w-100">No featured memorials found.</p>';
+      container.innerHTML = '<p class="text-muted text-center w-100">No memorials to display yet.</p>';
       return;
     }
 
     const cards = memorials.map(m => {
       const photoUrl = m.main_photo || '/images/placeholder.png';
+      const safeName = escapeHtml(m.name);
+      const safeId = encodeURIComponent(m.id);
+      const birthDate = formatDate(m.birth_date);
+      const deathDate = formatDate(m.death_date);
+
       return (
-        '<div class="col-6 col-md-4 col-lg-3">' +
-          `<a href="/memorial?id=${m.id}" class="card text-decoration-none text-dark shadow-sm recent-memorial-card">` +
-            '<div class="recent-memorial-img-container">' +
-              `<img src="${photoUrl}" class="recent-memorial-img" alt="${m.name}">` +
-            '</div>' +
-            '<div class="card-body p-2">' +
-              `<h6 class="card-title text-center mb-0 small">${m.name}</h6>` +
-            '</div>' +
-          '</a>' +
-        '</div>'
+        `<a href="/memorial?id=${safeId}" class="recent-memorial-card" data-route>` +
+          '<div class="recent-memorial-photo">' +
+            `<img src="${escapeHtml(photoUrl)}" alt="${safeName}">` +
+          '</div>' +
+          '<div class="recent-memorial-info">' +
+            `<h4 class="recent-memorial-name">${safeName}</h4>` +
+            (birthDate ? `<p class="recent-memorial-date">${birthDate}</p>` : '') +
+            (deathDate ? `<p class="recent-memorial-date">${deathDate}</p>` : '') +
+          '</div>' +
+        '</a>'
       );
     }).join('');
     container.innerHTML = cards;
   } catch (error) {
-    console.error("Error loading featured memorials:", error);
-    container.innerHTML = '<p class="text-danger text-center w-100">Could not load featured memorials.</p>';
+    console.error("Error loading recent memorials:", error);
+    container.innerHTML = '<p class="text-danger text-center w-100">Could not load recent memorials.</p>';
   }
 }
 
@@ -217,8 +241,8 @@ async function initializeHomepageMap() {
         if (!f) return;
         const coords = f.geometry.coordinates;
         const props = f.properties || {};
-        const title = props.title || 'Memorial';
-        const url = props.url || '#';
+        const title = escapeHtml(props.title || 'Memorial');
+        const url = encodeURI(props.url || '#');
         const html =
           '<div style="min-width:180px">' +
             '<strong>' + title + '</strong><br/>' +
@@ -260,7 +284,11 @@ export async function loadHomePage(appRoot) {
     if (!response.ok) throw new Error('Could not load home.html');
     appRoot.innerHTML = await response.text();
 
-    await initializeHomepageMap();
+    // Load recent memorials and map in parallel
+    await Promise.all([
+      loadRecentMemorials(),
+      initializeHomepageMap()
+    ]);
   } catch (error) {
     console.error('Failed to load home page:', error);
     appRoot.innerHTML = '<p class="text-danger text-center">Error loading home page.</p>';

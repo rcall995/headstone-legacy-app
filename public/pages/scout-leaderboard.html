@@ -1,0 +1,51 @@
+<!-- Scout Leaderboard Page -->
+<div class="page-wrapper">
+  <!-- Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="page-hero-title">Scout Leaderboard</h1>
+      <p class="page-hero-subtitle">Top scouts preserving history in their communities</p>
+    </div>
+  </section>
+
+  <!-- User's Rank Card (shown when logged in) -->
+  <section class="leaderboard-user-section" id="leaderboard-user-section" style="display: none;">
+    <div class="container">
+      <div class="leaderboard-user-card">
+        <div class="leaderboard-user-rank">
+          <span class="rank-number" id="user-rank">#-</span>
+        </div>
+        <div class="leaderboard-user-info">
+          <h3>Your Ranking</h3>
+          <p id="user-rank-stats">0 points</p>
+        </div>
+        <a href="/scout" class="btn btn-hero-secondary" data-route>View Profile</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Leaderboard List -->
+  <section class="leaderboard-section">
+    <div class="container">
+      <div class="leaderboard-list" id="leaderboard-list">
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Back to Scout Page -->
+  <section class="leaderboard-cta-section">
+    <div class="container text-center">
+      <a href="/scout" class="btn btn-hero-primary" data-route>
+        <i class="fas fa-arrow-left me-2"></i>Back to Scout Info
+      </a>
+      <a href="/scout-mode" class="btn btn-hero-secondary ms-2" data-route>
+        <i class="fas fa-map-marked-alt me-2"></i>Start Scouting
+      </a>
+    </div>
+  </section>
+</div>

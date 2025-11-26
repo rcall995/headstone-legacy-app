@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
-  const { memorialId, memorialName } = req.body;
+  const { memorialId, memorialName, referralCode, partnerId } = req.body;
 
   if (!memorialId) {
     return res.status(400).json({ error: 'Missing memorialId' });
@@ -40,6 +40,13 @@ export default async function handler(req, res) {
 
     const origin = req.headers.origin || 'https://headstonelegacy.com';
 
+    // Build referenceId with optional referral data
+    const referenceData = { memorialId, userId: user.id };
+    if (referralCode && partnerId) {
+      referenceData.referralCode = referralCode;
+      referenceData.partnerId = partnerId;
+    }
+
     const response = await squareClient.checkoutApi.createPaymentLink({
       idempotencyKey: `${memorialId}-${Date.now()}`,
       order: {
@@ -49,7 +56,7 @@ export default async function handler(req, res) {
           quantity: '1',
           basePriceMoney: { amount: BigInt(3900), currency: 'USD' }
         }],
-        referenceId: JSON.stringify({ memorialId, userId: user.id })
+        referenceId: JSON.stringify(referenceData)
       },
       checkoutOptions: {
         allowTipping: false,

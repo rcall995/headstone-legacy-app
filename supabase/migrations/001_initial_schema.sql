@@ -1,6 +1,6 @@
 -- ============================================
--- HEADSTONE LEGACY - SUPABASE SCHEMA
--- Run this in your Supabase SQL Editor
+-- HEADSTONE LEGACY - INITIAL SCHEMA
+-- Migration 001 - Run first on new Supabase project
 -- ============================================
 
 -- Enable UUID extension
@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS memorials (
   curators JSONB DEFAULT '[]'::jsonb,
   candle_count INTEGER DEFAULT 0,
   view_count INTEGER DEFAULT 0,
+  is_featured BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -72,6 +73,7 @@ CREATE TABLE IF NOT EXISTS memorials (
 CREATE INDEX IF NOT EXISTS idx_memorials_curator_ids ON memorials USING GIN (curator_ids);
 CREATE INDEX IF NOT EXISTS idx_memorials_status ON memorials (status);
 CREATE INDEX IF NOT EXISTS idx_memorials_name_lowercase ON memorials (name_lowercase);
+CREATE INDEX IF NOT EXISTS idx_memorials_is_featured ON memorials (is_featured) WHERE is_featured = TRUE;
 
 -- ============================================
 -- TRIBUTES (Guestbook entries)
@@ -309,16 +311,6 @@ CREATE POLICY "Authenticated users can delete project notes" ON project_notes
   FOR DELETE USING (auth.role() = 'authenticated');
 
 -- ============================================
--- STORAGE BUCKETS (Run in Supabase Dashboard)
--- ============================================
--- Create these buckets in Storage section:
--- 1. memorials (public) - memorial photos
--- 2. scouted-photos (public) - scout mode photos
--- 3. tributes (public) - tribute photos
--- 4. voice-recordings (public) - audio files
--- 5. avatars (public) - user profile photos
-
--- ============================================
 -- HELPFUL VIEWS
 -- ============================================
 
@@ -344,10 +336,10 @@ LEFT JOIN voice_recordings vr ON m.id = vr.memorial_id
 GROUP BY m.id;
 
 -- ============================================
--- SEED DATA (Optional - for testing)
+-- STORAGE BUCKETS (Create manually in Dashboard)
 -- ============================================
-
--- Insert a test project note
-INSERT INTO project_notes (title, category, content, tags, is_pinned) VALUES
-('Project Kickoff', 'decision', 'Migrated from Firebase to Supabase + Vercel. Focus on building engagement features next.', ARRAY['migration', 'supabase', 'vercel'], true),
-('Feature Priority', 'feature', 'Phase 1: Virtual candles, Anniversary reminders, Enhanced tributes. Phase 2: Voice recordings, Video tributes, Life timeline.', ARRAY['roadmap', 'features'], true);
+-- 1. memorials (public) - memorial photos
+-- 2. scouted-photos (public) - scout mode photos
+-- 3. tributes (public) - tribute photos
+-- 4. voice-recordings (public) - audio files
+-- 5. avatars (public) - user profile photos

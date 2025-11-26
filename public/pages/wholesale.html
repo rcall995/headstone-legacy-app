@@ -1,0 +1,446 @@
+<div class="page-wrapper">
+  <!-- Hero -->
+  <section class="page-hero wholesale-hero">
+    <div class="container">
+      <h1 class="page-hero-title">Wholesale Partner Program</h1>
+      <p class="page-hero-subtitle">Bulk pricing for monument companies, funeral homes & cemeteries</p>
+    </div>
+  </section>
+
+  <!-- Pricing Tiers -->
+  <section class="wholesale-section">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 class="section-title">Volume Pricing</h2>
+        <p class="section-subtitle">The more you order, the more you save</p>
+
+        <!-- Product Type Toggle -->
+        <div class="product-toggle mt-4">
+          <div class="btn-group" role="group" aria-label="Product type">
+            <button type="button" class="btn btn-lg btn-primary active" id="toggle-physical">
+              <i class="fas fa-tag me-2"></i>Physical Tags
+            </button>
+            <button type="button" class="btn btn-lg btn-outline-primary" id="toggle-digital">
+              <i class="fas fa-qrcode me-2"></i>Digital Licenses
+            </button>
+          </div>
+          <p class="text-muted mt-2 mb-0" id="toggle-description">Premium stainless steel tags shipped to you</p>
+        </div>
+      </div>
+
+      <!-- Physical Tags Pricing -->
+      <div id="physical-pricing" class="wholesale-pricing-grid">
+        <!-- Starter Tier -->
+        <div class="wholesale-pricing-card">
+          <div class="wholesale-tier-name">Starter</div>
+          <div class="wholesale-quantity">10+ <span>tags</span></div>
+          <div class="wholesale-price">$25 <span>/tag</span></div>
+          <div class="wholesale-savings">Save $140+</div>
+          <ul class="wholesale-features list-unstyled">
+            <li><i class="fas fa-check"></i> Premium stainless steel tags</li>
+            <li><i class="fas fa-check"></i> Laser-engraved QR codes</li>
+            <li><i class="fas fa-check"></i> Mounting hardware included</li>
+            <li><i class="fas fa-check"></i> Lifetime replacement guarantee</li>
+            <li><i class="fas fa-check"></i> Free shipping</li>
+          </ul>
+          <button class="btn btn-secondary-unified w-100" onclick="scrollToForm()">
+            Get Started
+          </button>
+        </div>
+
+        <!-- Professional Tier -->
+        <div class="wholesale-pricing-card featured">
+          <div class="wholesale-tier-name">Professional</div>
+          <div class="wholesale-quantity">25+ <span>tags</span></div>
+          <div class="wholesale-price">$20 <span>/tag</span></div>
+          <div class="wholesale-savings">Save $475+</div>
+          <ul class="wholesale-features list-unstyled">
+            <li><i class="fas fa-check"></i> Everything in Starter</li>
+            <li><i class="fas fa-check"></i> Priority production</li>
+            <li><i class="fas fa-check"></i> Dedicated account manager</li>
+            <li><i class="fas fa-check"></i> Marketing materials</li>
+            <li><i class="fas fa-check"></i> Co-branded option available</li>
+          </ul>
+          <button class="btn btn-primary-unified w-100" onclick="scrollToForm()">
+            Apply Now
+          </button>
+        </div>
+
+        <!-- Enterprise Tier -->
+        <div class="wholesale-pricing-card">
+          <div class="wholesale-tier-name">Enterprise</div>
+          <div class="wholesale-quantity">50+ <span>tags</span></div>
+          <div class="wholesale-price">$15 <span>/tag</span></div>
+          <div class="wholesale-savings">Save $1,200+</div>
+          <ul class="wholesale-features list-unstyled">
+            <li><i class="fas fa-check"></i> Everything in Professional</li>
+            <li><i class="fas fa-check"></i> Custom branding options</li>
+            <li><i class="fas fa-check"></i> White-label available</li>
+            <li><i class="fas fa-check"></i> Net-30 payment terms</li>
+            <li><i class="fas fa-check"></i> Volume discounts on 100+</li>
+          </ul>
+          <button class="btn btn-secondary-unified w-100" onclick="scrollToForm()">
+            Contact Us
+          </button>
+        </div>
+      </div>
+
+      <!-- Digital Licenses Pricing (hidden by default) -->
+      <div id="digital-pricing" class="wholesale-pricing-grid" style="display: none;">
+        <!-- Digital Starter -->
+        <div class="wholesale-pricing-card">
+          <div class="wholesale-tier-name">Digital Starter</div>
+          <div class="wholesale-quantity">10+ <span>licenses</span></div>
+          <div class="wholesale-price">$12 <span>/license</span></div>
+          <div class="wholesale-savings">Perfect for laser etching</div>
+          <ul class="wholesale-features list-unstyled">
+            <li><i class="fas fa-check"></i> High-res QR code files (SVG + PNG)</li>
+            <li><i class="fas fa-check"></i> Vector format for laser machines</li>
+            <li><i class="fas fa-check"></i> Hosted memorial page included</li>
+            <li><i class="fas fa-check"></i> Instant download after purchase</li>
+            <li><i class="fas fa-check"></i> Sizing guide included</li>
+          </ul>
+          <button class="btn btn-secondary-unified w-100" onclick="scrollToForm()">
+            Get Started
+          </button>
+        </div>
+
+        <!-- Digital Professional -->
+        <div class="wholesale-pricing-card featured">
+          <div class="wholesale-tier-name">Digital Pro</div>
+          <div class="wholesale-quantity">25+ <span>licenses</span></div>
+          <div class="wholesale-price">$8 <span>/license</span></div>
+          <div class="wholesale-savings">Best for growing shops</div>
+          <ul class="wholesale-features list-unstyled">
+            <li><i class="fas fa-check"></i> Everything in Digital Starter</li>
+            <li><i class="fas fa-check"></i> Bulk download portal access</li>
+            <li><i class="fas fa-check"></i> Priority support</li>
+            <li><i class="fas fa-check"></i> Custom size templates</li>
+            <li><i class="fas fa-check"></i> EPS format available</li>
+          </ul>
+          <button class="btn btn-primary-unified w-100" onclick="scrollToForm()">
+            Apply Now
+          </button>
+        </div>
+
+        <!-- Digital Enterprise -->
+        <div class="wholesale-pricing-card">
+          <div class="wholesale-tier-name">Digital Enterprise</div>
+          <div class="wholesale-quantity">50+ <span>licenses</span></div>
+          <div class="wholesale-price">$5 <span>/license</span></div>
+          <div class="wholesale-savings">Maximum margins</div>
+          <ul class="wholesale-features list-unstyled">
+            <li><i class="fas fa-check"></i> Everything in Digital Pro</li>
+            <li><i class="fas fa-check"></i> API access for automation</li>
+            <li><i class="fas fa-check"></i> White-label memorial pages</li>
+            <li><i class="fas fa-check"></i> Net-30 payment terms</li>
+            <li><i class="fas fa-check"></i> Dedicated account manager</li>
+          </ul>
+          <button class="btn btn-secondary-unified w-100" onclick="scrollToForm()">
+            Contact Us
+          </button>
+        </div>
+      </div>
+
+      <!-- Profit Calculator - Physical Tags -->
+      <div id="physical-calculator" class="card-unified mb-5">
+        <h4 class="mb-4"><i class="fas fa-calculator"></i> Profit Calculator - Physical Tags</h4>
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-3">If you sell QR tags at <strong>$49</strong> retail:</p>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Volume</th>
+                  <th>Your Cost</th>
+                  <th>Profit/Tag</th>
+                  <th>Total Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>10 tags</td>
+                  <td>$250</td>
+                  <td>$24</td>
+                  <td class="text-success fw-bold">$240</td>
+                </tr>
+                <tr>
+                  <td>25 tags</td>
+                  <td>$500</td>
+                  <td>$29</td>
+                  <td class="text-success fw-bold">$725</td>
+                </tr>
+                <tr>
+                  <td>50 tags</td>
+                  <td>$750</td>
+                  <td>$34</td>
+                  <td class="text-success fw-bold">$1,700</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <div class="bg-light p-4 rounded text-center">
+              <p class="mb-2">Average monument company sells</p>
+              <div class="display-4 text-primary fw-bold">10-20</div>
+              <p class="mb-0">headstones per month</p>
+              <hr>
+              <p class="mb-0">Potential monthly profit: <strong class="text-success">$240 - $680+</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profit Calculator - Digital Licenses (hidden by default) -->
+      <div id="digital-calculator" class="card-unified mb-5" style="display: none;">
+        <h4 class="mb-4"><i class="fas fa-calculator"></i> Profit Calculator - Laser Etch</h4>
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-3">If you charge <strong>$75</strong> to add a QR memorial:</p>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Volume</th>
+                  <th>Your Cost</th>
+                  <th>Profit Each</th>
+                  <th>Total Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>10 codes</td>
+                  <td>$120</td>
+                  <td>$63</td>
+                  <td class="text-success fw-bold">$630</td>
+                </tr>
+                <tr>
+                  <td>25 codes</td>
+                  <td>$200</td>
+                  <td>$67</td>
+                  <td class="text-success fw-bold">$1,675</td>
+                </tr>
+                <tr>
+                  <td>50 codes</td>
+                  <td>$250</td>
+                  <td>$70</td>
+                  <td class="text-success fw-bold">$3,500</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <div class="bg-light p-4 rounded text-center">
+              <p class="mb-2"><i class="fas fa-bolt text-warning me-2"></i>No shipping costs</p>
+              <p class="mb-2"><i class="fas fa-bolt text-warning me-2"></i>No inventory to manage</p>
+              <p class="mb-2"><i class="fas fa-bolt text-warning me-2"></i>Instant delivery</p>
+              <hr>
+              <p class="mb-0">Higher margins with <strong class="text-success">zero logistics</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How It Works -->
+      <div class="text-center mb-4">
+        <h2 class="section-title">How Wholesale Works</h2>
+      </div>
+      <div class="row g-4 mb-5">
+        <div class="col-md-4">
+          <div class="card-unified text-center h-100">
+            <div class="step-number mx-auto mb-3">1</div>
+            <h5>Apply & Get Approved</h5>
+            <p class="text-muted mb-0">Fill out the form below. We'll verify your business and set up your wholesale account within 24-48 hours.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card-unified text-center h-100">
+            <div class="step-number mx-auto mb-3">2</div>
+            <h5>Place Bulk Orders</h5>
+            <p class="text-muted mb-0">Order tags in bulk through your wholesale dashboard. We'll ship directly to you within 3-5 business days.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card-unified text-center h-100">
+            <div class="step-number mx-auto mb-3">3</div>
+            <h5>Sell & Profit</h5>
+            <p class="text-muted mb-0">Add tags to your headstone sales at your markup. Keep 100% of the profit on every sale.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Application Form -->
+      <div class="row justify-content-center" id="wholesale-form">
+        <div class="col-lg-8">
+          <div class="wholesale-form-card">
+            <div class="wholesale-form-header">
+              <h3>Apply for Wholesale Account</h3>
+              <p>Tell us about your business and we'll get you set up</p>
+            </div>
+
+            <form id="wholesale-application-form" novalidate>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="ws-business-name" class="form-label">Business Name *</label>
+                  <input type="text" class="form-control form-control-lg" id="ws-business-name" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="ws-business-type" class="form-label">Business Type *</label>
+                  <select class="form-select form-select-lg" id="ws-business-type" required>
+                    <option value="">Select type...</option>
+                    <option value="monument_company">Monument/Headstone Company</option>
+                    <option value="funeral_home">Funeral Home</option>
+                    <option value="cemetery">Cemetery</option>
+                    <option value="retailer">Memorial Products Retailer</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="ws-contact-name" class="form-label">Contact Name *</label>
+                  <input type="text" class="form-control form-control-lg" id="ws-contact-name" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="ws-title" class="form-label">Title/Role</label>
+                  <input type="text" class="form-control form-control-lg" id="ws-title" placeholder="Owner, Sales Manager, etc.">
+                </div>
+                <div class="col-md-6">
+                  <label for="ws-email" class="form-label">Email *</label>
+                  <input type="email" class="form-control form-control-lg" id="ws-email" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="ws-phone" class="form-label">Phone *</label>
+                  <input type="tel" class="form-control form-control-lg" id="ws-phone" required>
+                </div>
+                <div class="col-12">
+                  <label for="ws-website" class="form-label">Website</label>
+                  <input type="url" class="form-control form-control-lg" id="ws-website" placeholder="https://yourcompany.com">
+                </div>
+                <div class="col-md-6">
+                  <label for="ws-volume" class="form-label">Estimated Monthly Volume *</label>
+                  <select class="form-select form-select-lg" id="ws-volume" required>
+                    <option value="">Select volume...</option>
+                    <option value="10-24">10-24 tags/month</option>
+                    <option value="25-49">25-49 tags/month</option>
+                    <option value="50-99">50-99 tags/month</option>
+                    <option value="100+">100+ tags/month</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="ws-timeline" class="form-label">When do you want to start?</label>
+                  <select class="form-select form-select-lg" id="ws-timeline">
+                    <option value="immediately">Immediately</option>
+                    <option value="1-2 weeks">1-2 weeks</option>
+                    <option value="1 month">Within a month</option>
+                    <option value="just exploring">Just exploring options</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label for="ws-message" class="form-label">Anything else we should know?</label>
+                  <textarea class="form-control" id="ws-message" rows="3" placeholder="Tell us about your business, questions you have, or specific needs..."></textarea>
+                </div>
+                <div class="col-12 mt-4">
+                  <button type="submit" class="btn btn-primary-unified btn-lg w-100" id="ws-submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Submit Application</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- Success Message -->
+            <div id="ws-success" class="text-center py-5" style="display: none;">
+              <div class="success-icon-large text-success mb-4">
+                <i class="fas fa-check-circle" style="font-size: 4rem;"></i>
+              </div>
+              <h4>Application Received!</h4>
+              <p class="text-muted">We'll review your application and get back to you within 24-48 hours.</p>
+              <p>In the meantime, feel free to <a href="/partners" data-route>join our affiliate program</a> to start earning commissions right away.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="mt-5 pt-4">
+        <h2 class="section-title text-center">Frequently Asked Questions</h2>
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="partner-faq-item">
+              <h5>How do the QR tags work?</h5>
+              <p>Each tag has a unique QR code. When scanned, it takes visitors to the digital memorial page where they can see photos, stories, and family history. You or your customers create the memorial on our website (free), then the tag links to it.</p>
+            </div>
+            <div class="partner-faq-item">
+              <h5>Can I pre-order tags without memorials?</h5>
+              <p>Yes! We can ship "blank" tags with unique codes. The memorial can be created later and linked to the tag. This is perfect for keeping inventory on hand.</p>
+            </div>
+            <div class="partner-faq-item">
+              <h5>What's the turnaround time?</h5>
+              <p>Standard orders ship within 3-5 business days. Rush orders (24-48 hours) are available for an additional fee.</p>
+            </div>
+            <div class="partner-faq-item">
+              <h5>Can I get custom branding?</h5>
+              <p>Yes! Enterprise accounts (50+ tags) can add their logo to the back of tags and get co-branded memorial pages. Contact us for details.</p>
+            </div>
+            <div class="partner-faq-item">
+              <h5>What if a tag gets damaged?</h5>
+              <p>All tags come with a lifetime replacement guarantee. If a tag ever becomes unreadable, we'll replace it free of charge.</p>
+            </div>
+            <div class="partner-faq-item">
+              <h5>What about laser etching directly onto headstones?</h5>
+              <p>Perfect for shops with laser engraving capability! Our Digital License option gives you high-resolution vector files (SVG, PNG, EPS) optimized for laser machines. You etch the QR code directly onto the stone - no physical tag needed. It's a premium offering with higher margins since there's no shipping or inventory.</p>
+            </div>
+            <div class="partner-faq-item">
+              <h5>What file formats do digital licenses include?</h5>
+              <p>Each digital license includes SVG (vector for laser machines), PNG (high-resolution), and a sizing guide. Enterprise accounts also get EPS format and API access for automated workflows.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+function scrollToForm() {
+  document.getElementById('wholesale-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Toggle between Physical Tags and Digital Licenses
+document.addEventListener('DOMContentLoaded', function() {
+  const togglePhysical = document.getElementById('toggle-physical');
+  const toggleDigital = document.getElementById('toggle-digital');
+  const toggleDescription = document.getElementById('toggle-description');
+
+  const physicalPricing = document.getElementById('physical-pricing');
+  const digitalPricing = document.getElementById('digital-pricing');
+  const physicalCalculator = document.getElementById('physical-calculator');
+  const digitalCalculator = document.getElementById('digital-calculator');
+
+  if (togglePhysical && toggleDigital) {
+    togglePhysical.addEventListener('click', function() {
+      togglePhysical.classList.add('btn-primary', 'active');
+      togglePhysical.classList.remove('btn-outline-primary');
+      toggleDigital.classList.remove('btn-primary', 'active');
+      toggleDigital.classList.add('btn-outline-primary');
+
+      physicalPricing.style.display = '';
+      digitalPricing.style.display = 'none';
+      physicalCalculator.style.display = '';
+      digitalCalculator.style.display = 'none';
+      toggleDescription.textContent = 'Premium stainless steel tags shipped to you';
+    });
+
+    toggleDigital.addEventListener('click', function() {
+      toggleDigital.classList.add('btn-primary', 'active');
+      toggleDigital.classList.remove('btn-outline-primary');
+      togglePhysical.classList.remove('btn-primary', 'active');
+      togglePhysical.classList.add('btn-outline-primary');
+
+      physicalPricing.style.display = 'none';
+      digitalPricing.style.display = '';
+      physicalCalculator.style.display = 'none';
+      digitalCalculator.style.display = '';
+      toggleDescription.textContent = 'Vector QR codes for laser etching - no physical product';
+    });
+  }
+});
+</script>
