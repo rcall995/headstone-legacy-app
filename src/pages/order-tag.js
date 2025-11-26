@@ -192,37 +192,19 @@ export async function loadOrderTagPage(appRoot, memorialId) {
         if (!response.ok) throw new Error('HTML content not found');
         appRoot.innerHTML = await response.text();
 
-        // Check if memorialId is a UUID or a slug
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memorialId);
+        // Memorial ID can be either a UUID or a text slug - both are stored in the 'id' column
+        const { data: memorial, error } = await supabase
+            .from('memorials')
+            .select('id, name')
+            .eq('id', memorialId)
+            .single();
 
-        let memorial, actualMemorialId;
-
-        if (isUUID) {
-            const { data, error } = await supabase
-                .from('memorials')
-                .select('id, name')
-                .eq('id', memorialId)
-                .single();
-            if (error || !data) {
-                appRoot.innerHTML = `<p class="text-danger text-center">Memorial not found.</p>`;
-                return;
-            }
-            memorial = data;
-            actualMemorialId = memorialId;
-        } else {
-            // Treat as slug
-            const { data, error } = await supabase
-                .from('memorials')
-                .select('id, name')
-                .eq('slug', memorialId)
-                .single();
-            if (error || !data) {
-                appRoot.innerHTML = `<p class="text-danger text-center">Memorial not found.</p>`;
-                return;
-            }
-            memorial = data;
-            actualMemorialId = data.id;
+        if (error || !memorial) {
+            appRoot.innerHTML = `<p class="text-danger text-center">Memorial not found.</p>`;
+            return;
         }
+
+        const actualMemorialId = memorial.id;
 
         const orderMemorialNameEl = document.getElementById('order-memorial-name');
         if(orderMemorialNameEl) {
