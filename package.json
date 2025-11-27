@@ -12,15 +12,19 @@
     "node": "20"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@google-cloud/vision": "^4.0.0",
     "@mapbox/mapbox-sdk": "^0.16.0",
+    "@react-pdf/renderer": "^4.3.1",
     "@supabase/supabase-js": "^2.45.0",
+    "canvas": "^2.11.2",
     "dotenv": "^17.2.1",
     "micro": "^10.0.1",
+    "parse-gedcom": "^2.0.1",
     "qrcode": "^1.5.4",
+    "react": "^19.2.0",
     "square": "^37.0.0",
     "stripe": "^14.0.0"
   },
-  "devDependencies": {},
   "private": true
 }

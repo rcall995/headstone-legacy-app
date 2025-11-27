@@ -10,7 +10,10 @@ let currentPinCoords = null;
 let currentPhotoFiles = [];
 let pinnedRelatives = [];
 let resizeListener = null;
-let currentMode = null; // 'single' or 'multi'
+let currentMode = null; // 'single', 'multi', or 'wanted'
+let wantedGraves = [];
+let currentWantedFilter = 'all';
+let userLocation = null;
 
 const DEFAULT_CENTER = [-98.5, 39.8];
 
@@ -72,6 +75,264 @@ function cleanupScoutMode() {
   currentPhotoFiles = [];
   pinnedRelatives = [];
   currentMode = null;
+  wantedGraves = [];
+  currentWantedFilter = 'all';
+}
+
+// ========== WANTED GRAVES FUNCTIONS ==========
+async function fetchWantedGraves(filter = 'all') {
+  const loadingEl = document.getElementById('wanted-loading');
+  const emptyEl = document.getElementById('wanted-empty');
+  const listEl = document.getElementById('wanted-list');
+
+  if (loadingEl) loadingEl.classList.remove('d-none');
+  if (emptyEl) emptyEl.classList.add('d-none');
+  if (listEl) listEl.classList.add('d-none');
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      showToast('Please sign in to view wanted graves', 'error');
+      return;
+    }
+
+    let url = '/api/scouts/wanted-graves';
+    const params = new URLSearchParams();
+
+    if (filter && filter !== 'all') {
+      params.append('filter', filter);
+    }
+
+    // Add location for distance calculation if available
+    if (userLocation) {
+      params.append('lat', userLocation.lat);
+      params.append('lng', userLocation.lng);
+    }
+
+    if (params.toString()) {
+      url += '?' + params.toString();
+    }
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`
+      }
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch wanted graves');
+
+    const data = await response.json();
+    wantedGraves = data.graves || [];
+
+    // Update stats
+    document.getElementById('wanted-total').textContent = data.total || wantedGraves.length;
+    document.getElementById('wanted-nearby').textContent = data.nearby || 0;
+
+    // Update badge count on main screen
+    const countBadge = document.getElementById('wanted-count-badge');
+    if (countBadge) countBadge.textContent = data.total || wantedGraves.length;
+
+    renderWantedGraves();
+  } catch (error) {
+    console.error('[scout-mode] fetch wanted graves failed:', error);
+    showToast('Failed to load wanted graves', 'error');
+  } finally {
+    if (loadingEl) loadingEl.classList.add('d-none');
+  }
+}
+
+function renderWantedGraves() {
+  const emptyEl = document.getElementById('wanted-empty');
+  const listEl = document.getElementById('wanted-list');
+
+  if (!wantedGraves.length) {
+    if (emptyEl) emptyEl.classList.remove('d-none');
+    if (listEl) listEl.classList.add('d-none');
+    return;
+  }
+
+  if (emptyEl) emptyEl.classList.add('d-none');
+  if (listEl) {
+    listEl.classList.remove('d-none');
+    listEl.innerHTML = wantedGraves.map(grave => {
+      const tags = [];
+      if (grave.needs_cemetery) {
+        tags.push('<span class="wanted-tag needs-cemetery"><i class="fas fa-church me-1"></i>Needs Cemetery</span>');
+      }
+      if (grave.needs_location) {
+        tags.push('<span class="wanted-tag needs-pin"><i class="fas fa-map-pin me-1"></i>Needs GPS Pin</span>');
+      }
+      tags.push('<span class="wanted-tag bonus-points"><i class="fas fa-star me-1"></i>2.5x Points</span>');
+
+      const dates = formatDates(grave.birth_year, grave.death_year);
+      const hint = grave.search_hints || (grave.cemetery_name ? `Cemetery: ${escapeHtml(grave.cemetery_name)}` : 'No hints available');
+
+      return `
+        <div class="wanted-grave-card" data-id="${grave.id}">
+          <div class="wanted-grave-header">
+            <div class="wanted-grave-icon">
+              <i class="fas fa-search"></i>
+            </div>
+            <div class="wanted-grave-info">
+              <h4 class="wanted-grave-name">${escapeHtml(grave.name)}</h4>
+              <p class="wanted-grave-dates">${dates}</p>
+            </div>
+          </div>
+          <div class="wanted-grave-tags">${tags.join('')}</div>
+          ${hint ? `<div class="wanted-grave-hint"><i class="fas fa-lightbulb"></i><span>${escapeHtml(hint)}</span></div>` : ''}
+          <div class="wanted-grave-actions">
+            <button class="wanted-action-btn find-grave-btn" data-id="${grave.id}">
+              <i class="fas fa-map-marked-alt"></i>
+              I Found This Grave
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Add event listeners for action buttons
+    listEl.querySelectorAll('.find-grave-btn').forEach(btn => {
+      btn.addEventListener('click', () => openFindGraveFlow(btn.dataset.id));
+    });
+  }
+}
+
+function formatDates(birthYear, deathYear) {
+  if (birthYear && deathYear) {
+    return `${birthYear} - ${deathYear}`;
+  } else if (birthYear) {
+    return `Born ${birthYear}`;
+  } else if (deathYear) {
+    return `Died ${deathYear}`;
+  }
+  return 'Dates unknown';
+}
+
+async function openFindGraveFlow(graveId) {
+  const grave = wantedGraves.find(g => g.id === graveId);
+  if (!grave) return;
+
+  // Navigate to single pin mode with pre-selected memorial
+  currentMode = 'single-wanted';
+
+  // Hide wanted graves screen, show wizard screen
+  document.getElementById('wanted-graves-screen')?.classList.add('d-none');
+  document.getElementById('scout-wizard-screen')?.classList.remove('d-none');
+
+  // Get user's location or use default
+  const center = userLocation ? [userLocation.lng, userLocation.lat] : DEFAULT_CENTER;
+  initScoutMap(center);
+  showWantedPinUI(grave);
+}
+
+function showWantedPinUI(grave) {
+  showCenterPinHUD();
+
+  // Add top instruction bar
+  if (!document.querySelector('.scout-top-bar')) {
+    const topBar = document.createElement('div');
+    topBar.className = 'scout-top-bar';
+    topBar.innerHTML = `
+      <div class="scout-instruction">
+        <h4><i class="fas fa-crosshairs"></i> Locate ${escapeHtml(grave.name)}</h4>
+        <p>Pan and zoom to place the pin on their gravesite</p>
+      </div>
+    `;
+    document.body.appendChild(topBar);
+  }
+
+  // Add bottom action bar
+  if (!document.querySelector('.scout-bottom-bar')) {
+    const bottomBar = document.createElement('div');
+    bottomBar.className = 'scout-bottom-bar';
+    bottomBar.innerHTML = `
+      <div class="scout-action-buttons">
+        <button id="scout-cancel-btn" class="scout-btn secondary">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+        <button id="scout-confirm-btn" class="scout-btn primary wanted">
+          <i class="fas fa-check"></i>
+          Submit Location
+        </button>
+      </div>
+    `;
+    document.body.appendChild(bottomBar);
+
+    // Add event listeners
+    document.getElementById('scout-cancel-btn')?.addEventListener('click', () => {
+      cleanupScoutMode();
+      // Return to wanted graves screen
+      document.getElementById('scout-wizard-screen')?.classList.add('d-none');
+      document.getElementById('wanted-graves-screen')?.classList.remove('d-none');
+      fetchWantedGraves(currentWantedFilter);
+    });
+
+    document.getElementById('scout-confirm-btn')?.addEventListener('click', async () => {
+      if (!scoutMap) return showToast('Map not ready yet.', 'error');
+
+      const btn = document.getElementById('scout-confirm-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Submitting...';
+
+      try {
+        const c = scoutMap.getCenter();
+        await submitWantedLocation(grave.id, c.lat, c.lng);
+      } catch (error) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Submit Location';
+      }
+    });
+  }
+}
+
+async function submitWantedLocation(memorialId, lat, lng) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      showToast('Please sign in to submit location', 'error');
+      return;
+    }
+
+    const response = await fetch('/api/scouts/submit-location', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({
+        memorialId,
+        gravesiteLat: lat,
+        gravesiteLng: lng,
+        gravesiteAccuracy: 10 // Default accuracy
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to submit location');
+    }
+
+    const result = await response.json();
+
+    showToast(`Location submitted! You earned ${result.points.earned} bonus points!`, 'success');
+
+    // Show badges if any
+    if (result.newBadges?.length) {
+      result.newBadges.forEach(badge => {
+        setTimeout(() => {
+          showToast(`New Badge: ${badge.name}! ${badge.description}`, 'success');
+        }, 1500);
+      });
+    }
+
+    cleanupScoutMode();
+    window.dispatchEvent(new CustomEvent('navigate', { detail: '/scout-mode' }));
+  } catch (error) {
+    console.error('[scout-mode] submit location failed:', error);
+    showToast(error.message || 'Failed to submit location', 'error');
+    throw error;
+  }
 }
 
 function getOrCreateMapEl() {
@@ -453,6 +714,67 @@ export async function loadScoutModePage(appRoot) {
 
     document.getElementById('single-pin-btn')?.addEventListener('click', () => start('single'));
     document.getElementById('multi-pin-btn')?.addEventListener('click', () => start('multi'));
+
+    // Wanted Graves button handler
+    document.getElementById('wanted-graves-btn')?.addEventListener('click', () => {
+      currentMode = 'wanted';
+
+      // Try to get user location first
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          },
+          () => {
+            userLocation = null;
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      }
+
+      // Hide choice screen, show wanted graves screen
+      document.getElementById('scout-choice-screen')?.classList.add('d-none');
+      document.getElementById('wanted-graves-screen')?.classList.remove('d-none');
+
+      // Fetch wanted graves
+      fetchWantedGraves('all');
+    });
+
+    // Wanted graves back button
+    document.getElementById('wanted-back-btn')?.addEventListener('click', () => {
+      document.getElementById('wanted-graves-screen')?.classList.add('d-none');
+      document.getElementById('scout-choice-screen')?.classList.remove('d-none');
+      currentMode = null;
+    });
+
+    // Wanted graves filter tabs
+    document.querySelectorAll('.wanted-filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.wanted-filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentWantedFilter = tab.dataset.filter;
+        fetchWantedGraves(currentWantedFilter);
+      });
+    });
+
+    // Fetch wanted count for badge on initial load
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const response = await fetch('/api/scouts/wanted-graves', {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const countBadge = document.getElementById('wanted-count-badge');
+            if (countBadge) countBadge.textContent = data.total || 0;
+          }
+        }
+      } catch (e) {
+        console.warn('[scout-mode] failed to fetch wanted count:', e);
+      }
+    })();
 
     // Photo upload handling
     document.getElementById('pinPhoto')?.addEventListener('change', (e) => {

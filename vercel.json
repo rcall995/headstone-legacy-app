@@ -2,6 +2,22 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": null,
+  "crons": [
+    {
+      "path": "/api/cron/send-legacy-messages",
+      "schedule": "0 9 * * *"
+    }
+  ],
+  "functions": {
+    "api/books/preview-pdf.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/books/generate-pdf.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",

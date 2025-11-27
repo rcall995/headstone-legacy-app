@@ -11,6 +11,17 @@ let cemeteryMapPreview = null; // Map instance for preview
 let lifePathMapInstance = null; // Map instance for life journey
 let isGeocoding = false; // Prevent duplicate geocoding requests
 let headstonePhotoFile = null; // Store the headstone photo
+let geocodedResidenceLocations = {}; // Store geocoded residence locations by address
+
+// Gravesite pin state
+let gravesiteLocation = null; // Store gravesite location { lat, lng, accuracy }
+let gravesiteMapPicker = null; // Map instance for gravesite picker
+
+// Memorial linking state
+let memorialSearchModal = null;
+let currentLinkingRelativeGroup = null; // The relative field being linked
+let searchDebounceTimer = null;
+let pendingConnections = []; // Connections to create when saving
 
 function navigateToStep(stepNumber) {
     currentStep = stepNumber;
@@ -149,6 +160,216 @@ async function useMyLocation(appRoot) {
         locationBtn.disabled = false;
         locationBtn.innerHTML = '<i class="fas fa-crosshairs"></i>';
     }
+}
+
+// --- Gravesite Pin Functions ---
+
+// Update UI to show gravesite is set
+function updateGravesiteUI() {
+    const notSetEl = document.getElementById('gravesite-not-set');
+    const isSetEl = document.getElementById('gravesite-is-set');
+    const coordsEl = document.getElementById('gravesite-coords');
+    const statusCard = document.getElementById('gravesite-status-card');
+
+    if (gravesiteLocation) {
+        notSetEl.style.display = 'none';
+        isSetEl.style.display = 'flex';
+        statusCard.classList.add('has-pin');
+
+        // Show coordinates and accuracy
+        let coordsText = `${gravesiteLocation.lat.toFixed(6)}, ${gravesiteLocation.lng.toFixed(6)}`;
+        if (gravesiteLocation.accuracy) {
+            const accuracyClass = gravesiteLocation.accuracy < 10 ? 'excellent' : gravesiteLocation.accuracy < 30 ? 'good' : 'poor';
+            coordsText += ` <span class="gps-accuracy-indicator ${accuracyClass}"><i class="fas fa-satellite"></i> ±${Math.round(gravesiteLocation.accuracy)}m</span>`;
+        }
+        coordsEl.innerHTML = coordsText;
+    } else {
+        notSetEl.style.display = 'flex';
+        isSetEl.style.display = 'none';
+        statusCard.classList.remove('has-pin');
+        coordsEl.textContent = '';
+    }
+}
+
+// Use GPS to pin exact gravesite location
+async function setGravesiteGPS() {
+    const gpsBtn = document.getElementById('set-gravesite-gps-btn');
+    const updateBtn = document.getElementById('update-gravesite-btn');
+    const activeBtn = gravesiteLocation ? updateBtn : gpsBtn;
+
+    if (!navigator.geolocation) {
+        showToast('Geolocation is not supported by your browser', 'error');
+        return;
+    }
+
+    activeBtn.disabled = true;
+    activeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Getting GPS...';
+
+    try {
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            });
+        });
+
+        const { latitude, longitude, accuracy } = position.coords;
+
+        gravesiteLocation = {
+            lat: latitude,
+            lng: longitude,
+            accuracy: accuracy
+        };
+
+        updateGravesiteUI();
+        showToast('Gravesite location pinned!', 'success');
+
+    } catch (error) {
+        console.error('GPS error:', error);
+        if (error.code === 1) {
+            showToast('Location access denied. Please enable location services.', 'error');
+        } else if (error.code === 2) {
+            showToast('Could not determine your location. Try moving to a better spot.', 'error');
+        } else if (error.code === 3) {
+            showToast('Location request timed out. Please try again.', 'error');
+        } else {
+            showToast('Could not get GPS location', 'error');
+        }
+    } finally {
+        activeBtn.disabled = false;
+        if (gravesiteLocation) {
+            activeBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Update';
+        } else {
+            activeBtn.innerHTML = '<i class="fas fa-crosshairs me-2"></i>Use My GPS';
+        }
+    }
+}
+
+// Open map picker modal for gravesite - uses center-pin UX like Scout Mode
+function openGravesiteMapPicker() {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('gravesiteMapModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'gravesiteMapModal';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-map-pin me-2 text-danger"></i>Pin Gravesite Location</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="gravesite-map-instructions" style="padding: 12px 16px; background: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+                            <i class="fas fa-crosshairs text-primary me-2"></i>
+                            <strong>Drag the map</strong> to position the pin on the exact gravesite location.
+                        </div>
+                        <div id="gravesite-map-picker" class="gravesite-map-picker" style="height: 400px; position: relative;">
+                            <!-- Center pin overlay -->
+                            <div id="center-pin-marker" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 10; pointer-events: none; font-size: 36px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">📍</div>
+                        </div>
+                        <div style="padding: 12px 16px; background: #f8f9fa; border-top: 1px solid #dee2e6;">
+                            <p class="text-muted small mb-0" id="gravesite-picker-coords">Move the map to select location</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirm-gravesite-pin">
+                            <i class="fas fa-check me-2"></i>Confirm Location
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const bsModal = new bootstrap.Modal(modal);
+
+    modal.addEventListener('shown.bs.modal', () => {
+        // Determine initial center - use existing gravesite or cemetery location or default
+        let initialCenter = [-98.5795, 39.8283]; // Center of US
+        let initialZoom = 4;
+
+        if (gravesiteLocation) {
+            initialCenter = [gravesiteLocation.lng, gravesiteLocation.lat];
+            initialZoom = 18;
+        } else if (cemeteryLocation) {
+            initialCenter = [cemeteryLocation.lng, cemeteryLocation.lat];
+            initialZoom = 17;
+        }
+
+        // Initialize or update map
+        if (!gravesiteMapPicker) {
+            gravesiteMapPicker = new mapboxgl.Map({
+                container: 'gravesite-map-picker',
+                style: 'mapbox://styles/mapbox/satellite-streets-v12',
+                center: initialCenter,
+                zoom: initialZoom
+            });
+
+            gravesiteMapPicker.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+            // Add geolocate control
+            const geolocate = new mapboxgl.GeolocateControl({
+                positionOptions: { enableHighAccuracy: true },
+                trackUserLocation: false,
+                showUserHeading: false
+            });
+            gravesiteMapPicker.addControl(geolocate, 'top-left');
+
+            // Update coordinates as map moves
+            gravesiteMapPicker.on('move', () => {
+                const center = gravesiteMapPicker.getCenter();
+                document.getElementById('gravesite-picker-coords').textContent =
+                    `Location: ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
+            });
+
+            gravesiteMapPicker.on('load', () => {
+                gravesiteMapPicker.resize();
+                // Initial coordinates display
+                const center = gravesiteMapPicker.getCenter();
+                document.getElementById('gravesite-picker-coords').textContent =
+                    `Location: ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
+            });
+        } else {
+            gravesiteMapPicker.setCenter(initialCenter);
+            gravesiteMapPicker.setZoom(initialZoom);
+            setTimeout(() => gravesiteMapPicker.resize(), 100);
+            // Update coordinates display
+            const center = gravesiteMapPicker.getCenter();
+            document.getElementById('gravesite-picker-coords').textContent =
+                `Location: ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
+        }
+    }, { once: true });
+
+    // Handle confirm button - get center of map
+    document.getElementById('confirm-gravesite-pin').onclick = () => {
+        if (gravesiteMapPicker) {
+            const center = gravesiteMapPicker.getCenter();
+            gravesiteLocation = {
+                lat: center.lat,
+                lng: center.lng,
+                accuracy: null // Manual pin has no GPS accuracy
+            };
+            updateGravesiteUI();
+            showToast('Gravesite location pinned!', 'success');
+            bsModal.hide();
+        } else {
+            showToast('Map not ready, please try again', 'warning');
+        }
+    };
+
+    bsModal.show();
+}
+
+// Remove gravesite pin
+function removeGravesitePin() {
+    gravesiteLocation = null;
+    updateGravesiteUI();
+    showToast('Gravesite pin removed', 'info');
 }
 
 async function geocodeCemeteryAddress(appRoot) {
@@ -342,6 +563,8 @@ async function updateLifePathMap(appRoot) {
                     lat,
                     lng
                 });
+                // Store geocoded location for saving later
+                geocodedResidenceLocations[residence.address] = { lat, lng };
             }
         } catch (error) {
             console.warn('Could not geocode:', residence.address);
@@ -619,6 +842,13 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
             memorialData.cemetery_lng = cemeteryLocation.lng;
         }
 
+        // Add gravesite location if it was set
+        if (gravesiteLocation) {
+            memorialData.gravesite_lat = gravesiteLocation.lat;
+            memorialData.gravesite_lng = gravesiteLocation.lng;
+            memorialData.gravesite_accuracy = gravesiteLocation.accuracy || null;
+        }
+
         if (!memorialId) {
             memorialData.curator_ids = [user.id];
             memorialData.curators = [{ uid: user.id, email: user.email }];
@@ -653,6 +883,9 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
         }
 
         if (error) throw error;
+
+        // Create any pending family connections
+        await createPendingConnections(newMemorialId);
 
         showToast(`Memorial ${desiredStatus}!`, 'success');
 
@@ -776,11 +1009,17 @@ function getDynamicFieldValues(appRoot, type) {
         if (type === 'residences') {
             const addressInput = group.querySelector('.residence-address-input');
             if (!addressInput || !addressInput.value) return null;
-            return {
-                address: addressInput.value,
+            const address = addressInput.value;
+            const residence = {
+                address: address,
                 startYear: group.querySelector('.residence-start-input').value || '',
                 endYear: group.querySelector('.residence-end-input').value || '',
             };
+            // Include geocoded location if available
+            if (geocodedResidenceLocations[address]) {
+                residence.location = geocodedResidenceLocations[address];
+            }
+            return residence;
         }
         return null;
     }).filter(Boolean);
@@ -826,10 +1065,46 @@ function addDynamicField(appRoot, type, values = {}) {
     }
     newField.innerHTML = newFieldHtml;
     newField.querySelector('.remove-btn')?.addEventListener('click', (e) => e.target.closest('.dynamic-input-group').remove());
+
+    // Add link button handler for relatives
+    if (type === 'relatives') {
+        const linkBtn = newField.querySelector('.link-btn');
+        linkBtn?.addEventListener('click', () => {
+            openMemorialSearchModal(newField, appRoot);
+        });
+
+        // If already linked, show linked state
+        if (values.memorialId) {
+            linkBtn?.classList.add('linked');
+            if (linkBtn) {
+                linkBtn.innerHTML = '<i class="fas fa-check"></i>';
+                linkBtn.title = 'Already linked to a memorial';
+            }
+            // Add badge
+            const nameInputCol = newField.querySelector('.relative-name-input')?.parentElement;
+            if (nameInputCol) {
+                const badge = document.createElement('span');
+                badge.className = 'relative-linked-badge';
+                badge.innerHTML = `<i class="fas fa-link"></i> Linked`;
+                nameInputCol.appendChild(badge);
+            }
+        }
+    }
+
     container.appendChild(newField);
 }
 
 function populateForm(data, appRoot) {
+    // Clear existing dynamic fields before populating to prevent duplicates
+    // (This can happen if router runs twice due to auth state changes)
+    const relativesContainer = appRoot.querySelector('#relatives-container');
+    const milestonesContainer = appRoot.querySelector('#milestones-container');
+    const residencesContainer = appRoot.querySelector('#residences-container');
+
+    if (relativesContainer) relativesContainer.innerHTML = '';
+    if (milestonesContainer) milestonesContainer.innerHTML = '';
+    if (residencesContainer) residencesContainer.innerHTML = '';
+
     appRoot.querySelector('#memorial-name').value = data.name || '';
     appRoot.querySelector('#memorial-title').value = data.title || '';
     appRoot.querySelector('#memorial-birth-date').value = data.birth_date || '';
@@ -867,6 +1142,16 @@ function populateForm(data, appRoot) {
         );
     }
 
+    // Load gravesite location if it exists
+    if (data.gravesite_lat && data.gravesite_lng) {
+        gravesiteLocation = {
+            lat: data.gravesite_lat,
+            lng: data.gravesite_lng,
+            accuracy: data.gravesite_accuracy || null
+        };
+        updateGravesiteUI();
+    }
+
     if (data.tier) {
         const tierRadioButton = appRoot.querySelector(`input[name="tier"][value="${data.tier}"]`);
         if (tierRadioButton) {
@@ -882,7 +1167,13 @@ function populateForm(data, appRoot) {
         data.milestones.forEach(milestone => addDynamicField(appRoot, 'milestones', milestone));
     }
     if (data.residences && Array.isArray(data.residences)) {
-        data.residences.forEach(residence => addDynamicField(appRoot, 'residences', residence));
+        data.residences.forEach(residence => {
+            addDynamicField(appRoot, 'residences', residence);
+            // Load existing geocoded locations
+            if (residence.location && residence.address) {
+                geocodedResidenceLocations[residence.address] = residence.location;
+            }
+        });
     }
 
     // Load existing headstone photo if present
@@ -900,6 +1191,734 @@ function populateForm(data, appRoot) {
             removeBtn?.classList.remove('d-none');
         }
     }
+
+    // Load existing main photo if present
+    if (data.main_photo) {
+        const previewContainer = appRoot.querySelector('#main-photo-preview');
+        if (previewContainer) {
+            previewContainer.innerHTML = `
+                <div class="existing-photo-preview d-flex align-items-center gap-3 p-3 bg-light rounded mt-2">
+                    <div class="position-relative" style="flex-shrink: 0;">
+                        <img src="${data.main_photo}" class="rounded" style="width: 120px; height: 120px; object-fit: cover;">
+                        <span class="badge bg-success position-absolute top-0 start-0">Current</span>
+                    </div>
+                    <div>
+                        <strong class="d-block text-dark">Photo already uploaded</strong>
+                        <small class="text-muted">Select a new file above to replace it</small>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // Load existing gallery photos if present
+    if (data.photos && Array.isArray(data.photos) && data.photos.length > 0) {
+        const galleryPreview = appRoot.querySelector('#photos-preview');
+        if (galleryPreview) {
+            galleryPreview.innerHTML = data.photos.map((photoUrl, index) => `
+                <div class="col-md-3 mb-2 existing-photo-preview">
+                    <div class="position-relative">
+                        <img src="${photoUrl}" class="img-thumbnail" style="width: 100%; height: 150px; object-fit: cover;">
+                        <span class="badge bg-secondary position-absolute top-0 start-0 m-1">${index + 1}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add note about adding more photos
+            const noteEl = document.createElement('div');
+            noteEl.className = 'col-12 mt-2';
+            noteEl.innerHTML = '<small class="text-muted"><i class="fas fa-info-circle me-1"></i>Select new files to add more photos to the gallery</small>';
+            galleryPreview.appendChild(noteEl);
+        }
+    }
+}
+
+// --- Collaborators Functions ---
+let currentMemorialIdForCollaborators = null;
+let currentUserRole = null;
+let collaboratorsLoadingPromise = null; // Prevent concurrent loads
+
+async function initializeCollaborators(appRoot, memorialId) {
+    if (!memorialId) return;
+
+    currentMemorialIdForCollaborators = memorialId;
+
+    // Show the collaborators section
+    const section = appRoot.querySelector('#collaborators-section');
+    if (section) section.style.display = 'block';
+
+    // Load collaborators
+    await loadCollaborators(appRoot, memorialId);
+
+    // Setup invite button
+    appRoot.querySelector('#send-invite-btn')?.addEventListener('click', () => sendInvite(appRoot, memorialId));
+}
+
+async function loadCollaborators(appRoot, memorialId) {
+    // If already loading, wait for the existing request to complete
+    if (collaboratorsLoadingPromise) {
+        return collaboratorsLoadingPromise;
+    }
+
+    const loading = appRoot.querySelector('#collaborators-loading');
+    const empty = appRoot.querySelector('#collaborators-empty');
+    const container = appRoot.querySelector('#collaborators-container');
+    const inviteForm = appRoot.querySelector('.collaborator-invite-form');
+
+    if (loading) loading.style.display = 'block';
+    if (empty) empty.style.display = 'none';
+    if (container) container.innerHTML = '';
+
+    const loadPromise = (async () => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            const response = await fetch(`/api/collaborators/list?memorialId=${encodeURIComponent(memorialId)}`, {
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load collaborators');
+            }
+
+            const { collaborators, currentUserRole: role, canInvite } = await response.json();
+            currentUserRole = role;
+
+            // Show/hide invite form based on permission
+            if (inviteForm) {
+                inviteForm.style.display = canInvite ? 'block' : 'none';
+            }
+
+            if (loading) loading.style.display = 'none';
+
+            // Clear container again in case a race condition occurred
+            if (container) container.innerHTML = '';
+
+            if (!collaborators || collaborators.length === 0) {
+                if (empty) empty.style.display = 'block';
+                return;
+            }
+
+            // Render collaborators
+            collaborators.forEach(collab => {
+                const card = createCollaboratorCard(collab, appRoot, memorialId);
+                container.appendChild(card);
+            });
+
+        } catch (error) {
+            console.error('Error loading collaborators:', error);
+            if (loading) loading.style.display = 'none';
+            showToast('Could not load collaborators', 'error');
+        } finally {
+            collaboratorsLoadingPromise = null;
+        }
+    })();
+
+    collaboratorsLoadingPromise = loadPromise;
+    return loadPromise;
+}
+
+function createCollaboratorCard(collab, appRoot, memorialId) {
+    const card = document.createElement('div');
+    card.className = `collaborator-card ${collab.status === 'pending' ? 'pending' : ''}`;
+
+    const initial = (collab.displayName || collab.email || '?')[0].toUpperCase();
+    const isOwner = currentUserRole === 'owner';
+    const isPending = collab.status === 'pending';
+    const canManage = isOwner && collab.role !== 'owner';
+
+    card.innerHTML = `
+        <div class="collaborator-avatar">
+            ${collab.avatarUrl ? `<img src="${collab.avatarUrl}" alt="">` : initial}
+        </div>
+        <div class="collaborator-info">
+            <div class="collaborator-name">${collab.displayName || collab.email}</div>
+            <div class="collaborator-email">${collab.email}${isPending ? ' (invite pending)' : ''}</div>
+        </div>
+        <span class="collaborator-role ${isPending ? 'pending' : collab.role}">
+            ${isPending ? 'Pending' : collab.role}
+        </span>
+        ${canManage ? `
+            <div class="collaborator-actions">
+                ${isPending ? `
+                    <button class="btn btn-sm btn-outline-primary copy-invite-btn" title="Copy invite link">
+                        <i class="fas fa-link"></i>
+                    </button>
+                ` : ''}
+                <button class="btn btn-sm btn-outline-danger remove-collab-btn" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        ` : ''}
+    `;
+
+    // Add event listeners
+    const copyBtn = card.querySelector('.copy-invite-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const response = await fetch('/api/collaborators/manage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        collaboratorId: collab.id,
+                        memorialId,
+                        action: 'resend_invite'
+                    })
+                });
+                const { inviteUrl } = await response.json();
+                await navigator.clipboard.writeText(inviteUrl);
+                showToast('Invite link copied!', 'success');
+            } catch (e) {
+                showToast('Failed to copy link', 'error');
+            }
+        });
+    }
+
+    const removeBtn = card.querySelector('.remove-collab-btn');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', async () => {
+            if (!confirm(`Remove ${collab.email} from this memorial?`)) return;
+
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const response = await fetch('/api/collaborators/manage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        collaboratorId: collab.id,
+                        memorialId,
+                        action: 'remove'
+                    })
+                });
+
+                if (response.ok) {
+                    card.remove();
+                    showToast('Collaborator removed', 'success');
+                } else {
+                    throw new Error('Failed to remove');
+                }
+            } catch (e) {
+                showToast('Failed to remove collaborator', 'error');
+            }
+        });
+    }
+
+    return card;
+}
+
+async function sendInvite(appRoot, memorialId) {
+    const emailInput = appRoot.querySelector('#invite-email');
+    const roleSelect = appRoot.querySelector('#invite-role');
+    const sendBtn = appRoot.querySelector('#send-invite-btn');
+
+    const email = emailInput?.value.trim();
+    const role = roleSelect?.value;
+
+    if (!email) {
+        showToast('Please enter an email address', 'error');
+        return;
+    }
+
+    if (!email.includes('@')) {
+        showToast('Please enter a valid email address', 'error');
+        return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const response = await fetch('/api/collaborators/invite', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+                memorialId,
+                email,
+                role
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to send invite');
+        }
+
+        showToast(data.message, 'success');
+
+        // Show invite URL for copying
+        if (data.invite?.inviteUrl && data.invite.status === 'pending') {
+            const urlBox = document.createElement('div');
+            urlBox.className = 'invite-url-box';
+            urlBox.innerHTML = `
+                <code>${data.invite.inviteUrl}</code>
+                <button class="btn btn-sm btn-success copy-url-btn">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            `;
+            appRoot.querySelector('.collaborator-invite-form').appendChild(urlBox);
+
+            urlBox.querySelector('.copy-url-btn').addEventListener('click', async () => {
+                await navigator.clipboard.writeText(data.invite.inviteUrl);
+                showToast('Link copied!', 'success');
+            });
+
+            // Remove after 30 seconds
+            setTimeout(() => urlBox.remove(), 30000);
+        }
+
+        // Clear input and reload list
+        emailInput.value = '';
+        await loadCollaborators(appRoot, memorialId);
+
+    } catch (error) {
+        console.error('Invite error:', error);
+        showToast(error.message, 'error');
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send Invite';
+    }
+}
+
+// --- Biography Helper Functions ---
+let bioHelperModal = null;
+
+function initializeBioHelper(appRoot) {
+    const modalEl = appRoot.querySelector('#bioHelperModal');
+    if (!modalEl) return;
+
+    bioHelperModal = new bootstrap.Modal(modalEl);
+
+    // Open modal button
+    appRoot.querySelector('#open-bio-helper-btn')?.addEventListener('click', () => {
+        const personName = appRoot.querySelector('#memorial-name').value || 'this person';
+        appRoot.querySelector('#bio-helper-person-name').textContent = personName;
+
+        // Reset the form
+        resetBioHelper(appRoot);
+        bioHelperModal.show();
+    });
+
+    // Track progress as user types
+    const promptInputs = appRoot.querySelectorAll('.bio-prompt-input');
+    promptInputs.forEach(input => {
+        input.addEventListener('input', () => updateBioHelperProgress(appRoot));
+    });
+
+    // Generate button
+    appRoot.querySelector('#generate-bio-btn')?.addEventListener('click', () => generateBiography(appRoot));
+
+    // Use biography button
+    appRoot.querySelector('#use-bio-btn')?.addEventListener('click', () => {
+        const generatedBio = appRoot.querySelector('#bio-preview-content').value;
+        const storyTextarea = appRoot.querySelector('#memorial-story');
+        if (storyTextarea && generatedBio) {
+            storyTextarea.value = generatedBio;
+            showToast('Biography added to your story!', 'success');
+            bioHelperModal.hide();
+        }
+    });
+}
+
+function resetBioHelper(appRoot) {
+    // Clear all prompt inputs
+    appRoot.querySelectorAll('.bio-prompt-input').forEach(input => {
+        input.value = '';
+        input.closest('.bio-prompt-card')?.classList.remove('has-answer');
+    });
+
+    // Reset progress
+    updateBioHelperProgress(appRoot);
+
+    // Hide preview section
+    const previewSection = appRoot.querySelector('#bio-preview-section');
+    if (previewSection) previewSection.style.display = 'none';
+
+    // Hide use button, show generate button
+    const generateBtn = appRoot.querySelector('#generate-bio-btn');
+    const useBtn = appRoot.querySelector('#use-bio-btn');
+    if (generateBtn) generateBtn.style.display = '';
+    if (useBtn) useBtn.style.display = 'none';
+
+    // Hide error
+    const errorEl = appRoot.querySelector('#bio-helper-error');
+    if (errorEl) errorEl.style.display = 'none';
+}
+
+function updateBioHelperProgress(appRoot) {
+    const inputs = appRoot.querySelectorAll('.bio-prompt-input');
+    let answered = 0;
+
+    inputs.forEach(input => {
+        const hasValue = input.value.trim().length > 0;
+        input.closest('.bio-prompt-card')?.classList.toggle('has-answer', hasValue);
+        if (hasValue) answered++;
+    });
+
+    const progressBar = appRoot.querySelector('#bio-helper-progress-bar');
+    const progressText = appRoot.querySelector('#bio-helper-progress-text');
+    const generateBtn = appRoot.querySelector('#generate-bio-btn');
+
+    const percentage = (answered / inputs.length) * 100;
+
+    if (progressBar) progressBar.style.width = `${percentage}%`;
+    if (progressText) progressText.textContent = `${answered} of ${inputs.length} questions answered`;
+    if (generateBtn) generateBtn.disabled = answered === 0;
+}
+
+async function generateBiography(appRoot) {
+    const generateBtn = appRoot.querySelector('#generate-bio-btn');
+    const useBtn = appRoot.querySelector('#use-bio-btn');
+    const previewSection = appRoot.querySelector('#bio-preview-section');
+    const previewContent = appRoot.querySelector('#bio-preview-content');
+    const errorEl = appRoot.querySelector('#bio-helper-error');
+
+    // Gather answers
+    const answers = {
+        family: appRoot.querySelector('#bio-prompt-family')?.value.trim() || '',
+        career: appRoot.querySelector('#bio-prompt-career')?.value.trim() || '',
+        earlylife: appRoot.querySelector('#bio-prompt-earlylife')?.value.trim() || '',
+        hobbies: appRoot.querySelector('#bio-prompt-hobbies')?.value.trim() || '',
+        personality: appRoot.querySelector('#bio-prompt-personality')?.value.trim() || '',
+        community: appRoot.querySelector('#bio-prompt-community')?.value.trim() || '',
+        remember: appRoot.querySelector('#bio-prompt-remember')?.value.trim() || ''
+    };
+
+    // Check at least one answer
+    if (!Object.values(answers).some(v => v)) {
+        showToast('Please answer at least one question', 'error');
+        return;
+    }
+
+    // Get other data
+    const name = appRoot.querySelector('#memorial-name')?.value || 'Unknown';
+    const birthDate = appRoot.querySelector('#memorial-birth-date')?.value || '';
+    const deathDate = appRoot.querySelector('#memorial-death-date')?.value || '';
+
+    // Show loading state
+    generateBtn.disabled = true;
+    generateBtn.classList.add('loading');
+    generateBtn.innerHTML = '<i class="fas fa-spinner me-2"></i>Generating...';
+    errorEl.style.display = 'none';
+
+    try {
+        const response = await fetch('/api/ai/generate-biography', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name,
+                birthDate,
+                deathDate,
+                answers
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to generate biography');
+        }
+
+        const { biography } = await response.json();
+
+        // Display the biography in editable textarea
+        previewContent.value = biography;
+        previewSection.style.display = 'block';
+
+        // Show use button
+        useBtn.style.display = '';
+
+        // Scroll to preview
+        previewSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        showToast('Biography generated! Edit if needed, then click "Use This Biography".', 'success');
+
+    } catch (error) {
+        console.error('Biography generation error:', error);
+        errorEl.textContent = error.message || 'Failed to generate biography. Please try again.';
+        errorEl.style.display = 'block';
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.classList.remove('loading');
+        generateBtn.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Biography';
+        updateBioHelperProgress(appRoot);
+    }
+}
+
+// --- Memorial Search/Linking Functions ---
+function initializeMemorialSearch(appRoot, currentMemorialId) {
+    const modalEl = appRoot.querySelector('#memorialSearchModal');
+    if (!modalEl) return;
+
+    memorialSearchModal = new bootstrap.Modal(modalEl);
+    const searchInput = appRoot.querySelector('#memorial-search-input');
+    const resultsContainer = appRoot.querySelector('#memorial-search-results');
+    const selectedContainer = appRoot.querySelector('#memorial-search-selected');
+    const confirmBtn = appRoot.querySelector('#confirm-memorial-link-btn');
+    const clearBtn = appRoot.querySelector('#clear-memorial-selection');
+
+    // Debounced search
+    searchInput?.addEventListener('input', (e) => {
+        clearTimeout(searchDebounceTimer);
+        const query = e.target.value.trim();
+
+        if (query.length < 2) {
+            resultsContainer.innerHTML = `
+                <div class="search-empty-state text-center py-4 text-muted">
+                    <i class="fas fa-users fa-2x mb-2 opacity-50"></i>
+                    <p class="mb-0">Type a name to search existing memorials</p>
+                </div>
+            `;
+            return;
+        }
+
+        resultsContainer.innerHTML = `
+            <div class="search-loading">
+                <i class="fas fa-spinner fa-spin me-2"></i>Searching...
+            </div>
+        `;
+
+        searchDebounceTimer = setTimeout(() => searchMemorials(query, currentMemorialId, resultsContainer, appRoot), 300);
+    });
+
+    // Clear selection
+    clearBtn?.addEventListener('click', () => {
+        clearMemorialSelection(appRoot);
+    });
+
+    // Confirm link
+    confirmBtn?.addEventListener('click', () => {
+        confirmMemorialLink(appRoot);
+    });
+
+    // Reset on modal close
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        searchInput.value = '';
+        clearMemorialSelection(appRoot);
+        resultsContainer.innerHTML = `
+            <div class="search-empty-state text-center py-4 text-muted">
+                <i class="fas fa-users fa-2x mb-2 opacity-50"></i>
+                <p class="mb-0">Type a name to search existing memorials</p>
+            </div>
+        `;
+        currentLinkingRelativeGroup = null;
+    });
+}
+
+async function searchMemorials(query, excludeId, resultsContainer, appRoot) {
+    try {
+        const excludeParam = excludeId ? `&exclude=${encodeURIComponent(excludeId)}` : '';
+        const response = await fetch(`/api/memorials/search?q=${encodeURIComponent(query)}${excludeParam}`);
+
+        if (!response.ok) throw new Error('Search failed');
+
+        const { results } = await response.json();
+
+        if (!results || results.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="search-no-results">
+                    <i class="fas fa-search fa-2x mb-2 opacity-50"></i>
+                    <p class="mb-0">No memorials found for "${query}"</p>
+                    <small class="text-muted">Try a different name or create a new memorial later</small>
+                </div>
+            `;
+            return;
+        }
+
+        resultsContainer.innerHTML = results.map(m => `
+            <div class="memorial-search-result" data-memorial-id="${m.id}" data-memorial-name="${m.name}" data-memorial-dates="${m.dateRange || ''}" data-memorial-photo="${m.photo || ''}">
+                ${m.photo
+                    ? `<img src="${m.photo}" alt="" class="memorial-search-photo">`
+                    : `<div class="memorial-search-photo-placeholder">${m.name[0].toUpperCase()}</div>`
+                }
+                <div class="memorial-search-info">
+                    <div class="memorial-search-name">${m.name}</div>
+                    ${m.dateRange ? `<div class="memorial-search-dates">${m.dateRange}</div>` : ''}
+                </div>
+                <i class="fas fa-chevron-right text-muted"></i>
+            </div>
+        `).join('');
+
+        // Add click handlers
+        resultsContainer.querySelectorAll('.memorial-search-result').forEach(el => {
+            el.addEventListener('click', () => selectMemorial(el, appRoot));
+        });
+
+    } catch (error) {
+        console.error('Memorial search error:', error);
+        resultsContainer.innerHTML = `
+            <div class="search-no-results text-danger">
+                <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                <p class="mb-0">Search failed. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+function selectMemorial(element, appRoot) {
+    const id = element.dataset.memorialId;
+    const name = element.dataset.memorialName;
+    const dates = element.dataset.memorialDates;
+    const photo = element.dataset.memorialPhoto;
+
+    // Update UI
+    const selectedContainer = appRoot.querySelector('#memorial-search-selected');
+    const confirmBtn = appRoot.querySelector('#confirm-memorial-link-btn');
+
+    appRoot.querySelector('#selected-memorial-id').value = id;
+    appRoot.querySelector('#selected-memorial-name').textContent = name;
+    appRoot.querySelector('#selected-memorial-dates').textContent = dates;
+
+    const photoEl = appRoot.querySelector('#selected-memorial-photo');
+    if (photo) {
+        photoEl.src = photo;
+        photoEl.style.display = 'block';
+    } else {
+        photoEl.style.display = 'none';
+    }
+
+    selectedContainer.classList.remove('d-none');
+    confirmBtn.disabled = false;
+
+    // Highlight selected result
+    appRoot.querySelectorAll('.memorial-search-result').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+}
+
+function clearMemorialSelection(appRoot) {
+    const selectedContainer = appRoot.querySelector('#memorial-search-selected');
+    const confirmBtn = appRoot.querySelector('#confirm-memorial-link-btn');
+
+    appRoot.querySelector('#selected-memorial-id').value = '';
+    selectedContainer.classList.add('d-none');
+    confirmBtn.disabled = true;
+
+    appRoot.querySelectorAll('.memorial-search-result').forEach(el => el.classList.remove('selected'));
+}
+
+function confirmMemorialLink(appRoot) {
+    const selectedId = appRoot.querySelector('#selected-memorial-id').value;
+    const selectedName = appRoot.querySelector('#selected-memorial-name').textContent;
+
+    if (!selectedId || !currentLinkingRelativeGroup) return;
+
+    // Update the relative field with the linked memorial ID
+    const memorialIdInput = currentLinkingRelativeGroup.querySelector('.relative-memorial-id');
+    if (memorialIdInput) {
+        memorialIdInput.value = selectedId;
+    }
+
+    // IMPORTANT: Fill in the name field with the linked memorial's name
+    const nameInput = currentLinkingRelativeGroup.querySelector('.relative-name-input');
+    if (nameInput && selectedName) {
+        nameInput.value = selectedName;
+    }
+
+    // Update the Link button to show it's linked
+    const linkBtn = currentLinkingRelativeGroup.querySelector('.link-btn');
+    if (linkBtn) {
+        linkBtn.classList.add('linked');
+        linkBtn.innerHTML = '<i class="fas fa-check"></i>';
+        linkBtn.title = `Linked to ${selectedName}`;
+    }
+
+    // Add a visual badge
+    const existingBadge = currentLinkingRelativeGroup.querySelector('.relative-linked-badge');
+    if (!existingBadge) {
+        if (nameInput) {
+            const badge = document.createElement('span');
+            badge.className = 'relative-linked-badge';
+            badge.innerHTML = `<i class="fas fa-link"></i> Linked`;
+            nameInput.parentElement.appendChild(badge);
+        }
+    }
+
+    // Store the pending connection
+    const relationshipSelect = currentLinkingRelativeGroup.querySelector('.relative-relationship-input');
+    const relationship = relationshipSelect?.value || 'Other';
+
+    // Check if connection already pending
+    const existingIndex = pendingConnections.findIndex(c => c.connectedMemorialId === selectedId);
+    if (existingIndex >= 0) {
+        pendingConnections[existingIndex].relationship = relationship;
+    } else {
+        pendingConnections.push({
+            connectedMemorialId: selectedId,
+            relationship: relationship
+        });
+    }
+
+    showToast(`Linked to ${selectedName}`, 'success');
+    memorialSearchModal.hide();
+}
+
+function openMemorialSearchModal(relativeGroup, appRoot) {
+    currentLinkingRelativeGroup = relativeGroup;
+
+    // Pre-fill search with relative's name if available
+    const nameInput = relativeGroup.querySelector('.relative-name-input');
+    const searchInput = appRoot.querySelector('#memorial-search-input');
+
+    // Show modal first
+    memorialSearchModal.show();
+
+    // Then pre-fill and trigger search after modal is visible
+    if (nameInput?.value && searchInput) {
+        setTimeout(() => {
+            searchInput.value = nameInput.value;
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        }, 150);
+    } else if (searchInput) {
+        // Focus the search input even if no name pre-filled
+        setTimeout(() => searchInput.focus(), 150);
+    }
+}
+
+async function createPendingConnections(memorialId) {
+    if (pendingConnections.length === 0) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    for (const connection of pendingConnections) {
+        try {
+            await fetch('/api/connections/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    memorialId,
+                    connectedMemorialId: connection.connectedMemorialId,
+                    relationship: connection.relationship
+                })
+            });
+        } catch (error) {
+            console.error('Failed to create connection:', error);
+        }
+    }
+
+    // Clear pending connections
+    pendingConnections = [];
 }
 
 async function initializePage(appRoot, urlParams) {
@@ -930,6 +1949,8 @@ async function initializePage(appRoot, urlParams) {
 
         if (data) {
             populateForm(data, appRoot);
+            // Initialize collaborators for existing memorials
+            initializeCollaborators(appRoot, memorialId);
         }
     }
 
@@ -947,9 +1968,21 @@ async function initializePage(appRoot, urlParams) {
     // Setup headstone photo upload
     setupHeadstonePhoto(appRoot);
 
+    // Setup Biography Helper
+    initializeBioHelper(appRoot);
+
+    // Setup Memorial Search/Linking
+    initializeMemorialSearch(appRoot, memorialId);
+
     // Wire up cemetery location buttons
     appRoot.querySelector('#use-my-location-btn')?.addEventListener('click', () => useMyLocation(appRoot));
     appRoot.querySelector('#geocode-cemetery-btn')?.addEventListener('click', () => geocodeCemeteryAddress(appRoot));
+
+    // Wire up gravesite pin buttons
+    appRoot.querySelector('#set-gravesite-gps-btn')?.addEventListener('click', setGravesiteGPS);
+    appRoot.querySelector('#set-gravesite-map-btn')?.addEventListener('click', openGravesiteMapPicker);
+    appRoot.querySelector('#update-gravesite-btn')?.addEventListener('click', setGravesiteGPS);
+    appRoot.querySelector('#remove-gravesite-btn')?.addEventListener('click', removeGravesitePin);
 
     // Auto-geocode when user leaves the address field (if address changed and not empty)
     const addressInput = appRoot.querySelector('#memorial-cemetery-address');
@@ -968,6 +2001,7 @@ async function initializePage(appRoot, urlParams) {
     showPhotoPreview(appRoot, 'memorial-photos', 'photos-preview');
 
     appRoot.querySelector('#memorialForm')?.addEventListener('submit', (e) => saveMemorial(e, memorialId, appRoot, 'draft'));
+    appRoot.querySelector('#save-draft-button')?.addEventListener('click', (e) => saveMemorial(e, memorialId, appRoot, 'draft'));
     appRoot.querySelector('#publish-button')?.addEventListener('click', (e) => saveMemorial(e, memorialId, appRoot, 'published'));
 }
 
@@ -977,6 +2011,20 @@ export function cleanupMemorialForm() {
     cleanupLifePathMap();
     cemeteryLocation = null;
     headstonePhotoFile = null;
+    collaboratorsLoadingPromise = null;
+    currentMemorialIdForCollaborators = null;
+    currentUserRole = null;
+    pendingConnections = [];
+    currentLinkingRelativeGroup = null;
+    geocodedResidenceLocations = {};
+    if (bioHelperModal) {
+        bioHelperModal.hide();
+        bioHelperModal = null;
+    }
+    if (memorialSearchModal) {
+        memorialSearchModal.hide();
+        memorialSearchModal = null;
+    }
 }
 
 export async function loadMemorialForm(appRoot, urlParams) {

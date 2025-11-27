@@ -94,6 +94,11 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="qr-generator-tab" data-bs-toggle="tab" data-bs-target="#qr-generator-panel" type="button">
+                    <i class="fas fa-qrcode me-2"></i>QR Generator
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes-panel" type="button">
                     <i class="fas fa-sticky-note me-2"></i>Notes
                 </button>
@@ -420,6 +425,77 @@
                                 </thead>
                                 <tbody id="orders-tbody"></tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== QR GENERATOR PANEL ==================== -->
+            <div class="tab-pane fade" id="qr-generator-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-qrcode me-2"></i>Generate Branded QR Code</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-4">
+                                    Generate a high-resolution QR code with the Headstone Legacy logo.
+                                    The QR code will link directly to the memorial page.
+                                </p>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Select Memorial</label>
+                                    <select class="form-select" id="qr-memorial-select">
+                                        <option value="">-- Select a memorial --</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-4" id="qr-memorial-info" style="display: none;">
+                                    <div class="alert alert-info mb-0">
+                                        <strong>QR Code URL:</strong>
+                                        <br>
+                                        <code id="qr-url-preview">https://www.headstonelegacy.com/memorial?id=...</code>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Or Enter Memorial ID Manually</label>
+                                    <input type="text" class="form-control" id="qr-manual-id" placeholder="e.g., benjamin-franklin-founding-father">
+                                    <small class="text-muted">Use the memorial slug or UUID</small>
+                                </div>
+
+                                <button class="btn btn-primary btn-lg w-100" id="generate-branded-qr-btn" disabled>
+                                    <i class="fas fa-qrcode me-2"></i>Generate QR Code
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-image me-2"></i>Preview</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <div id="qr-preview-placeholder" class="py-5">
+                                    <i class="fas fa-qrcode fa-5x text-muted mb-3"></i>
+                                    <p class="text-muted">Select a memorial and click "Generate" to preview the QR code</p>
+                                </div>
+                                <div id="qr-preview-loading" class="py-5" style="display: none;">
+                                    <div class="spinner-border text-primary mb-3"></div>
+                                    <p class="text-muted">Generating QR code...</p>
+                                </div>
+                                <div id="qr-preview-result" style="display: none;">
+                                    <img id="qr-preview-image" src="" alt="QR Code Preview" class="img-fluid rounded shadow mb-3" style="max-width: 400px;">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a id="qr-download-link" href="" download="headstone-legacy-qr.png" class="btn btn-success btn-lg">
+                                            <i class="fas fa-download me-2"></i>Download PNG
+                                        </a>
+                                    </div>
+                                    <p class="text-muted mt-3 small">1000x1000px PNG with logo overlay</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

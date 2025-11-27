@@ -1,5 +1,5 @@
 /* serviceworker.js */
-const CACHE_VERSION = 'v28'; // Added tributes-list page, fixed featured memorials, XSS fixes
+const CACHE_VERSION = 'v42'; // Add Memorial Book ordering system
 const CACHE_NAME = `headstone-memorial-cache-${CACHE_VERSION}`;
 
 const urlsToCache = [
@@ -24,7 +24,9 @@ const urlsToCache = [
   '/pages/login.html',
   '/pages/memorial-template.html',
   '/pages/tributes-list.html',
-  '/pages/home.html'
+  '/pages/home.html',
+  '/pages/order-book.html',
+  '/js/pages/order-book.js'
 ];
 
 // Install: Pre-cache the app shell

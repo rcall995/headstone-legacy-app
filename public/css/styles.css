@@ -766,21 +766,46 @@ a:not(.btn):hover {
 }
 
 /* --- Timeline Styles --- */
-.timeline { position: relative; list-style: none; padding: 1rem 0; margin: 0; }
-.timeline:before {
-    content: ''; position: absolute; top: 0; left: 18px; height: 100%; width: 4px; background: #e9ecef;
+.timeline { list-style: none; padding: 1rem; margin: 0; }
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
 }
-.timeline-item { margin-bottom: 1.5rem; position: relative; padding-left: 45px; }
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 28px;
+    width: 2px;
+    height: calc(100% + 0.5rem);
+    background: #e9ecef;
+}
+.timeline-item:last-child::after { display: none; }
+.timeline-bullet {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px var(--light-gray);
+    z-index: 1;
+}
+.timeline-item.timeline-item-historical .timeline-bullet { background: #6c757d; }
+.timeline-item.timeline-item-major .timeline-bullet { background: var(--secondary-color); }
+.timeline-content { flex: 1; padding-top: 3px; }
 .timeline-item-year { font-weight: bold; color: var(--primary-color); font-size: 1.1rem; margin-bottom: 0.25rem; }
 .timeline-item.timeline-item-historical { color: #6c757d; font-style: italic; }
-.timeline-item:before {
-    content: ''; font-family: "Font Awesome 6 Free"; font-weight: 900; display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 12px; position: absolute; left: 8px; top: 2px; width: 24px; height: 24px; border-radius: 50%; background: var(--primary-color); border: 3px solid var(--light-gray);
-}
-.timeline-item:not(.timeline-item-historical):not(.timeline-item-major):before { content: "\f005"; } /* star */
-.timeline-item.timeline-item-major:before { content: "\f111"; background-color: var(--secondary-color); } /* circle */
-.timeline-item.timeline-item-historical:before { content: "\f0ac"; background: #6c757d; } /* globe */
-.timeline-item:not(.timeline-item-historical) p { font-weight: bold; }
+.timeline-item.timeline-item-historical .timeline-item-year { color: #6c757d; }
+.timeline-item:not(.timeline-item-historical) p { font-weight: bold; margin: 0; }
 
 /* --- Responsive Styles --- */
 @media (min-width: 992px) {
@@ -3620,4 +3645,1034 @@ a.value-card,
 .wholesale-form-header p {
     color: var(--text-secondary);
     margin: 0;
+}
+
+/* ============================================
+   MEMORIAL PAGE - TABBED INTERFACE
+   ============================================ */
+
+/* Memorial Tabs Container */
+.memorial-tabs-container {
+    background: var(--bg-cream);
+    padding: 0 0 2rem;
+    min-height: 400px;
+}
+
+/* Tab Navigation */
+.memorial-nav-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    border: none;
+    background: var(--bg-white);
+    padding: 0.75rem 1rem;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 0;
+    position: sticky;
+    top: 70px;
+    z-index: 100;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.memorial-nav-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.memorial-nav-tabs .nav-item {
+    flex-shrink: 0;
+}
+
+.memorial-nav-tabs .nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    background: transparent;
+    position: relative;
+    white-space: nowrap;
+}
+
+.memorial-nav-tabs .nav-link i {
+    font-size: 1.25rem;
+}
+
+.memorial-nav-tabs .nav-link:hover {
+    color: var(--primary);
+    background: rgba(0, 95, 96, 0.05);
+}
+
+.memorial-nav-tabs .nav-link.active {
+    color: var(--primary);
+    background: rgba(0, 95, 96, 0.1);
+    box-shadow: none;
+}
+
+.memorial-nav-tabs .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+/* Tab Badge */
+.tab-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #dc3545;
+    color: white;
+    font-size: 0.65rem;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+/* Tab Content */
+.memorial-tab-content {
+    background: var(--bg-white);
+    border-radius: 0 0 16px 16px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.memorial-tab-content > .tab-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Memorial Content Cards */
+.memorial-content-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.memorial-content-card .content-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-cream);
+}
+
+.memorial-content-card .content-card-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.memorial-content-card .content-card-header h5 i {
+    color: var(--primary);
+}
+
+.memorial-content-card .content-card-body {
+    padding: 1.25rem;
+}
+
+/* Bio card specific styling */
+#bio-card .card-body,
+#bio-card.memorial-content-card {
+    background: var(--bg-white);
+}
+
+#bio-card .card-body {
+    padding: 1.5rem;
+}
+
+#bio-card .card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+#bio-card .card-title i {
+    color: var(--primary);
+}
+
+/* Timeline card in tabs */
+#timeline-card .card-body {
+    padding: 1.5rem;
+}
+
+/* Gallery in tabs */
+#gallery-card .card-body {
+    padding: 1.25rem;
+}
+
+#gallery-card .row {
+    margin: -0.25rem;
+}
+
+#gallery-card .col-4,
+#gallery-card .col-md-3 {
+    padding: 0.25rem;
+}
+
+/* Family cards in tabs */
+#family-card .card-body {
+    padding: 1.25rem;
+}
+
+/* Map cards in tabs */
+#map-card .card-body {
+    padding: 1.25rem;
+}
+
+/* Mobile Tab Styles */
+@media (max-width: 767px) {
+    .memorial-nav-tabs {
+        justify-content: flex-start;
+        padding: 0.5rem 0.75rem;
+        gap: 0.15rem;
+        top: 60px;
+    }
+
+    .memorial-nav-tabs .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.7rem;
+    }
+
+    .memorial-nav-tabs .nav-link i {
+        font-size: 1.1rem;
+    }
+
+    .memorial-nav-tabs .nav-link span {
+        display: block;
+    }
+
+    .memorial-tab-content {
+        padding: 1rem;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .memorial-content-card .content-card-header {
+        padding: 0.875rem 1rem;
+    }
+
+    .memorial-content-card .content-card-body {
+        padding: 1rem;
+    }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 991px) {
+    .memorial-nav-tabs .nav-link {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Desktop - horizontal tabs with text */
+@media (min-width: 992px) {
+    .memorial-tabs-container .container {
+        max-width: 900px;
+    }
+
+    .memorial-nav-tabs {
+        gap: 0.5rem;
+    }
+
+    .memorial-nav-tabs .nav-link {
+        flex-direction: row;
+        gap: 0.5rem;
+        padding: 0.875rem 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .memorial-nav-tabs .nav-link i {
+        font-size: 1rem;
+    }
+
+    .memorial-tab-content {
+        padding: 2rem;
+    }
+}
+
+/* Memorial Page Header - Improved */
+.memorial-page-header {
+    padding: 2.5rem 0;
+    background: linear-gradient(180deg, #fff 0%, var(--bg-cream) 100%);
+    border-bottom: none;
+}
+
+.memorial-header-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+/* Main photo styling */
+#display-main-media {
+    margin-bottom: 1.5rem;
+}
+
+#display-main-media img {
+    max-width: 320px;
+    max-height: 320px;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+    border: 4px solid #fff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Engagement section improvements */
+#engagement-section {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 1.25rem;
+    border-radius: 16px;
+    background: rgba(255, 193, 7, 0.06);
+    border: 1px solid rgba(255, 193, 7, 0.15);
+}
+
+/* Scrolly Section - Desktop Grid */
+@media (min-width: 992px) {
+    .scrolly-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Full-width cards */
+    .scrolly-section #bio-card,
+    .scrolly-section #timeline-card,
+    .scrolly-section #tributes-card,
+    .scrolly-section #voice-recordings-card,
+    .scrolly-section #residences-map-card {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Card improvements */
+.scrolly-section .card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.scrolly-section .card:hover {
+    transform: none; /* Disable hover transform for memorial cards */
+    box-shadow: var(--shadow-sm);
+}
+
+.scrolly-section .card-body {
+    padding: 1.5rem;
+}
+
+.scrolly-section .card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.scrolly-section .card-title i {
+    color: var(--primary);
+}
+
+/* Map cards improvements */
+#residences-map-card .card-body,
+#map-card .card-body {
+    padding: 1.25rem;
+}
+
+#residences-map-container,
+#cemetery-map-container {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+}
+
+/* Visitor CTA Section */
+#visitor-cta-section {
+    padding: 2.5rem 0;
+}
+
+#visitor-cta-section .card {
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+/* Mobile Memorial Page Styles */
+@media (max-width: 767px) {
+    .memorial-page-header {
+        padding: 1.5rem 0 2rem;
+    }
+
+    .memorial-header-name {
+        font-size: 1.75rem;
+        padding: 0 1rem;
+    }
+
+    #display-main-media img {
+        max-width: 200px;
+        max-height: 200px;
+        border-width: 3px;
+    }
+
+    #display-dates {
+        font-size: 1rem;
+    }
+
+    /* Stack action buttons better on mobile */
+    .memorial-page-header .d-flex.gap-2 {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .memorial-page-header .d-flex.gap-2 .btn {
+        min-width: 120px;
+    }
+
+    #engagement-section {
+        margin: 0 1rem;
+        padding: 1rem;
+    }
+
+    .engagement-stats {
+        gap: 1.5rem !important;
+    }
+
+    /* Mobile scrolly section */
+    .scrolly-section {
+        padding: 0 0.75rem;
+    }
+
+    .scrolly-section .card-body {
+        padding: 1.25rem;
+    }
+
+    .scrolly-section .card-title {
+        font-size: 1.05rem;
+    }
+
+    /* Mobile map height */
+    #residences-map-container,
+    #cemetery-map-container {
+        height: 280px !important;
+    }
+
+    /* Visitor CTA - mobile */
+    #visitor-cta-section {
+        padding: 1.5rem 0;
+    }
+
+    #visitor-cta-section .card-body {
+        padding: 2rem 1.5rem !important;
+    }
+
+    #visitor-cta-section h3 {
+        font-size: 1.25rem;
+    }
+
+    #visitor-cta-section .lead {
+        font-size: 1rem;
+    }
+}
+
+/* Tablet specific adjustments */
+@media (min-width: 768px) and (max-width: 991px) {
+    .memorial-header-name {
+        font-size: 2.25rem;
+    }
+
+    #display-main-media img {
+        max-width: 280px;
+        max-height: 280px;
+    }
+
+    .scrolly-section {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+}
+
+/* Large desktop - wider layout */
+@media (min-width: 1200px) {
+    .memorial-page-header .container {
+        max-width: 900px;
+    }
+
+    #display-main-media img {
+        max-width: 360px;
+        max-height: 360px;
+    }
+
+    .memorial-header-name {
+        font-size: 2.75rem;
+    }
+}
+
+/* ============================================
+   MEMORIAL BOOK ORDER PAGE STYLES
+   ============================================ */
+
+.order-book-page {
+    padding: 2rem 0 4rem;
+}
+
+/* 3D Book Preview */
+.book-preview-section {
+    margin-bottom: 2rem;
+}
+
+.book-preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+}
+
+.book-3d-wrapper {
+    perspective: 1000px;
+    margin-bottom: 1rem;
+}
+
+.book-3d {
+    position: relative;
+    width: 280px;
+    height: 380px;
+    transform-style: preserve-3d;
+    transform: rotateY(-15deg);
+    transition: transform 0.5s ease;
+}
+
+.book-3d:hover {
+    transform: rotateY(-30deg);
+}
+
+.book-cover {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f0f1a 100%);
+    border-radius: 0 8px 8px 0;
+    box-shadow:
+        5px 5px 20px rgba(0, 0, 0, 0.4),
+        inset -2px 0 10px rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    backface-visibility: hidden;
+    border-left: 4px solid #c9a227;
+}
+
+.book-spine {
+    position: absolute;
+    left: -20px;
+    width: 20px;
+    height: 100%;
+    background: linear-gradient(90deg, #0f0f1a, #1a1a2e);
+    transform: rotateY(90deg);
+    transform-origin: right;
+    border-radius: 4px 0 0 4px;
+}
+
+.book-cover-photo {
+    width: 140px;
+    height: 180px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid rgba(201, 162, 39, 0.5);
+}
+
+.book-cover-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.book-cover-photo .cover-placeholder {
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.book-cover-text {
+    text-align: center;
+    color: #fff;
+}
+
+.book-cover-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: #c9a227;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.book-cover-dates {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+}
+
+.book-preview-caption {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Cover Template Styles */
+.book-3d.template-classic .book-cover {
+    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f0f1a 100%);
+    border-left-color: #c9a227;
+}
+
+.book-3d.template-modern .book-cover {
+    background: linear-gradient(145deg, #ffffff 0%, #f5f5f5 50%, #e8e8e8 100%);
+    border-left-color: #005F60;
+}
+
+.book-3d.template-modern .book-cover-name {
+    color: #005F60;
+}
+
+.book-3d.template-modern .book-cover-dates {
+    color: #666;
+}
+
+.book-3d.template-modern .book-spine {
+    background: linear-gradient(90deg, #e8e8e8, #ffffff);
+}
+
+.book-3d.template-nature .book-cover {
+    background: linear-gradient(145deg, #2d4a3e 0%, #1e352a 50%, #152419 100%);
+    border-left-color: #8fbc8f;
+}
+
+.book-3d.template-nature .book-cover-name {
+    color: #8fbc8f;
+}
+
+.book-3d.template-nature .book-spine {
+    background: linear-gradient(90deg, #152419, #2d4a3e);
+}
+
+.book-3d.template-faith .book-cover {
+    background: linear-gradient(145deg, #4a3c6e 0%, #352a52 50%, #241c38 100%);
+    border-left-color: #d4af37;
+}
+
+.book-3d.template-faith .book-cover-name {
+    color: #d4af37;
+}
+
+.book-3d.template-faith .book-spine {
+    background: linear-gradient(90deg, #241c38, #4a3c6e);
+}
+
+/* Sample Pages Preview */
+.sample-pages-section {
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.sample-pages-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 991px) {
+    .sample-pages-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575px) {
+    .sample-pages-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+.sample-page {
+    text-align: center;
+}
+
+.sample-page-content {
+    background: #fff;
+    border-radius: 4px;
+    aspect-ratio: 8.5/11;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e0e0e0;
+}
+
+.sample-page-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Title Page Sample */
+.sample-page-content.title-page {
+    background: linear-gradient(145deg, #f8f6f0 0%, #fff 100%);
+}
+
+.sample-photo-placeholder {
+    width: 60px;
+    height: 75px;
+    background: #e8e8e8;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    border: 2px solid #d0d0d0;
+}
+
+.sample-photo-placeholder i {
+    font-size: 1.5rem;
+    color: #999;
+}
+
+.sample-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.sample-dates {
+    font-size: 0.7rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.sample-subtitle {
+    font-size: 0.6rem;
+    color: #888;
+    font-style: italic;
+}
+
+/* Bio Page Sample */
+.sample-page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.5rem;
+}
+
+.sample-text-lines {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.sample-line {
+    height: 6px;
+    background: #e8e8e8;
+    border-radius: 3px;
+    width: 100%;
+}
+
+.sample-line.short {
+    width: 70%;
+}
+
+/* Gallery Page Sample */
+.sample-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.sample-photo {
+    aspect-ratio: 4/3;
+    background: #f0f0f0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e0e0e0;
+}
+
+.sample-photo i {
+    font-size: 1rem;
+    color: #bbb;
+}
+
+/* Timeline Page Sample */
+.sample-timeline {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sample-timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sample-year {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--primary);
+    min-width: 30px;
+}
+
+.sample-timeline-item .sample-line {
+    flex: 1;
+    height: 4px;
+}
+
+/* Cover Template Selector */
+.cover-template-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.cover-template-option {
+    cursor: pointer;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.cover-template-option:hover {
+    background: rgba(0, 95, 96, 0.1);
+}
+
+.cover-template-option.active {
+    border-color: var(--primary);
+    background: rgba(0, 95, 96, 0.1);
+}
+
+.template-preview {
+    width: 100%;
+    aspect-ratio: 3/4;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.template-preview.template-classic {
+    background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+    border-left: 3px solid #c9a227;
+}
+
+.template-preview.template-modern {
+    background: linear-gradient(145deg, #ffffff, #e8e8e8);
+    border-left: 3px solid #005F60;
+}
+
+.template-preview.template-nature {
+    background: linear-gradient(145deg, #2d4a3e, #152419);
+    border-left: 3px solid #8fbc8f;
+}
+
+.template-preview.template-faith {
+    background: linear-gradient(145deg, #4a3c6e, #241c38);
+    border-left: 3px solid #d4af37;
+}
+
+.cover-template-option span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.cover-template-option.active span {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Book Sections Toggle List */
+.book-sections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.book-section-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 95, 96, 0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.book-section-toggle:hover {
+    background: rgba(0, 95, 96, 0.1);
+}
+
+.book-section-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+}
+
+.book-section-toggle input[type="checkbox"]:disabled {
+    opacity: 0.7;
+}
+
+.book-section-toggle .section-name {
+    flex: 1;
+    font-size: 0.95rem;
+}
+
+.book-section-toggle .section-name i {
+    width: 20px;
+    color: var(--primary);
+    margin-right: 0.5rem;
+}
+
+.book-section-toggle .section-count {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.book-section-toggle .section-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: var(--primary);
+    color: white;
+}
+
+.book-section-toggle .section-badge.required {
+    background: rgba(0, 95, 96, 0.2);
+    color: var(--primary);
+}
+
+/* Upsell Banner */
+.upsell-banner {
+    margin-top: 1rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(0, 95, 96, 0.1), rgba(0, 95, 96, 0.05));
+    border-radius: 12px;
+    border: 1px solid rgba(0, 95, 96, 0.2);
+    position: relative;
+}
+
+.upsell-badge {
+    position: absolute;
+    top: -10px;
+    right: 15px;
+    background: #28a745;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.upsell-banner h5 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+}
+
+.upsell-banner p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 991px) {
+    .book-preview-section .row {
+        flex-direction: column;
+    }
+
+    .book-3d {
+        width: 220px;
+        height: 300px;
+    }
+
+    .book-cover-photo {
+        width: 110px;
+        height: 140px;
+    }
+
+    .book-cover-name {
+        font-size: 1rem;
+    }
+
+    .cover-template-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .book-3d {
+        width: 180px;
+        height: 250px;
+    }
+
+    .book-cover-photo {
+        width: 90px;
+        height: 115px;
+    }
+
+    .book-cover {
+        padding: 1rem;
+    }
+
+    .book-cover-name {
+        font-size: 0.9rem;
+    }
+
+    .book-cover-dates {
+        font-size: 0.8rem;
+    }
 }

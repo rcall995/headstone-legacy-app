@@ -1,0 +1,94 @@
+<div class="accept-invite-page">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <!-- Loading State -->
+                <div id="invite-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3"></div>
+                    <p class="text-muted">Loading invite...</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="invite-error" class="card border-danger" style="display: none;">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-exclamation-circle text-danger fa-4x mb-3"></i>
+                        <h4>Invite Error</h4>
+                        <p class="text-muted" id="error-message">Something went wrong</p>
+                        <a href="/" class="btn btn-primary mt-3" data-route>
+                            <i class="fas fa-home me-2"></i>Go Home
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Success State (Already Accepted) -->
+                <div id="invite-success" class="card border-success" style="display: none;">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
+                        <h4>You're In!</h4>
+                        <p class="text-muted" id="success-message">You now have access to this memorial</p>
+                        <a href="#" class="btn btn-success btn-lg mt-3" id="view-memorial-after-accept" data-route>
+                            <i class="fas fa-eye me-2"></i>View Memorial
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Sign In Required State -->
+                <div id="invite-signin" class="card" style="display: none;">
+                    <div class="card-body text-center py-4">
+                        <div class="invite-memorial-preview mb-4">
+                            <i class="fas fa-envelope-open-text text-primary fa-3x mb-3"></i>
+                            <h4>You're Invited!</h4>
+                            <p class="text-muted mb-0">You've been invited to contribute to:</p>
+                            <h5 class="text-primary mt-2" id="memorial-name-preview">Memorial Name</h5>
+                            <span class="badge bg-primary" id="role-preview">Contributor</span>
+                        </div>
+
+                        <hr>
+
+                        <p class="mb-4">Sign in or create an account to accept this invitation</p>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-lg" id="google-signin-btn">
+                                <i class="fab fa-google me-2"></i>Continue with Google
+                            </button>
+                            <button class="btn btn-outline-primary" id="email-signin-btn">
+                                <i class="fas fa-envelope me-2"></i>Continue with Email
+                            </button>
+                        </div>
+
+                        <p class="text-muted small mt-4 mb-0">
+                            After signing in, you'll be added as a collaborator
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Accept Invite State (Already Signed In) -->
+                <div id="invite-accept" class="card" style="display: none;">
+                    <div class="card-body text-center py-4">
+                        <div class="invite-memorial-preview mb-4">
+                            <i class="fas fa-user-plus text-primary fa-3x mb-3"></i>
+                            <h4>Accept Invitation</h4>
+                            <p class="text-muted mb-0">You've been invited to contribute to:</p>
+                            <h5 class="text-primary mt-2" id="memorial-name-accept">Memorial Name</h5>
+                            <span class="badge bg-primary" id="role-accept">Contributor</span>
+                        </div>
+
+                        <div class="alert alert-info text-start mb-4" id="invite-message-box" style="display: none;">
+                            <strong><i class="fas fa-comment me-1"></i> Message from inviter:</strong>
+                            <p class="mb-0 mt-1" id="invite-message"></p>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-lg" id="accept-invite-btn">
+                                <i class="fas fa-check me-2"></i>Accept Invitation
+                            </button>
+                            <a href="/" class="btn btn-outline-secondary" data-route>
+                                Decline
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

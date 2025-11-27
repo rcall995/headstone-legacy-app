@@ -54,10 +54,27 @@
             width: 50px;
             height: 70px;
         }
-        .candle-icon {
-            font-size: 2.5rem;
-            color: #f8f0e3;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        .candle-body {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 45px;
+            background: linear-gradient(to bottom, #f8f0e3 0%, #e8dcc8 100%);
+            border-radius: 3px 3px 6px 6px;
+            box-shadow: inset -2px 0 4px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .candle-body::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 8px;
+            background: #333;
+            border-radius: 1px;
         }
         .candle-flame {
             position: absolute;
@@ -357,6 +374,86 @@
             font-size: 0.9rem;
             word-break: break-all;
         }
+
+        /* Family Tree Styles */
+        .family-tree-section {
+            margin-bottom: 1.5rem;
+        }
+        .family-tree-section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .family-tree-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+        .family-member-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            padding: 1rem;
+            border-radius: 12px;
+            background: #f9fafb;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .family-member-card:hover {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .family-member-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            margin-bottom: 0.75rem;
+        }
+        .family-member-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #005F60, #007a7a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.75rem;
+            font-weight: 600;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            margin-bottom: 0.75rem;
+        }
+        .family-member-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        .family-member-relation {
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-align: center;
+        }
+        .family-member-dates {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -389,7 +486,7 @@
                         <div class="stat-item d-flex align-items-center gap-2">
                             <div class="candle-icon-container">
                                 <div class="candle-flame" id="candle-flame"></div>
-                                <i class="fas fa-candle-holder candle-icon"></i>
+                                <div class="candle-body"></div>
                             </div>
                             <div class="text-start">
                                 <span class="candle-count h5 mb-0" id="candle-count">0</span>
@@ -409,72 +506,144 @@
             </div>
         </div>
 
-        <div class="container-fluid py-5">
-            <div class="scrolly-section">
-                <div id="bio-card" class="card"></div>
-                <div id="gallery-card" class="card" style="display: none;"></div>
-                <div id="timeline-card" class="card" style="display: none;"></div>
-                <div id="family-card" class="card" style="display: none;"></div>
-                <div id="residences-card" class="card" style="display: none;"></div>
-                <div id="map-card" class="card" style="display: none;"></div>
-                <div id="quotes-card" class="card" style="display: none;"></div>
-                <div id="archive-card" class="card" style="display: none;"></div>
-
-                <!-- Tributes/Guestbook Section -->
-                <div id="tributes-card" class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="fas fa-heart me-2 text-danger"></i>Tributes & Messages</h5>
-                        <button class="btn btn-primary btn-sm" id="add-tribute-btn">
-                            <i class="fas fa-plus me-2"></i>Leave a Tribute
+        <!-- Tabbed Content Section -->
+        <div class="memorial-tabs-container">
+            <div class="container">
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs memorial-nav-tabs" id="memorialTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="story-tab" data-bs-toggle="tab" data-bs-target="#story-panel" type="button" role="tab" aria-controls="story-panel" aria-selected="true">
+                            <i class="fas fa-book-open"></i>
+                            <span>Story</span>
                         </button>
+                    </li>
+                    <li class="nav-item" role="presentation" id="gallery-tab-item" style="display: none;">
+                        <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery-panel" type="button" role="tab" aria-controls="gallery-panel" aria-selected="false">
+                            <i class="fas fa-images"></i>
+                            <span>Photos</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation" id="family-tab-item" style="display: none;">
+                        <button class="nav-link" id="family-tab" data-bs-toggle="tab" data-bs-target="#family-panel" type="button" role="tab" aria-controls="family-panel" aria-selected="false">
+                            <i class="fas fa-users"></i>
+                            <span>Family</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation" id="places-tab-item" style="display: none;">
+                        <button class="nav-link" id="places-tab" data-bs-toggle="tab" data-bs-target="#places-panel" type="button" role="tab" aria-controls="places-panel" aria-selected="false">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Places</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="memories-tab" data-bs-toggle="tab" data-bs-target="#memories-panel" type="button" role="tab" aria-controls="memories-panel" aria-selected="false">
+                            <i class="fas fa-heart"></i>
+                            <span>Memories</span>
+                            <span class="tab-badge" id="memories-badge" style="display: none;"></span>
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content memorial-tab-content" id="memorialTabsContent">
+                    <!-- Story Tab -->
+                    <div class="tab-pane fade show active" id="story-panel" role="tabpanel" aria-labelledby="story-tab">
+                        <div id="bio-card" class="memorial-content-card"></div>
+                        <div id="timeline-card" class="memorial-content-card" style="display: none;"></div>
                     </div>
-                    <div class="card-body">
-                        <div id="tributes-list">
-                            <div class="text-center text-muted py-4">
-                                <i class="fas fa-spinner fa-spin me-2"></i>Loading tributes...
+
+                    <!-- Gallery Tab -->
+                    <div class="tab-pane fade" id="gallery-panel" role="tabpanel" aria-labelledby="gallery-tab">
+                        <div id="gallery-card" class="memorial-content-card"></div>
+                    </div>
+
+                    <!-- Family Tab -->
+                    <div class="tab-pane fade" id="family-panel" role="tabpanel" aria-labelledby="family-tab">
+                        <div id="family-card" class="memorial-content-card" style="display: none;"></div>
+                        <div id="family-tree-card" class="memorial-content-card" style="display: none;">
+                            <div class="content-card-header">
+                                <h5><i class="fas fa-sitemap me-2"></i>Family Tree</h5>
+                                <p class="text-muted small mb-0">Click on a family member to view their memorial</p>
+                            </div>
+                            <div class="content-card-body">
+                                <div id="family-tree-content"></div>
                             </div>
                         </div>
-                        <div id="no-tributes-message" class="text-center text-muted py-4" style="display: none;">
-                            <i class="fas fa-heart fa-2x mb-3 opacity-50"></i>
-                            <p>No tributes yet. Be the first to share a memory or message.</p>
-                            <button class="btn btn-outline-primary" id="first-tribute-btn">
-                                <i class="fas fa-feather-alt me-2"></i>Write the First Tribute
-                            </button>
-                        </div>
                     </div>
-                </div>
 
-                <!-- Voice Recordings Section -->
-                <div id="voice-recordings-card" class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="fas fa-microphone me-2 text-primary"></i>Voice Memories</h5>
-                        <button class="btn btn-primary btn-sm" id="add-voice-btn">
-                            <i class="fas fa-plus me-2"></i>Record Memory
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div id="voice-recordings-list">
-                            <div class="text-center text-muted py-4">
-                                <i class="fas fa-spinner fa-spin me-2"></i>Loading recordings...
+                    <!-- Places Tab -->
+                    <div class="tab-pane fade" id="places-panel" role="tabpanel" aria-labelledby="places-tab">
+                        <div id="residences-card" class="memorial-content-card" style="display: none;"></div>
+
+                        <div id="residences-map-card" class="memorial-content-card" style="display: none;">
+                            <div class="content-card-header">
+                                <h5><i class="fas fa-route me-2"></i>Life Journey Map</h5>
+                                <p class="text-muted small mb-0">Places they called home throughout their life</p>
+                            </div>
+                            <div class="content-card-body">
+                                <div id="residences-map-container" style="height: 350px; width: 100%; border-radius: 8px; overflow: hidden;"></div>
                             </div>
                         </div>
-                        <div id="no-voice-message" class="text-center text-muted py-4" style="display: none;">
-                            <i class="fas fa-microphone fa-2x mb-3 opacity-50"></i>
-                            <p>No voice recordings yet. Share a spoken memory or story.</p>
-                            <button class="btn btn-outline-primary" id="first-voice-btn">
-                                <i class="fas fa-microphone me-2"></i>Record the First Memory
-                            </button>
+
+                        <div id="map-card" class="memorial-content-card" style="display: none;"></div>
+                    </div>
+
+                    <!-- Memories Tab (Tributes + Voice) -->
+                    <div class="tab-pane fade" id="memories-panel" role="tabpanel" aria-labelledby="memories-tab">
+                        <!-- Tributes Section -->
+                        <div id="tributes-card" class="memorial-content-card">
+                            <div class="content-card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5><i class="fas fa-heart me-2 text-danger"></i>Tributes & Messages</h5>
+                                </div>
+                                <button class="btn btn-primary btn-sm" id="add-tribute-btn">
+                                    <i class="fas fa-plus me-2"></i>Leave a Tribute
+                                </button>
+                            </div>
+                            <div class="content-card-body">
+                                <div id="tributes-list">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-spinner fa-spin me-2"></i>Loading tributes...
+                                    </div>
+                                </div>
+                                <div id="no-tributes-message" class="text-center text-muted py-4" style="display: none;">
+                                    <i class="fas fa-heart fa-2x mb-3 opacity-50"></i>
+                                    <p>No tributes yet. Be the first to share a memory or message.</p>
+                                    <button class="btn btn-outline-primary" id="first-tribute-btn">
+                                        <i class="fas fa-feather-alt me-2"></i>Write the First Tribute
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Voice Recordings Section -->
+                        <div id="voice-recordings-card" class="memorial-content-card">
+                            <div class="content-card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5><i class="fas fa-microphone me-2 text-primary"></i>Voice Memories</h5>
+                                </div>
+                                <button class="btn btn-primary btn-sm" id="add-voice-btn">
+                                    <i class="fas fa-plus me-2"></i>Record Memory
+                                </button>
+                            </div>
+                            <div class="content-card-body">
+                                <div id="voice-recordings-list">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-spinner fa-spin me-2"></i>Loading recordings...
+                                    </div>
+                                </div>
+                                <div id="no-voice-message" class="text-center text-muted py-4" style="display: none;">
+                                    <i class="fas fa-microphone fa-2x mb-3 opacity-50"></i>
+                                    <p>No voice recordings yet. Share a spoken memory or story.</p>
+                                    <button class="btn btn-outline-primary" id="first-voice-btn">
+                                        <i class="fas fa-microphone me-2"></i>Record the First Memory
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div id="residences-map-card" class="full-width-map-section" style="display: none;">
-            <div class="container py-3">
-                <h5 class="card-title"><i class="fas fa-map-marked-alt me-2"></i> Residential History Map</h5>
-            </div>
-            <div id="residences-map-container" style="height: 400px; width: 100%;"></div>
         </div>
     </div>
 
@@ -524,9 +693,12 @@
                     <p class="text-muted">Scan this code to visit the memorial's welcome page.</p>
                     <div id="qr-code-container" class="my-3 d-flex justify-content-center"></div>
                 </div>
-                <div class="modal-footer d-flex justify-content-between">
-                    <a href="#" id="order-tag-btn" class="btn btn-primary" data-route><i class="fas fa-tag me-2"></i> Order Tag</a>
-                    <button type="button" class="btn btn-secondary" id="download-qr-btn"><i class="fas fa-download me-2"></i> Download</button>
+                <div class="modal-footer flex-column gap-2">
+                    <div class="d-flex justify-content-center gap-2 w-100 flex-wrap">
+                        <a href="#" id="order-tag-btn" class="btn btn-primary" data-route><i class="fas fa-tag me-2"></i> QR Tag $39</a>
+                        <a href="#" id="order-book-btn" class="btn btn-outline-primary" data-route><i class="fas fa-book me-2"></i> Book $79</a>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="download-qr-btn"><i class="fas fa-download me-2"></i> Download QR Image</button>
                 </div>
             </div>
         </div>

@@ -1,0 +1,369 @@
+<div class="dashboard-theme-wrapper">
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-1"><i class="fas fa-file-import me-2"></i>Import Family Tree</h1>
+                <p class="text-muted mb-0">Import a GEDCOM file to create memorials for your ancestors</p>
+            </div>
+            <a href="/memorial-list?status=draft" class="btn btn-outline-primary" data-route>
+                <i class="fas fa-arrow-left me-2"></i>Back to Memorials
+            </a>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="import-steps mb-4">
+            <div class="step active" id="step1-indicator">
+                <div class="step-number">1</div>
+                <div class="step-label">Upload</div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step" id="step2-indicator">
+                <div class="step-number">2</div>
+                <div class="step-label">Review</div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step" id="step3-indicator">
+                <div class="step-number">3</div>
+                <div class="step-label">Import</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Upload -->
+        <div id="step1-upload" class="import-step">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center p-5">
+                    <div class="upload-zone" id="upload-zone">
+                        <i class="fas fa-cloud-upload-alt fa-4x text-primary mb-3"></i>
+                        <h4>Upload Your GEDCOM File</h4>
+                        <p class="text-muted">Drag and drop your .ged file here, or click to browse</p>
+                        <input type="file" id="gedcom-file-input" accept=".ged,.gedcom" class="d-none">
+                        <button class="btn btn-primary btn-lg mt-3" id="browse-btn">
+                            <i class="fas fa-folder-open me-2"></i>Browse Files
+                        </button>
+                    </div>
+                    <div id="file-info" class="mt-3 d-none">
+                        <div class="alert alert-info d-flex align-items-center">
+                            <i class="fas fa-file-alt fa-2x me-3"></i>
+                            <div class="text-start">
+                                <strong id="file-name">filename.ged</strong>
+                                <br><small class="text-muted" id="file-size">0 KB</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger ms-auto" id="remove-file-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-dark border-secondary mt-4">
+                <div class="card-body">
+                    <h5><i class="fas fa-info-circle me-2 text-info"></i>What is GEDCOM?</h5>
+                    <p class="text-muted mb-3">
+                        GEDCOM is the standard file format for genealogy data. You can export a GEDCOM file from:
+                    </p>
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <span>Ancestry.com</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <span>FamilySearch.org</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <span>MyHeritage</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <span>FindMyPast</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <span>Legacy Family Tree</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <span>RootsMagic</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-primary btn-lg" id="parse-btn" disabled>
+                    <i class="fas fa-cogs me-2"></i>Parse File
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Review -->
+        <div id="step2-review" class="import-step d-none">
+            <div class="card bg-dark border-secondary mb-4">
+                <div class="card-body">
+                    <h5><i class="fas fa-chart-bar me-2"></i>Import Summary</h5>
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number text-primary" id="stat-total">0</div>
+                                <div class="stat-label">Total People</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number text-success" id="stat-deceased">0</div>
+                                <div class="stat-label">Deceased</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number text-warning" id="stat-living">0</div>
+                                <div class="stat-label">Living (skipped)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number text-info" id="stat-families">0</div>
+                                <div class="stat-label">Families</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-dark border-secondary mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>People to Import</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2" id="select-all-btn">Select All</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="deselect-all-btn">Deselect All</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" class="form-check-input" id="select-all-checkbox">
+                                    </th>
+                                    <th>Name</th>
+                                    <th>Birth</th>
+                                    <th>Death</th>
+                                    <th>Burial Location</th>
+                                    <th>Needs</th>
+                                </tr>
+                            </thead>
+                            <tbody id="people-table-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    <span id="selected-count">0</span> people selected for import
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="fas fa-search-location me-2"></i>
+                <strong>Scout Bounty System:</strong> Imported memorials without GPS coordinates will appear in the "Wanted Graves" section of Scout Mode. Community scouts can earn bonus points by finding and pinning these graves!
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-outline-secondary" id="back-to-upload-btn">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </button>
+                <button class="btn btn-success btn-lg" id="import-btn">
+                    <i class="fas fa-file-import me-2"></i>Import Selected (<span id="import-count">0</span>)
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Results -->
+        <div id="step3-results" class="import-step d-none">
+            <div class="text-center py-5">
+                <div id="import-loading">
+                    <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                    <h4>Importing Family Tree...</h4>
+                    <p class="text-muted">Creating memorials and family connections</p>
+                </div>
+
+                <div id="import-success" class="d-none">
+                    <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
+                    <h3>Import Complete!</h3>
+                    <p class="text-muted mb-4">Your family tree has been imported successfully</p>
+
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number text-success" id="result-created">0</div>
+                                <div class="stat-label">Memorials Created</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number text-info" id="result-connections">0</div>
+                                <div class="stat-label">Family Connections</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number text-warning" id="result-wanted">0</div>
+                                <div class="stat-label">Needing Location</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="/memorial-list?status=draft" class="btn btn-primary btn-lg" data-route>
+                            <i class="fas fa-list me-2"></i>View Imported Memorials
+                        </a>
+                        <button class="btn btn-outline-success" id="import-more-btn">
+                            <i class="fas fa-plus me-2"></i>Import Another File
+                        </button>
+                    </div>
+                </div>
+
+                <div id="import-error" class="d-none">
+                    <i class="fas fa-exclamation-circle fa-5x text-danger mb-3"></i>
+                    <h3>Import Failed</h3>
+                    <p class="text-danger" id="error-message">An error occurred during import</p>
+                    <button class="btn btn-outline-primary" id="retry-btn">
+                        <i class="fas fa-redo me-2"></i>Try Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.import-steps {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.step.active {
+    opacity: 1;
+}
+
+.step.completed {
+    opacity: 1;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bs-secondary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.step.active .step-number {
+    background: var(--bs-primary);
+}
+
+.step.completed .step-number {
+    background: var(--bs-success);
+}
+
+.step-label {
+    font-size: 0.875rem;
+    color: var(--bs-secondary);
+}
+
+.step.active .step-label {
+    color: var(--bs-primary);
+    font-weight: 600;
+}
+
+.step-connector {
+    width: 100px;
+    height: 2px;
+    background: var(--bs-secondary);
+    margin: 0 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.upload-zone {
+    border: 3px dashed var(--bs-secondary);
+    border-radius: 1rem;
+    padding: 3rem;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+    border-color: var(--bs-primary);
+    background: rgba(0, 95, 96, 0.1);
+}
+
+.stat-box {
+    padding: 1rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 0.5rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--bs-secondary);
+}
+
+.table-dark {
+    --bs-table-bg: transparent;
+}
+
+.table-dark tbody tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+@media (max-width: 768px) {
+    .import-steps {
+        flex-wrap: wrap;
+    }
+
+    .step-connector {
+        display: none;
+    }
+
+    .stat-box {
+        margin-bottom: 1rem;
+    }
+}
+</style>

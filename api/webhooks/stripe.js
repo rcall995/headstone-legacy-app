@@ -103,12 +103,23 @@ async function handleCheckoutComplete(session) {
 
     console.log('Order updated to paid:', orderId);
 
-    // Generate QR code for the order
-    const qrResult = await generateQRForOrder(orderId, metadata.memorialId);
-    if (qrResult.success) {
-      console.log('QR code generated:', qrResult.qrUrl);
+    // Check if this is a book order
+    const isBookOrder = metadata.productType === 'book_hardcover' ||
+                        metadata.productType === 'bundle_legacy' ||
+                        metadata.productType === 'bundle_family';
+
+    if (isBookOrder && metadata.memorialId) {
+      // Book order - trigger PDF generation and Lulu submission
+      console.log(`Book order detected, triggering PDF generation for memorial ${metadata.memorialId}`);
+      await handleBookOrderFulfillment(orderId, metadata.memorialId, order);
     } else {
-      console.error('Failed to generate QR code:', qrResult.error);
+      // QR tag order - generate QR code
+      const qrResult = await generateQRForOrder(orderId, metadata.memorialId);
+      if (qrResult.success) {
+        console.log('QR code generated:', qrResult.qrUrl);
+      } else {
+        console.error('Failed to generate QR code:', qrResult.error);
+      }
     }
 
     // Handle referral conversion if applicable
@@ -116,8 +127,8 @@ async function handleCheckoutComplete(session) {
       await handleReferralConversion(order, metadata);
     }
 
-    // TODO: Send confirmation email with QR code
-    // await sendOrderConfirmationEmail(order, qrResult.qrUrl);
+    // TODO: Send confirmation email
+    // await sendOrderConfirmationEmail(order);
 
   } catch (error) {
     console.error('Error handling checkout complete:', error);
@@ -197,6 +208,73 @@ async function handleCheckoutExpired(session) {
         updated_at: new Date().toISOString()
       })
       .eq('id', orderId);
+  }
+}
+
+/**
+ * Handle book order fulfillment - PDF generation and Lulu submission
+ */
+async function handleBookOrderFulfillment(orderId, memorialId, order) {
+  const baseUrl = process.env.SITE_URL || 'https://www.headstonelegacy.com';
+
+  try {
+    // Step 1: Generate PDF
+    console.log(`Generating PDF for order ${orderId}`);
+
+    const pdfResponse = await fetch(`${baseUrl}/api/books/generate-pdf`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+      },
+      body: JSON.stringify({
+        orderId,
+        memorialId,
+        coverTemplate: order?.cover_template || 'classic',
+        dedicationText: order?.dedication_text,
+        includeGallery: order?.include_gallery ?? true,
+        includeTimeline: order?.include_timeline ?? true,
+        includeFamily: order?.include_family_tree ?? true,
+        includeResidences: order?.include_residences ?? true,
+        includeTributes: order?.include_tributes ?? true
+      })
+    });
+
+    if (!pdfResponse.ok) {
+      const errorText = await pdfResponse.text();
+      console.error('PDF generation failed:', errorText);
+      // Continue anyway - can retry later
+      return;
+    }
+
+    const pdfResult = await pdfResponse.json();
+    console.log('PDF generated successfully:', pdfResult.pdfUrl);
+
+    // Step 2: Submit to Lulu
+    console.log(`Submitting order ${orderId} to Lulu`);
+
+    const luluResponse = await fetch(`${baseUrl}/api/books/submit-to-lulu`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+      },
+      body: JSON.stringify({ orderId })
+    });
+
+    if (!luluResponse.ok) {
+      const errorText = await luluResponse.text();
+      console.error('Lulu submission failed:', errorText);
+      // PDF is generated, can submit manually or retry later
+      return;
+    }
+
+    const luluResult = await luluResponse.json();
+    console.log('Lulu submission successful:', luluResult.luluOrderId);
+
+  } catch (error) {
+    console.error('Book fulfillment error:', error);
+    // Don't throw - order is paid, fulfillment can be retried
   }
 }
 

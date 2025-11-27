@@ -18,7 +18,10 @@
         <div class="product-toggle mt-4">
           <div class="btn-group" role="group" aria-label="Product type">
             <button type="button" class="btn btn-lg btn-primary active" id="toggle-physical">
-              <i class="fas fa-tag me-2"></i>Physical Tags
+              <i class="fas fa-tag me-2"></i>QR Tags
+            </button>
+            <button type="button" class="btn btn-lg btn-outline-primary" id="toggle-books">
+              <i class="fas fa-book me-2"></i>Memorial Books
             </button>
             <button type="button" class="btn btn-lg btn-outline-primary" id="toggle-digital">
               <i class="fas fa-qrcode me-2"></i>Digital Licenses
@@ -139,6 +142,113 @@
           <button class="btn btn-secondary-unified w-100" onclick="scrollToForm()">
             Contact Us
           </button>
+        </div>
+      </div>
+
+      <!-- Memorial Books Pricing (hidden by default) -->
+      <div id="books-pricing" class="wholesale-pricing-grid" style="display: none;">
+        <!-- Books Starter -->
+        <div class="wholesale-pricing-card">
+          <div class="wholesale-tier-name">Starter</div>
+          <div class="wholesale-quantity">5+ <span>books</span></div>
+          <div class="wholesale-price">$45 <span>/book</span></div>
+          <div class="wholesale-savings">Retail $79 - You profit $34+</div>
+          <ul class="wholesale-features list-unstyled">
+            <li><i class="fas fa-check"></i> 8.5" x 11" Hardcover</li>
+            <li><i class="fas fa-check"></i> Full color printing</li>
+            <li><i class="fas fa-check"></i> 24-60+ pages</li>
+            <li><i class="fas fa-check"></i> Matte laminated cover</li>
+            <li><i class="fas fa-check"></i> Drop-ship to families</li>
+          </ul>
+          <button class="btn btn-secondary-unified w-100" onclick="scrollToForm()">
+            Get Started
+          </button>
+        </div>
+
+        <!-- Books Professional -->
+        <div class="wholesale-pricing-card featured">
+          <div class="wholesale-tier-name">Professional</div>
+          <div class="wholesale-quantity">15+ <span>books</span></div>
+          <div class="wholesale-price">$38 <span>/book</span></div>
+          <div class="wholesale-savings">Retail $99 - You profit $61+</div>
+          <ul class="wholesale-features list-unstyled">
+            <li><i class="fas fa-check"></i> Everything in Starter</li>
+            <li><i class="fas fa-check"></i> Priority production</li>
+            <li><i class="fas fa-check"></i> Custom dedication page</li>
+            <li><i class="fas fa-check"></i> Funeral home logo option</li>
+            <li><i class="fas fa-check"></i> Marketing collateral</li>
+          </ul>
+          <button class="btn btn-primary-unified w-100" onclick="scrollToForm()">
+            Apply Now
+          </button>
+        </div>
+
+        <!-- Books Enterprise -->
+        <div class="wholesale-pricing-card">
+          <div class="wholesale-tier-name">Enterprise</div>
+          <div class="wholesale-quantity">30+ <span>books</span></div>
+          <div class="wholesale-price">$32 <span>/book</span></div>
+          <div class="wholesale-savings">Retail $129 - You profit $97+</div>
+          <ul class="wholesale-features list-unstyled">
+            <li><i class="fas fa-check"></i> Everything in Professional</li>
+            <li><i class="fas fa-check"></i> White-label available</li>
+            <li><i class="fas fa-check"></i> Net-30 payment terms</li>
+            <li><i class="fas fa-check"></i> Dedicated account manager</li>
+            <li><i class="fas fa-check"></i> Bulk family packages</li>
+          </ul>
+          <button class="btn btn-secondary-unified w-100" onclick="scrollToForm()">
+            Contact Us
+          </button>
+        </div>
+      </div>
+
+      <!-- Profit Calculator - Memorial Books (hidden by default) -->
+      <div id="books-calculator" class="card-unified mb-5" style="display: none;">
+        <h4 class="mb-4"><i class="fas fa-calculator"></i> Profit Calculator - Memorial Books</h4>
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-3">If you sell memorial books at <strong>$99</strong> retail:</p>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Volume</th>
+                  <th>Your Cost</th>
+                  <th>Profit/Book</th>
+                  <th>Total Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>5 books</td>
+                  <td>$225</td>
+                  <td>$54</td>
+                  <td class="text-success fw-bold">$270</td>
+                </tr>
+                <tr>
+                  <td>15 books</td>
+                  <td>$570</td>
+                  <td>$61</td>
+                  <td class="text-success fw-bold">$915</td>
+                </tr>
+                <tr>
+                  <td>30 books</td>
+                  <td>$960</td>
+                  <td>$67</td>
+                  <td class="text-success fw-bold">$2,010</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <div class="bg-light p-4 rounded text-center">
+              <p class="mb-2"><strong>Premium Upsell Opportunity</strong></p>
+              <p class="text-muted small mb-3">Offer as a keepsake package with funeral arrangements</p>
+              <div class="display-6 text-primary fw-bold mb-2">80%+</div>
+              <p class="mb-0">of families say yes when offered at service planning</p>
+              <hr>
+              <p class="mb-0">Perfect for: <strong>visitations, memorial services, anniversaries</strong></p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -404,40 +514,62 @@ function scrollToForm() {
   document.getElementById('wholesale-form').scrollIntoView({ behavior: 'smooth' });
 }
 
-// Toggle between Physical Tags and Digital Licenses
+// Toggle between Physical Tags, Memorial Books, and Digital Licenses
 document.addEventListener('DOMContentLoaded', function() {
   const togglePhysical = document.getElementById('toggle-physical');
+  const toggleBooks = document.getElementById('toggle-books');
   const toggleDigital = document.getElementById('toggle-digital');
   const toggleDescription = document.getElementById('toggle-description');
 
   const physicalPricing = document.getElementById('physical-pricing');
+  const booksPricing = document.getElementById('books-pricing');
   const digitalPricing = document.getElementById('digital-pricing');
   const physicalCalculator = document.getElementById('physical-calculator');
+  const booksCalculator = document.getElementById('books-calculator');
   const digitalCalculator = document.getElementById('digital-calculator');
 
-  if (togglePhysical && toggleDigital) {
-    togglePhysical.addEventListener('click', function() {
-      togglePhysical.classList.add('btn-primary', 'active');
-      togglePhysical.classList.remove('btn-outline-primary');
-      toggleDigital.classList.remove('btn-primary', 'active');
-      toggleDigital.classList.add('btn-outline-primary');
+  function setActive(activeBtn) {
+    [togglePhysical, toggleBooks, toggleDigital].forEach(btn => {
+      if (btn === activeBtn) {
+        btn.classList.add('btn-primary', 'active');
+        btn.classList.remove('btn-outline-primary');
+      } else {
+        btn.classList.remove('btn-primary', 'active');
+        btn.classList.add('btn-outline-primary');
+      }
+    });
+  }
 
+  if (togglePhysical && toggleBooks && toggleDigital) {
+    togglePhysical.addEventListener('click', function() {
+      setActive(togglePhysical);
       physicalPricing.style.display = '';
+      booksPricing.style.display = 'none';
       digitalPricing.style.display = 'none';
       physicalCalculator.style.display = '';
+      booksCalculator.style.display = 'none';
       digitalCalculator.style.display = 'none';
       toggleDescription.textContent = 'Premium stainless steel tags shipped to you';
     });
 
-    toggleDigital.addEventListener('click', function() {
-      toggleDigital.classList.add('btn-primary', 'active');
-      toggleDigital.classList.remove('btn-outline-primary');
-      togglePhysical.classList.remove('btn-primary', 'active');
-      togglePhysical.classList.add('btn-outline-primary');
-
+    toggleBooks.addEventListener('click', function() {
+      setActive(toggleBooks);
       physicalPricing.style.display = 'none';
+      booksPricing.style.display = '';
+      digitalPricing.style.display = 'none';
+      physicalCalculator.style.display = 'none';
+      booksCalculator.style.display = '';
+      digitalCalculator.style.display = 'none';
+      toggleDescription.textContent = 'Beautiful hardcover memorial books for families';
+    });
+
+    toggleDigital.addEventListener('click', function() {
+      setActive(toggleDigital);
+      physicalPricing.style.display = 'none';
+      booksPricing.style.display = 'none';
       digitalPricing.style.display = '';
       physicalCalculator.style.display = 'none';
+      booksCalculator.style.display = 'none';
       digitalCalculator.style.display = '';
       toggleDescription.textContent = 'Vector QR codes for laser etching - no physical product';
     });

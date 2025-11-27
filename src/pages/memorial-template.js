@@ -66,8 +66,9 @@ function updateOpenGraphTags(data) {
     const baseUrl = 'https://www.headstonelegacy.com';
     const memorialUrl = `${baseUrl}/memorial?id=${data.id}`;
     const title = `${data.name || 'Memorial'} - Headstone Legacy`;
-    const description = data.story
-        ? data.story.substring(0, 160) + (data.story.length > 160 ? '...' : '')
+    const bioText = data.bio || data.story;
+    const description = bioText
+        ? bioText.substring(0, 160) + (bioText.length > 160 ? '...' : '')
         : `View the memorial page for ${data.name || 'a loved one'}. Light a candle, leave a tribute, and explore their life story.`;
     const image = data.main_photo || `${baseUrl}/images/og-image.jpg`;
 
@@ -198,9 +199,11 @@ function renderHeader(data) {
 
 function renderBio(data) {
     const bioCard = document.getElementById('bio-card');
-    if (data.story) {
+    // Check both 'bio' and 'story' fields for backwards compatibility
+    const bioText = data.bio || data.story;
+    if (bioText) {
         bioCard.style.display = 'block';
-        const escapedStory = escapeHtml(data.story).replace(/\n/g, '<br>');
+        const escapedStory = escapeHtml(bioText).replace(/\n/g, '<br>');
         bioCard.innerHTML = `
             <div class="card-body">
                 <h5 class="card-title"><i class="fas fa-book-open me-2"></i> Biography</h5>
@@ -234,11 +237,16 @@ function renderTimeline(data) {
         allEvents.forEach(item => {
             const age = calculateAge(data.birth_date, item.year);
             const ageDisplay = age !== null ? ` (Age ${age})` : '';
+            const isHistorical = item.type === 'historical';
+            const bulletIcon = isHistorical ? '<i class="fas fa-globe-americas"></i>' : '<i class="fas fa-star"></i>';
             timelineHTML += `
-                <li class="timeline-item ${item.type === 'historical' ? 'timeline-item-historical' : ''}">
-                    <div class="timeline-item-year">${item.year}${ageDisplay}</div>
-                    <p>${item.title || item.event}</p>
-                    ${item.description ? `<small class="text-muted">${item.description}</small>` : ''}
+                <li class="timeline-item ${isHistorical ? 'timeline-item-historical' : ''}">
+                    <div class="timeline-bullet">${bulletIcon}</div>
+                    <div class="timeline-content">
+                        <div class="timeline-item-year">${item.year}${ageDisplay}</div>
+                        <p>${escapeHtml(item.title || item.event)}</p>
+                        ${item.description ? `<small class="text-muted">${escapeHtml(item.description)}</small>` : ''}
+                    </div>
                 </li>
             `;
         });
@@ -278,21 +286,25 @@ function renderGallery(data) {
 function renderFamily(data) {
     const familyCard = document.getElementById('family-card');
     const relatives = data.relatives || [];
-    if (relatives.length > 0) {
+
+    // Only show relatives that are NOT linked to a memorial
+    // Linked relatives will appear in the Family Tree section instead
+    const unlinkedRelatives = relatives.filter(r => !r.memorialId);
+
+    if (unlinkedRelatives.length > 0) {
         familyCard.style.display = 'block';
         let familyHTML = `
             <div class="card-body">
                 <h5 class="card-title"><i class="fas fa-users me-2"></i> Family</h5>
                 <ul class="list-group list-group-flush">
         `;
-        relatives.forEach(relative => {
+        unlinkedRelatives.forEach(relative => {
             familyHTML += `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <strong>${escapeHtml(relative.name)}</strong><br>
                         <small class="text-muted">${escapeHtml(relative.relationship)}</small>
                     </div>
-                    ${relative.memorialId ? `<a href="/memorial?id=${relative.memorialId}" class="btn btn-sm btn-outline-secondary" data-route>View</a>` : ''}
                 </li>
             `;
         });
@@ -301,6 +313,97 @@ function renderFamily(data) {
     } else {
         familyCard.style.display = 'none';
     }
+}
+
+// Render connected memorials from the family tree
+async function renderFamilyTree(memorialId) {
+    const familyTreeCard = document.getElementById('family-tree-card');
+    const contentContainer = document.getElementById('family-tree-content');
+
+    if (!familyTreeCard || !contentContainer) return;
+
+    try {
+        const response = await fetch(`/api/connections/tree?memorialId=${encodeURIComponent(memorialId)}`);
+
+        if (!response.ok) {
+            familyTreeCard.style.display = 'none';
+            return;
+        }
+
+        const { connections, totalConnections } = await response.json();
+
+        if (totalConnections === 0) {
+            familyTreeCard.style.display = 'none';
+            return;
+        }
+
+        // Build HTML for each relationship category
+        let html = '';
+
+        const categories = [
+            { key: 'parents', title: 'Parents', icon: 'fa-user-tie' },
+            { key: 'spouse', title: 'Spouse', icon: 'fa-heart' },
+            { key: 'siblings', title: 'Siblings', icon: 'fa-user-friends' },
+            { key: 'children', title: 'Children', icon: 'fa-child' },
+            { key: 'grandparents', title: 'Grandparents', icon: 'fa-user-clock' },
+            { key: 'grandchildren', title: 'Grandchildren', icon: 'fa-baby' },
+            { key: 'other', title: 'Other Family', icon: 'fa-users' }
+        ];
+
+        categories.forEach(cat => {
+            const members = connections[cat.key];
+            if (members && members.length > 0) {
+                html += `
+                    <div class="family-tree-section">
+                        <div class="family-tree-section-title">
+                            <i class="fas ${cat.icon} me-2"></i>${cat.title}
+                        </div>
+                        <div class="family-tree-grid">
+                            ${members.map(member => renderFamilyMemberCard(member)).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        if (html) {
+            contentContainer.innerHTML = html;
+            familyTreeCard.style.display = 'block';
+        } else {
+            familyTreeCard.style.display = 'none';
+        }
+
+    } catch (error) {
+        console.error('Error loading family tree:', error);
+        familyTreeCard.style.display = 'none';
+    }
+}
+
+function renderFamilyMemberCard(member) {
+    const initial = member.name ? member.name[0].toUpperCase() : '?';
+    const dateRange = formatMemberDateRange(member.birthDate, member.deathDate);
+
+    return `
+        <a href="/memorial?id=${encodeURIComponent(member.memorialId)}" class="family-member-card" data-route>
+            ${member.photo
+                ? `<img src="${member.photo}" alt="${escapeHtml(member.name)}" class="family-member-photo">`
+                : `<div class="family-member-placeholder">${initial}</div>`
+            }
+            <div class="family-member-name">${escapeHtml(member.name)}</div>
+            <div class="family-member-relation">${escapeHtml(member.relationshipLabel || member.relationshipType)}</div>
+            ${dateRange ? `<div class="family-member-dates">${dateRange}</div>` : ''}
+        </a>
+    `;
+}
+
+function formatMemberDateRange(birthDate, deathDate) {
+    if (!birthDate && !deathDate) return '';
+
+    const birthYear = birthDate ? new Date(birthDate).getFullYear() : '?';
+    const deathYear = deathDate ? new Date(deathDate).getFullYear() : '?';
+
+    if (birthYear === '?' && deathYear === '?') return '';
+    return `${birthYear} - ${deathYear}`;
 }
 
 function renderResidences(data) {
@@ -330,11 +433,49 @@ function renderResidences(data) {
     }
 }
 
-function renderResidencesMap(data) {
+async function renderResidencesMap(data) {
     const residencesMapCard = document.getElementById('residences-map-card');
-    const geocodedResidences = (data.residences || [])
-        .filter(r => r.location && r.location.lat && r.location.lng)
-        .sort((a, b) => (getYear(a.startYear) || 0) - (getYear(b.startYear) || 0));
+    const residences = data.residences || [];
+
+    // Clean up existing map before creating a new one
+    if (residencesMap) {
+        try {
+            residencesMap.remove();
+        } catch (err) {
+            console.warn('Error cleaning up residences map:', err);
+        }
+        residencesMap = null;
+    }
+
+    if (residences.length === 0) {
+        residencesMapCard.style.display = 'none';
+        return;
+    }
+
+    // Get residences with locations, or geocode them on the fly
+    let geocodedResidences = residences.filter(r => r.location && r.location.lat && r.location.lng);
+
+    // If no residences have locations, try to geocode them
+    if (geocodedResidences.length === 0) {
+        for (const residence of residences) {
+            if (!residence.address) continue;
+            try {
+                const response = await fetch('/api/geo/geocode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: residence.address })
+                });
+                if (response.ok) {
+                    const { lat, lng } = await response.json();
+                    geocodedResidences.push({ ...residence, location: { lat, lng } });
+                }
+            } catch (e) {
+                console.warn('Could not geocode residence:', residence.address);
+            }
+        }
+    }
+
+    geocodedResidences = geocodedResidences.sort((a, b) => (getYear(a.startYear) || 0) - (getYear(b.startYear) || 0));
 
     if (geocodedResidences.length > 0) {
         residencesMapCard.style.display = 'block';
@@ -349,6 +490,11 @@ function renderResidencesMap(data) {
         }
 
         mapboxgl.accessToken = config.MAPBOX_ACCESS_TOKEN;
+
+        // Clear the container to prevent "should be empty" warning
+        const mapContainer = document.getElementById('residences-map-container');
+        if (mapContainer) mapContainer.innerHTML = '';
+
         residencesMap = new mapboxgl.Map({
             container: 'residences-map-container',
             style: 'mapbox://styles/mapbox/streets-v12',
@@ -374,31 +520,42 @@ function renderResidencesMap(data) {
             });
 
             if (coordinates.length > 1) {
-                residencesMap.addSource('route', {
-                    'type': 'geojson',
-                    'data': {
-                        'type': 'Feature',
-                        'properties': {},
-                        'geometry': {
-                            'type': 'LineString',
-                            'coordinates': coordinates
+                // Check if source already exists to prevent duplicate errors
+                if (!residencesMap.getSource('route')) {
+                    residencesMap.addSource('route', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'Feature',
+                            'properties': {},
+                            'geometry': {
+                                'type': 'LineString',
+                                'coordinates': coordinates
+                            }
                         }
-                    }
+                    });
+                    residencesMap.addLayer({
+                        'id': 'route',
+                        'type': 'line',
+                        'source': 'route',
+                        'layout': {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        'paint': {
+                            'line-color': '#005F60',
+                            'line-width': 3
+                        }
+                    });
+                }
+                // Fit bounds with generous padding to show all markers clearly
+                residencesMap.fitBounds(bounds, {
+                    padding: { top: 50, bottom: 50, left: 50, right: 50 },
+                    maxZoom: 12
                 });
-                residencesMap.addLayer({
-                    'id': 'route',
-                    'type': 'line',
-                    'source': 'route',
-                    'layout': {
-                        'line-join': 'round',
-                        'line-cap': 'round'
-                    },
-                    'paint': {
-                        'line-color': '#005F60',
-                        'line-width': 3
-                    }
-                });
-                residencesMap.fitBounds(bounds, { padding: 60 });
+            } else if (coordinates.length === 1) {
+                // Single marker - zoom to a reasonable level
+                residencesMap.setCenter(coordinates[0]);
+                residencesMap.setZoom(10);
             }
         });
     } else {
@@ -409,21 +566,40 @@ function renderResidencesMap(data) {
 function renderCemeteryMap(data) {
     const mapCard = document.getElementById('map-card');
 
-    // Priority: 1) cemetery_lat/lng, 2) location_lat/lng (from Scout mode), 3) none
-    let lat, lng, locationName;
+    // Clean up existing map before creating a new one
+    if (gravesiteMap) {
+        try {
+            gravesiteMap.remove();
+        } catch (err) {
+            console.warn('Error cleaning up cemetery map:', err);
+        }
+        gravesiteMap = null;
+    }
+
+    // Cemetery/base location (for blue marker) - Priority: cemetery_lat/lng, then location_lat/lng
+    let cemeteryLat, cemeteryLng, locationName;
 
     if (data.cemetery_lat && data.cemetery_lng) {
-        lat = data.cemetery_lat;
-        lng = data.cemetery_lng;
+        cemeteryLat = data.cemetery_lat;
+        cemeteryLng = data.cemetery_lng;
         locationName = data.cemetery_name || 'Cemetery Location';
     } else if (data.location_lat && data.location_lng) {
-        lat = data.location_lat;
-        lng = data.location_lng;
+        cemeteryLat = data.location_lat;
+        cemeteryLng = data.location_lng;
         locationName = data.cemetery_name || data.name || 'Memorial Location';
+    } else if (data.gravesite_lat && data.gravesite_lng) {
+        // Only gravesite available - use it as base
+        cemeteryLat = data.gravesite_lat;
+        cemeteryLng = data.gravesite_lng;
+        locationName = data.cemetery_name || 'Gravesite Location';
     } else {
         mapCard.style.display = 'none';
         return;
     }
+
+    // Use these for backwards compatibility with rest of function
+    const lat = cemeteryLat;
+    const lng = cemeteryLng;
 
     if (typeof mapboxgl === 'undefined') {
         console.error('Mapbox GL library is not loaded');
@@ -434,17 +610,37 @@ function renderCemeteryMap(data) {
 
     mapCard.style.display = 'block';
 
-    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    // Check if gravesite is pinned
+    const hasGravesite = data.gravesite_lat && data.gravesite_lng;
+
+    // Determine directions destination - use gravesite if available, otherwise cemetery
+    const directionsLat = hasGravesite ? data.gravesite_lat : lat;
+    const directionsLng = hasGravesite ? data.gravesite_lng : lng;
+    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${directionsLat},${directionsLng}`;
+
+    // Check if current user is a curator (for showing pin button)
+    const isCurator = currentUser && data.curator_ids?.includes(currentUser.id);
 
     mapCard.innerHTML = `
         <div class="card-body">
             <h5 class="card-title"><i class="fas fa-map-marked-alt me-2"></i> Cemetery Location</h5>
             ${data.cemetery_address ? `<p class="text-muted mb-2">${escapeHtml(data.cemetery_address)}</p>` : ''}
-            <div class="mb-2">
+            <div class="d-flex flex-wrap gap-2 mb-3">
                 <a href="${directionsUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-directions me-1"></i> Get Directions
                 </a>
+                ${isCurator ? `
+                    <button type="button" class="btn btn-sm ${hasGravesite ? 'btn-outline-success' : 'btn-outline-secondary'}" id="pin-gravesite-btn">
+                        <i class="fas fa-map-pin me-1"></i> ${hasGravesite ? 'Update Gravesite Pin' : 'Pin Exact Gravesite'}
+                    </button>
+                ` : ''}
             </div>
+            ${hasGravesite ? `
+                <div class="alert alert-success py-2 mb-3">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Exact gravesite pinned!</strong> The red pin shows the precise grave location.
+                </div>
+            ` : ''}
             <div id="cemetery-map-container" style="height: 350px; border-radius: 8px; overflow: hidden;"></div>
             <div id="nearby-memorials-container" class="mt-3"></div>
         </div>
@@ -453,26 +649,229 @@ function renderCemeteryMap(data) {
     mapboxgl.accessToken = config.MAPBOX_ACCESS_TOKEN;
 
     setTimeout(() => {
+        // Center on gravesite if available, otherwise cemetery
+        const centerLat = hasGravesite ? data.gravesite_lat : lat;
+        const centerLng = hasGravesite ? data.gravesite_lng : lng;
+
         gravesiteMap = new mapboxgl.Map({
             container: 'cemetery-map-container',
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [lng, lat],
-            zoom: 15
+            style: hasGravesite ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/streets-v12',
+            center: [centerLng, centerLat],
+            zoom: hasGravesite ? 18 : 15
         });
 
-        const markerColor = data.cemetery_lat ? '#dc3545' : '#0d6efd';
-        new mapboxgl.Marker({ color: markerColor })
+        // Cemetery marker (blue)
+        new mapboxgl.Marker({ color: '#0d6efd' })
             .setLngLat([lng, lat])
             .setPopup(
                 new mapboxgl.Popup({ offset: 25 })
-                    .setHTML(`<h6>${escapeHtml(locationName)}</h6>`)
+                    .setHTML(`<h6>${escapeHtml(locationName)}</h6><p class="mb-0 small">Cemetery entrance</p>`)
             )
             .addTo(gravesiteMap);
+
+        // Gravesite marker (red) if available
+        if (hasGravesite) {
+            new mapboxgl.Marker({ color: '#dc3545' })
+                .setLngLat([data.gravesite_lng, data.gravesite_lat])
+                .setPopup(
+                    new mapboxgl.Popup({ offset: 25 })
+                        .setHTML(`<h6>${escapeHtml(data.name || 'Gravesite')}</h6><p class="mb-0 small"><i class="fas fa-map-pin me-1"></i>Exact grave location</p>`)
+                )
+                .addTo(gravesiteMap);
+        }
 
         gravesiteMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
         findNearbyMemorials(lat, lng, data.id, data.cemetery_name);
     }, 100);
+
+    // Setup pin gravesite button handler
+    if (isCurator) {
+        document.getElementById('pin-gravesite-btn')?.addEventListener('click', () => {
+            openPinGravesiteModal(data.id, lat, lng, data.gravesite_lat, data.gravesite_lng);
+        });
+    }
+}
+
+// Modal for pinning gravesite from memorial page
+async function openPinGravesiteModal(memorialId, cemeteryLat, cemeteryLng, existingGravesiteLat, existingGravesiteLng) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('pinGravesiteModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'pinGravesiteModal';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-map-pin me-2 text-danger"></i>Pin Exact Gravesite</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="gravesite-options mb-3">
+                            <button type="button" class="btn btn-primary me-2" id="gravesite-use-gps">
+                                <i class="fas fa-crosshairs me-2"></i>Use My GPS
+                            </button>
+                            <span class="text-muted">or click on the map to place pin</span>
+                        </div>
+                        <div id="gravesite-modal-map" style="height: 400px; border-radius: 8px; overflow: hidden;"></div>
+                        <p class="text-muted small mt-2 mb-0" id="gravesite-modal-coords"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="save-gravesite-pin" disabled>
+                            <i class="fas fa-check me-2"></i>Save Location
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const bsModal = new bootstrap.Modal(modal);
+    let modalMap = null;
+    let tempMarker = null;
+    let tempLocation = null;
+
+    modal.addEventListener('shown.bs.modal', () => {
+        // Initialize map
+        const initialCenter = existingGravesiteLat
+            ? [existingGravesiteLng, existingGravesiteLat]
+            : [cemeteryLng, cemeteryLat];
+
+        modalMap = new mapboxgl.Map({
+            container: 'gravesite-modal-map',
+            style: 'mapbox://styles/mapbox/satellite-streets-v12',
+            center: initialCenter,
+            zoom: existingGravesiteLat ? 18 : 17
+        });
+
+        modalMap.addControl(new mapboxgl.NavigationControl());
+
+        // Show existing gravesite marker
+        if (existingGravesiteLat) {
+            tempLocation = { lat: existingGravesiteLat, lng: existingGravesiteLng };
+            tempMarker = new mapboxgl.Marker({ color: '#dc3545', draggable: true })
+                .setLngLat([existingGravesiteLng, existingGravesiteLat])
+                .addTo(modalMap);
+
+            tempMarker.on('dragend', () => {
+                const pos = tempMarker.getLngLat();
+                tempLocation = { lat: pos.lat, lng: pos.lng };
+                document.getElementById('gravesite-modal-coords').textContent = `${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
+                document.getElementById('save-gravesite-pin').disabled = false;
+            });
+
+            document.getElementById('gravesite-modal-coords').textContent = `${existingGravesiteLat.toFixed(6)}, ${existingGravesiteLng.toFixed(6)}`;
+            document.getElementById('save-gravesite-pin').disabled = false;
+        }
+
+        // Handle map click
+        modalMap.on('click', (e) => {
+            const { lng, lat } = e.lngLat;
+            tempLocation = { lat, lng };
+
+            if (tempMarker) tempMarker.remove();
+            tempMarker = new mapboxgl.Marker({ color: '#dc3545', draggable: true })
+                .setLngLat([lng, lat])
+                .addTo(modalMap);
+
+            tempMarker.on('dragend', () => {
+                const pos = tempMarker.getLngLat();
+                tempLocation = { lat: pos.lat, lng: pos.lng };
+                document.getElementById('gravesite-modal-coords').textContent = `${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
+            });
+
+            document.getElementById('gravesite-modal-coords').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            document.getElementById('save-gravesite-pin').disabled = false;
+        });
+
+        // GPS button handler
+        document.getElementById('gravesite-use-gps').onclick = async () => {
+            const gpsBtn = document.getElementById('gravesite-use-gps');
+            gpsBtn.disabled = true;
+            gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Getting GPS...';
+
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    });
+                });
+
+                const { latitude, longitude, accuracy } = position.coords;
+                tempLocation = { lat: latitude, lng: longitude, accuracy };
+
+                if (tempMarker) tempMarker.remove();
+                tempMarker = new mapboxgl.Marker({ color: '#dc3545', draggable: true })
+                    .setLngLat([longitude, latitude])
+                    .addTo(modalMap);
+
+                modalMap.flyTo({ center: [longitude, latitude], zoom: 18 });
+
+                const accuracyText = accuracy < 10 ? '(excellent)' : accuracy < 30 ? '(good)' : '(approximate)';
+                document.getElementById('gravesite-modal-coords').textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} ±${Math.round(accuracy)}m ${accuracyText}`;
+                document.getElementById('save-gravesite-pin').disabled = false;
+
+                showToast('GPS location captured!', 'success');
+            } catch (error) {
+                showToast('Could not get GPS location', 'error');
+            } finally {
+                gpsBtn.disabled = false;
+                gpsBtn.innerHTML = '<i class="fas fa-crosshairs me-2"></i>Use My GPS';
+            }
+        };
+
+        // Save button handler
+        document.getElementById('save-gravesite-pin').onclick = async () => {
+            if (!tempLocation) return;
+
+            const saveBtn = document.getElementById('save-gravesite-pin');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+            try {
+                const { error } = await supabase
+                    .from('memorials')
+                    .update({
+                        gravesite_lat: tempLocation.lat,
+                        gravesite_lng: tempLocation.lng,
+                        gravesite_accuracy: tempLocation.accuracy || null
+                    })
+                    .eq('id', memorialId);
+
+                if (error) throw error;
+
+                showToast('Gravesite location saved!', 'success');
+                bsModal.hide();
+
+                // Reload the page to show updated map
+                window.location.reload();
+            } catch (error) {
+                console.error('Error saving gravesite:', error);
+                showToast('Failed to save gravesite location', 'error');
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-check me-2"></i>Save Location';
+            }
+        };
+    }, { once: true });
+
+    // Cleanup on close
+    modal.addEventListener('hidden.bs.modal', () => {
+        if (modalMap) {
+            modalMap.remove();
+            modalMap = null;
+        }
+        if (tempMarker) {
+            tempMarker = null;
+        }
+    }, { once: true });
+
+    bsModal.show();
 }
 
 // Function to find nearby memorials (within ~500m)
@@ -1668,6 +2067,131 @@ function setupShareHandlers(memorialId, memorialData) {
 }
 
 
+// --- TAB MANAGEMENT ---
+function setupTabs(data) {
+    // Show/hide tabs based on content availability
+    const hasPhotos = data.photos && data.photos.length > 0;
+    const hasFamily = (data.relatives && data.relatives.length > 0);
+    const hasResidences = data.residences && data.residences.length > 0;
+    const hasCemetery = data.cemetery_lat || data.location_lat;
+    const hasPlaces = hasResidences || hasCemetery;
+
+    // Gallery tab
+    const galleryTabItem = document.getElementById('gallery-tab-item');
+    if (galleryTabItem) {
+        galleryTabItem.style.display = hasPhotos ? 'block' : 'none';
+    }
+
+    // Family tab - will also show if family tree has connections (checked after render)
+    const familyTabItem = document.getElementById('family-tab-item');
+    if (familyTabItem) {
+        familyTabItem.style.display = hasFamily ? 'block' : 'none';
+    }
+
+    // Places tab
+    const placesTabItem = document.getElementById('places-tab-item');
+    if (placesTabItem) {
+        placesTabItem.style.display = hasPlaces ? 'block' : 'none';
+    }
+
+    // Handle map resize when Places tab is shown
+    const placesTab = document.getElementById('places-tab');
+    if (placesTab) {
+        placesTab.addEventListener('shown.bs.tab', () => {
+            // Resize maps when tab becomes visible
+            setTimeout(() => {
+                if (residencesMap) {
+                    residencesMap.resize();
+                }
+                if (gravesiteMap) {
+                    gravesiteMap.resize();
+                }
+            }, 100);
+        });
+    }
+}
+
+// Update family tab visibility after family tree loads
+function updateFamilyTabVisibility() {
+    const familyTabItem = document.getElementById('family-tab-item');
+    const familyCard = document.getElementById('family-card');
+    const familyTreeCard = document.getElementById('family-tree-card');
+
+    const hasFamilyContent =
+        (familyCard && familyCard.style.display !== 'none') ||
+        (familyTreeCard && familyTreeCard.style.display !== 'none');
+
+    if (familyTabItem) {
+        familyTabItem.style.display = hasFamilyContent ? 'block' : 'none';
+    }
+}
+
+// --- QR CODE HANDLERS ---
+function setupQRCodeHandlers(memorialId, data) {
+    const qrModal = document.getElementById('qrCodeModal');
+    const qrContainer = document.getElementById('qr-code-container');
+    const orderTagBtn = document.getElementById('order-tag-btn');
+    const downloadQrBtn = document.getElementById('download-qr-btn');
+
+    if (!qrModal || !qrContainer) return;
+
+    // Set up Order Tag button href - use slug if available, otherwise ID
+    if (orderTagBtn) {
+        const tagIdentifier = data.slug || memorialId;
+        orderTagBtn.href = `/order-tag/${encodeURIComponent(tagIdentifier)}`;
+    }
+
+    // Set up Order Book button href
+    const orderBookBtn = document.getElementById('order-book-btn');
+    if (orderBookBtn) {
+        const bookIdentifier = data.slug || memorialId;
+        orderBookBtn.href = `/order-book/${encodeURIComponent(bookIdentifier)}`;
+    }
+
+    let qrGenerated = false;
+
+    // Generate QR code when modal is shown
+    qrModal.addEventListener('shown.bs.modal', () => {
+        if (qrGenerated) return; // Only generate once
+
+        // Clear container
+        qrContainer.innerHTML = '';
+
+        // Generate QR code pointing to the welcome page
+        const welcomeUrl = `https://www.headstonelegacy.com/welcome?id=${memorialId}`;
+
+        // Use QRCode.js library (loaded in index.html)
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(qrContainer, {
+                text: welcomeUrl,
+                width: 200,
+                height: 200,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            qrGenerated = true;
+        } else {
+            qrContainer.innerHTML = '<p class="text-danger">QR Code library not loaded</p>';
+        }
+    });
+
+    // Download QR code button
+    if (downloadQrBtn) {
+        downloadQrBtn.addEventListener('click', () => {
+            const canvas = qrContainer.querySelector('canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = `${data.name || 'memorial'}-qrcode.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } else {
+                showToast('Please wait for QR code to generate', 'warning');
+            }
+        });
+    }
+}
+
 // --- PAGE INITIALIZATION ---
 async function initializePage(appRoot, memorialId) {
     // Store memorial ID for candle functions
@@ -1698,8 +2222,17 @@ async function initializePage(appRoot, memorialId) {
     renderGallery(data);
     renderFamily(data);
     renderResidences(data);
-    renderResidencesMap(data);
     renderCemeteryMap(data);
+
+    // Set up tabs before async operations
+    setupTabs(data);
+
+    // Load family tree and update tab visibility
+    await renderFamilyTree(memorialId);
+    updateFamilyTabVisibility();
+
+    // Render residence map (async geocoding)
+    await renderResidencesMap(data);
 
     // Store memorial data for reminder functions
     currentMemorialData = data;
@@ -1730,6 +2263,9 @@ async function initializePage(appRoot, memorialId) {
     // Set up share handlers
     setupShareHandlers(memorialId, data);
 
+    // Set up QR code handlers
+    setupQRCodeHandlers(memorialId, data);
+
     document.getElementById('memorial-layout-container').style.display = 'block';
     document.getElementById('no-memorial-message').style.display = 'none';
 
@@ -1749,6 +2285,7 @@ async function initializePage(appRoot, memorialId) {
             renderGallery(updatedData);
             renderFamily(updatedData);
             renderResidences(updatedData);
+            setupTabs(updatedData);
         })
         .subscribe();
 }

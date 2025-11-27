@@ -823,6 +823,123 @@ async function generateQRCode(orderId, memorialId) {
     }
 }
 
+// ==================== QR GENERATOR ====================
+async function loadQRGeneratorMemorials() {
+    const select = document.getElementById('qr-memorial-select');
+    if (!select) return;
+
+    try {
+        const { data, error } = await supabase
+            .from('memorials')
+            .select('id, name')
+            .order('name', { ascending: true });
+
+        if (error) throw error;
+
+        // Keep the placeholder option
+        select.innerHTML = '<option value="">-- Select a memorial --</option>';
+
+        if (data && data.length > 0) {
+            data.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m.id;
+                option.textContent = m.name || 'Unnamed Memorial';
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading memorials for QR generator:', error);
+    }
+}
+
+function updateQRGenerateButton() {
+    const select = document.getElementById('qr-memorial-select');
+    const manualInput = document.getElementById('qr-manual-id');
+    const generateBtn = document.getElementById('generate-branded-qr-btn');
+    const infoDiv = document.getElementById('qr-memorial-info');
+    const urlPreview = document.getElementById('qr-url-preview');
+
+    const memorialId = select?.value || manualInput?.value?.trim();
+
+    if (generateBtn) {
+        generateBtn.disabled = !memorialId;
+    }
+
+    if (memorialId) {
+        if (infoDiv) infoDiv.style.display = '';
+        if (urlPreview) urlPreview.textContent = `https://www.headstonelegacy.com/memorial?id=${memorialId}`;
+    } else {
+        if (infoDiv) infoDiv.style.display = 'none';
+    }
+}
+
+async function generateBrandedQR() {
+    const select = document.getElementById('qr-memorial-select');
+    const manualInput = document.getElementById('qr-manual-id');
+    const memorialId = select?.value || manualInput?.value?.trim();
+
+    if (!memorialId) {
+        showToast('Please select a memorial or enter an ID', 'error');
+        return;
+    }
+
+    const placeholder = document.getElementById('qr-preview-placeholder');
+    const loading = document.getElementById('qr-preview-loading');
+    const result = document.getElementById('qr-preview-result');
+    const previewImg = document.getElementById('qr-preview-image');
+    const downloadLink = document.getElementById('qr-download-link');
+    const generateBtn = document.getElementById('generate-branded-qr-btn');
+
+    // Show loading state
+    if (placeholder) placeholder.style.display = 'none';
+    if (result) result.style.display = 'none';
+    if (loading) loading.style.display = '';
+    if (generateBtn) {
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+    }
+
+    try {
+        // Call the branded QR API
+        const response = await fetch(`/api/tools/generate-branded-qr?id=${encodeURIComponent(memorialId)}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to generate QR code');
+        }
+
+        // Get the blob from response
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
+
+        // Update preview
+        if (previewImg) previewImg.src = imageUrl;
+        if (downloadLink) {
+            downloadLink.href = imageUrl;
+            downloadLink.download = `headstone-legacy-qr-${memorialId}.png`;
+        }
+
+        // Show result
+        if (loading) loading.style.display = 'none';
+        if (result) result.style.display = '';
+
+        showToast('QR code generated successfully!', 'success');
+
+    } catch (error) {
+        console.error('Error generating branded QR:', error);
+        showToast('Error generating QR code: ' + error.message, 'error');
+
+        // Reset to placeholder
+        if (loading) loading.style.display = 'none';
+        if (placeholder) placeholder.style.display = '';
+    } finally {
+        if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="fas fa-qrcode me-2"></i>Generate QR Code';
+        }
+        updateQRGenerateButton();
+    }
+}
+
 // ==================== NOTES ====================
 async function loadNotes(filter = 'all') {
     const notesList = document.getElementById('notes-list');
@@ -1011,6 +1128,28 @@ function setupEventHandlers() {
         if (shippedBtn) markOrderShipped(shippedBtn.dataset.id);
         if (generateBtn) generateQRCode(generateBtn.dataset.id, generateBtn.dataset.memorial);
     });
+
+    // QR Generator tab
+    document.getElementById('qr-generator-tab')?.addEventListener('shown.bs.tab', () => {
+        loadQRGeneratorMemorials();
+    });
+
+    // QR Generator controls
+    document.getElementById('qr-memorial-select')?.addEventListener('change', () => {
+        // Clear manual input when dropdown is used
+        const manualInput = document.getElementById('qr-manual-id');
+        if (manualInput) manualInput.value = '';
+        updateQRGenerateButton();
+    });
+
+    document.getElementById('qr-manual-id')?.addEventListener('input', () => {
+        // Clear dropdown when manual input is used
+        const select = document.getElementById('qr-memorial-select');
+        if (select) select.value = '';
+        updateQRGenerateButton();
+    });
+
+    document.getElementById('generate-branded-qr-btn')?.addEventListener('click', generateBrandedQR);
 }
 
 // ==================== MAIN EXPORT ====================

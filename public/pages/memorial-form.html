@@ -7,7 +7,7 @@
             <div class="wizard-progress">
                 <div class="wizard-progress-step" data-step="1">
                     <div class="step-number">1</div>
-                    <span class="step-label">Essentials</span>
+                    <span class="step-label">Person</span>
                 </div>
                 <div class="wizard-progress-step" data-step="2">
                     <div class="step-number">2</div>
@@ -15,7 +15,7 @@
                 </div>
                 <div class="wizard-progress-step" data-step="3">
                     <div class="step-number">3</div>
-                    <span class="step-label">Media</span>
+                    <span class="step-label">Photos</span>
                 </div>
                 <div class="wizard-progress-step" data-step="4">
                     <div class="step-number">4</div>
@@ -23,64 +23,19 @@
                 </div>
                 <div class="wizard-progress-step" data-step="5">
                     <div class="step-number">5</div>
-                    <span class="step-label">Advanced</span>
+                    <span class="step-label">Location</span>
                 </div>
             </div>
         </div>
 
-        <!-- Step 1: Essentials -->
+        <!-- Step 1: Person (Basic Info) -->
         <div class="wizard-step" data-step="1">
-            <!-- Headstone Photo -->
-            <div class="headstone-photo-card">
-                <div class="headstone-photo-header">
-                    <div class="headstone-photo-icon">
-                        <i class="fas fa-monument"></i>
-                    </div>
-                    <div class="headstone-photo-title">
-                        <h5>Headstone Photo</h5>
-                        <p>Capture the headstone or grave marker (optional)</p>
-                    </div>
-                </div>
-                <div class="headstone-photo-body">
-                    <div class="headstone-upload-area" id="headstone-upload-area">
-                        <input type="file" id="headstone-photo-input" accept="image/*" class="headstone-file-input">
-                        <div class="headstone-upload-content" id="headstone-upload-content">
-                            <i class="fas fa-camera"></i>
-                            <span>Tap to take or choose photo</span>
-                        </div>
-                        <img id="headstone-preview" class="headstone-preview-img d-none" alt="Headstone preview">
-                    </div>
-                    <button type="button" class="headstone-remove-btn d-none" id="headstone-remove-btn">
-                        <i class="fas fa-times"></i> Remove Photo
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tier Selection -->
-            <div class="form-section">
-                <h4 class="section-title" id="memorial-tier-heading">Choose a Memorial Tier</h4>
-                <div class="tier-select">
-                    <label class="tier-card">
-                        <input type="radio" name="tier" value="memorial" class="d-none" required>
-                        <div class="tier-name">Memorial</div>
-                        <p class="tier-desc">A beautiful page with biography, photos, and tributes.</p>
-                    </label>
-                    <label class="tier-card">
-                        <input type="radio" name="tier" value="storyteller" class="d-none" required>
-                        <div class="tier-name">Storyteller <span class="tier-badge">Popular</span></div>
-                        <p class="tier-desc">Adds an interactive timeline and enhanced styling.</p>
-                    </label>
-                    <label class="tier-card">
-                        <input type="radio" name="tier" value="historian" class="d-none" required>
-                        <div class="tier-name">Historian</div>
-                        <p class="tier-desc">Includes mapping, family tree, and a digital archive.</p>
-                    </label>
-                </div>
-            </div>
+            <!-- Hidden tier field - everyone gets full features -->
+            <input type="hidden" name="tier" value="historian">
 
             <!-- Basic Information -->
             <div class="form-section">
-                <h4 class="section-title">Basic Information</h4>
+                <h4 class="section-title"><i class="fas fa-user me-2"></i>About This Person</h4>
                 <div class="form-grid">
                     <div class="form-group full-width">
                         <label for="memorial-name" class="form-label">Full Name</label>
@@ -101,30 +56,6 @@
                 </div>
             </div>
 
-            <!-- Cemetery Location -->
-            <div class="form-section">
-                <h4 class="section-title"><i class="fas fa-map-marker-alt me-2"></i>Cemetery Location</h4>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="memorial-cemetery-name" class="form-label">Cemetery Name</label>
-                        <input type="text" class="form-control" id="memorial-cemetery-name" placeholder="Enter cemetery name">
-                    </div>
-                    <div class="form-group">
-                        <label for="memorial-cemetery-address" class="form-label">Cemetery Address</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="memorial-cemetery-address" placeholder="Full address including city, state">
-                            <button class="btn btn-outline-primary" type="button" id="use-my-location-btn" title="Use current GPS location">
-                                <i class="fas fa-crosshairs"></i>
-                            </button>
-                            <button class="btn btn-outline-secondary" type="button" id="geocode-cemetery-btn">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </button>
-                        </div>
-                        <small class="text-muted" id="geocode-status"></small>
-                    </div>
-                </div>
-                <div id="cemetery-map-preview" class="map-preview"></div>
-            </div>
         </div>
 
         <!-- Step 2: Story -->
@@ -132,6 +63,21 @@
             <div class="form-section">
                 <h4 class="section-title"><i class="fas fa-book-open me-2"></i>Biography / Life Story</h4>
                 <p class="section-subtitle">Share their story, memories, and what made them special</p>
+
+                <!-- AI Biography Helper Button -->
+                <div class="bio-helper-prompt mb-3">
+                    <div class="bio-helper-card" id="open-bio-helper-btn">
+                        <div class="bio-helper-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <div class="bio-helper-content">
+                            <strong>Need help writing?</strong>
+                            <p class="mb-0 small text-muted">Answer a few questions and let AI craft a beautiful biography</p>
+                        </div>
+                        <i class="fas fa-chevron-right bio-helper-arrow"></i>
+                    </div>
+                </div>
+
                 <textarea id="memorial-story" class="form-control story-textarea" rows="12" placeholder="Write their story here..."></textarea>
             </div>
         </div>
@@ -170,10 +116,117 @@
                     Add Family Member
                 </button>
             </div>
+
+            <!-- Collaborators Section (only shows when editing) -->
+            <div class="form-section" id="collaborators-section" style="display: none;">
+                <h4 class="section-title"><i class="fas fa-user-friends me-2"></i>Invite Family to Contribute</h4>
+                <p class="section-subtitle">Let family members add photos, stories, and memories</p>
+
+                <!-- Invite Form -->
+                <div class="collaborator-invite-form mb-4">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="invite-email" placeholder="family@example.com">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" id="invite-role">
+                                <option value="contributor">Contributor - Can add photos & stories</option>
+                                <option value="editor">Editor - Can edit memorial details</option>
+                                <option value="viewer">Viewer - Read-only access</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-primary w-100" id="send-invite-btn">
+                                <i class="fas fa-paper-plane me-1"></i>Send Invite
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collaborators List -->
+                <div id="collaborators-list">
+                    <div id="collaborators-loading" class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                        <span class="ms-2 text-muted">Loading collaborators...</span>
+                    </div>
+                    <div id="collaborators-empty" class="text-center py-4" style="display: none;">
+                        <i class="fas fa-user-plus fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No collaborators yet. Invite family members above!</p>
+                    </div>
+                    <div id="collaborators-container"></div>
+                </div>
+            </div>
         </div>
 
-        <!-- Step 5: Advanced (Historian Tier) -->
+        <!-- Step 5: Location -->
         <div class="wizard-step" data-step="5">
+            <!-- Cemetery Location -->
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-map-marker-alt me-2"></i>Cemetery Location</h4>
+                <p class="section-subtitle">Where is this person laid to rest? (Optional - you can add this later)</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="memorial-cemetery-name" class="form-label">Cemetery Name</label>
+                        <input type="text" class="form-control" id="memorial-cemetery-name" placeholder="Enter cemetery name">
+                    </div>
+                    <div class="form-group">
+                        <label for="memorial-cemetery-address" class="form-label">Cemetery Address</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="memorial-cemetery-address" placeholder="Full address including city, state">
+                            <button class="btn btn-outline-primary" type="button" id="use-my-location-btn" title="Use current GPS location">
+                                <i class="fas fa-crosshairs"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" type="button" id="geocode-cemetery-btn">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted" id="geocode-status"></small>
+                    </div>
+                </div>
+                <div id="cemetery-map-preview" class="map-preview"></div>
+
+                <!-- Gravesite Pin Section -->
+                <div class="gravesite-pin-section mt-4" id="gravesite-pin-section">
+                    <h5 class="section-subtitle"><i class="fas fa-map-pin me-2 text-danger"></i>Exact Gravesite Location <span class="badge bg-secondary ms-2">Optional</span></h5>
+                    <p class="text-muted small">Pin the exact location of the grave to help visitors find it within the cemetery.</p>
+
+                    <div class="gravesite-status-card" id="gravesite-status-card">
+                        <div id="gravesite-not-set" class="gravesite-status">
+                            <i class="fas fa-map-marker-alt text-muted fa-2x mb-2"></i>
+                            <p class="mb-2">No gravesite pin set</p>
+                            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                <button type="button" class="btn btn-primary" id="set-gravesite-gps-btn">
+                                    <i class="fas fa-crosshairs me-2"></i>Use My GPS
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="set-gravesite-map-btn">
+                                    <i class="fas fa-hand-pointer me-2"></i>Pick on Map
+                                </button>
+                            </div>
+                        </div>
+                        <div id="gravesite-is-set" class="gravesite-status" style="display: none;">
+                            <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                            <p class="mb-1 fw-bold text-success">Gravesite pinned!</p>
+                            <p class="small text-muted mb-2" id="gravesite-coords"></p>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="update-gravesite-btn">
+                                    <i class="fas fa-sync-alt me-1"></i>Update
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="remove-gravesite-btn">
+                                    <i class="fas fa-times me-1"></i>Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden inputs for gravesite coordinates -->
+                    <input type="hidden" id="gravesite-lat" name="gravesite_lat">
+                    <input type="hidden" id="gravesite-lng" name="gravesite_lng">
+                    <input type="hidden" id="gravesite-accuracy" name="gravesite_accuracy">
+                </div>
+            </div>
+
             <!-- Life Journey / Residences -->
             <div class="form-section">
                 <h4 class="section-title"><i class="fas fa-route me-2"></i>Life Journey</h4>
@@ -285,6 +338,167 @@
                         </a>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Biography Helper Modal -->
+<div class="modal fade" id="bioHelperModal" tabindex="-1" aria-labelledby="bioHelperModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title" id="bioHelperModalLabel">
+                        <i class="fas fa-magic text-primary me-2"></i>Biography Helper
+                    </h5>
+                    <p class="text-muted small mb-0">Answer a few questions to generate a heartfelt biography</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Progress indicator -->
+                <div class="bio-helper-progress mb-4">
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar bg-primary" id="bio-helper-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="bio-helper-progress-text">0 of 6 questions answered</small>
+                </div>
+
+                <!-- Person's name display -->
+                <div class="alert alert-light border mb-4" id="bio-helper-name-display">
+                    <strong>Writing biography for:</strong> <span id="bio-helper-person-name">-</span>
+                </div>
+
+                <!-- Guided prompts -->
+                <div class="bio-helper-prompts">
+                    <div class="bio-prompt-card" data-prompt="family">
+                        <div class="bio-prompt-header">
+                            <i class="fas fa-users text-primary"></i>
+                            <span>Who were the important people in their life?</span>
+                        </div>
+                        <textarea class="form-control bio-prompt-input" id="bio-prompt-family" rows="2" placeholder="e.g., Married to Jane for 45 years, father of three children (Mike, Sarah, Tom), grandfather of 7..."></textarea>
+                    </div>
+
+                    <div class="bio-prompt-card" data-prompt="career">
+                        <div class="bio-prompt-header">
+                            <i class="fas fa-briefcase text-warning"></i>
+                            <span>What did they do for work?</span>
+                        </div>
+                        <textarea class="form-control bio-prompt-input" id="bio-prompt-career" rows="2" placeholder="e.g., Worked as a carpenter for 30 years, owned a small bakery, was a dedicated nurse..."></textarea>
+                    </div>
+
+                    <div class="bio-prompt-card" data-prompt="earlylife">
+                        <div class="bio-prompt-header">
+                            <i class="fas fa-graduation-cap text-info"></i>
+                            <span>Where did they grow up and go to school?</span>
+                        </div>
+                        <textarea class="form-control bio-prompt-input" id="bio-prompt-earlylife" rows="2" placeholder="e.g., Born in Chicago, grew up on a farm in Iowa, graduated from Lincoln High School..."></textarea>
+                    </div>
+
+                    <div class="bio-prompt-card" data-prompt="hobbies">
+                        <div class="bio-prompt-header">
+                            <i class="fas fa-heart text-danger"></i>
+                            <span>What did they love doing?</span>
+                        </div>
+                        <textarea class="form-control bio-prompt-input" id="bio-prompt-hobbies" rows="2" placeholder="e.g., Fishing every Sunday, tending the garden, woodworking, cooking for the family..."></textarea>
+                    </div>
+
+                    <div class="bio-prompt-card" data-prompt="personality">
+                        <div class="bio-prompt-header">
+                            <i class="fas fa-smile text-success"></i>
+                            <span>How would friends and family describe them?</span>
+                        </div>
+                        <textarea class="form-control bio-prompt-input" id="bio-prompt-personality" rows="2" placeholder="e.g., Always had a joke ready, generous to a fault, never met a stranger, strong and quiet..."></textarea>
+                    </div>
+
+                    <div class="bio-prompt-card" data-prompt="community">
+                        <div class="bio-prompt-header">
+                            <i class="fas fa-hands-helping text-secondary"></i>
+                            <span>Were they involved in church, military, or community?</span>
+                        </div>
+                        <textarea class="form-control bio-prompt-input" id="bio-prompt-community" rows="2" placeholder="e.g., Deacon at First Baptist, Army veteran (Vietnam), volunteer firefighter, Rotary member..."></textarea>
+                    </div>
+
+                    <div class="bio-prompt-card" data-prompt="remember">
+                        <div class="bio-prompt-header">
+                            <i class="fas fa-star text-warning"></i>
+                            <span>What will you miss most about them?</span>
+                        </div>
+                        <textarea class="form-control bio-prompt-input" id="bio-prompt-remember" rows="2" placeholder="e.g., His Sunday morning pancakes, her warm hugs, the way he could fix anything..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Generated biography preview -->
+                <div class="bio-preview-section mt-4" id="bio-preview-section" style="display: none;">
+                    <h6 class="fw-bold mb-2"><i class="fas fa-file-alt me-2"></i>Generated Biography <small class="text-muted fw-normal">(edit as needed)</small></h6>
+                    <textarea class="form-control" id="bio-preview-content" rows="8" style="resize: vertical;"></textarea>
+                </div>
+
+                <!-- Error display -->
+                <div class="alert alert-danger mt-3" id="bio-helper-error" style="display: none;"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="generate-bio-btn">
+                    <i class="fas fa-magic me-2"></i>Generate Biography
+                </button>
+                <button type="button" class="btn btn-success" id="use-bio-btn" style="display: none;">
+                    <i class="fas fa-check me-2"></i>Use This Biography
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Memorial Search Modal (for linking family members) -->
+<div class="modal fade" id="memorialSearchModal" tabindex="-1" aria-labelledby="memorialSearchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="memorialSearchModalLabel">
+                    <i class="fas fa-link text-primary me-2"></i>Link to Memorial
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Search for an existing memorial to create a family connection</p>
+
+                <!-- Search input -->
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="memorial-search-input" placeholder="Search by name..." autocomplete="off">
+                </div>
+
+                <!-- Search results -->
+                <div id="memorial-search-results" class="memorial-search-results">
+                    <div class="search-empty-state text-center py-4 text-muted">
+                        <i class="fas fa-users fa-2x mb-2 opacity-50"></i>
+                        <p class="mb-0">Type a name to search existing memorials</p>
+                    </div>
+                </div>
+
+                <!-- Currently selected -->
+                <div id="memorial-search-selected" class="memorial-search-selected d-none">
+                    <label class="form-label small text-muted">Selected Memorial:</label>
+                    <div class="selected-memorial-card">
+                        <img id="selected-memorial-photo" src="" alt="" class="selected-memorial-photo">
+                        <div class="selected-memorial-info">
+                            <strong id="selected-memorial-name"></strong>
+                            <small id="selected-memorial-dates" class="text-muted d-block"></small>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="clear-memorial-selection">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <input type="hidden" id="selected-memorial-id">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-memorial-link-btn" disabled>
+                    <i class="fas fa-link me-2"></i>Link Memorial
+                </button>
             </div>
         </div>
     </div>

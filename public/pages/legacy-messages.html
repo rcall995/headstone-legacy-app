@@ -1,0 +1,355 @@
+<link rel="stylesheet" href="/css/legacy-messages.css">
+
+<div class="page-wrapper">
+    <section class="page-hero">
+        <div class="container">
+            <h1 class="page-hero-title">Legacy Messages</h1>
+            <p class="page-hero-subtitle">Schedule heartfelt messages to be delivered to loved ones on special occasions</p>
+        </div>
+    </section>
+
+    <!-- Memorial Selector (shows when no memorial is selected) -->
+    <section class="memorial-select-section" id="memorial-selector-section">
+        <div class="container">
+            <h2 class="section-title">Select a Memorial</h2>
+            <p class="section-subtitle">Choose which memorial to manage legacy messages for</p>
+            <div id="memorial-list-container">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted mt-2">Loading your memorials...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Messages Management (shows when memorial is selected) -->
+    <section class="messages-section" id="messages-section" style="display: none;">
+        <div class="container">
+            <!-- Memorial Header -->
+            <div class="memorial-header-card mb-4">
+                <div class="memorial-header-photo">
+                    <img id="selected-memorial-photo" src="" alt="">
+                    <div class="memorial-header-placeholder" id="photo-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                <div class="memorial-header-info">
+                    <h2 id="selected-memorial-name">Memorial Name</h2>
+                    <p id="selected-memorial-dates" class="text-muted"></p>
+                    <a href="#" id="change-memorial-link" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-exchange-alt me-1"></i>Change Memorial
+                    </a>
+                </div>
+            </div>
+
+            <!-- Feature Introduction -->
+            <div class="feature-intro-card mb-4">
+                <div class="feature-intro-icon">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <div class="feature-intro-content">
+                    <h3>Messages That Transcend Time</h3>
+                    <p>Create heartfelt messages to be delivered on birthdays, anniversaries, graduations, or any special moment. Your words will continue to touch hearts for generations to come.</p>
+                </div>
+            </div>
+
+            <!-- Message Type Tabs -->
+            <div class="message-type-tabs">
+                <button class="type-tab active" data-type="all">
+                    <i class="fas fa-inbox"></i>
+                    <span>All Messages</span>
+                    <span class="badge" id="count-all">0</span>
+                </button>
+                <button class="type-tab" data-type="milestone">
+                    <i class="fas fa-birthday-cake"></i>
+                    <span>Milestones</span>
+                    <span class="badge" id="count-milestone">0</span>
+                </button>
+                <button class="type-tab" data-type="anniversary">
+                    <i class="fas fa-heart"></i>
+                    <span>Anniversaries</span>
+                    <span class="badge" id="count-anniversary">0</span>
+                </button>
+                <button class="type-tab" data-type="wisdom">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Wisdom</span>
+                    <span class="badge" id="count-wisdom">0</span>
+                </button>
+                <button class="type-tab" data-type="conditional">
+                    <i class="fas fa-lock"></i>
+                    <span>Conditional</span>
+                    <span class="badge" id="count-conditional">0</span>
+                </button>
+            </div>
+
+            <!-- Messages List -->
+            <div class="messages-container">
+                <div id="messages-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="text-muted mt-2">Loading messages...</p>
+                </div>
+
+                <div id="messages-empty" class="empty-state" style="display: none;">
+                    <i class="fas fa-envelope-open fa-3x text-muted mb-3"></i>
+                    <h4>No Messages Yet</h4>
+                    <p class="text-muted">Create your first legacy message to start preserving your words for future generations.</p>
+                    <button class="btn btn-primary btn-lg" id="create-first-message-btn">
+                        <i class="fas fa-plus-circle me-2"></i>Create Your First Message
+                    </button>
+                </div>
+
+                <div id="messages-list"></div>
+            </div>
+
+            <!-- Floating Add Button -->
+            <button class="fab-button" id="create-message-btn" title="Create New Message">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    </section>
+</div>
+
+<!-- Create/Edit Message Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalLabel">
+                    <i class="fas fa-envelope text-primary me-2"></i>Create Legacy Message
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="message-form">
+                    <input type="hidden" id="message-id">
+
+                    <!-- Message Type Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Message Type</label>
+                        <div class="message-type-grid">
+                            <label class="message-type-option">
+                                <input type="radio" name="messageType" value="milestone" checked>
+                                <div class="option-content">
+                                    <i class="fas fa-birthday-cake"></i>
+                                    <span class="option-title">Milestone</span>
+                                    <span class="option-desc">Birthdays, graduations, weddings</span>
+                                </div>
+                            </label>
+                            <label class="message-type-option">
+                                <input type="radio" name="messageType" value="anniversary">
+                                <div class="option-content">
+                                    <i class="fas fa-heart"></i>
+                                    <span class="option-title">Anniversary</span>
+                                    <span class="option-desc">Annual remembrance dates</span>
+                                </div>
+                            </label>
+                            <label class="message-type-option">
+                                <input type="radio" name="messageType" value="wisdom">
+                                <div class="option-content">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <span class="option-title">Wisdom</span>
+                                    <span class="option-desc">Life advice and lessons</span>
+                                </div>
+                            </label>
+                            <label class="message-type-option">
+                                <input type="radio" name="messageType" value="conditional">
+                                <div class="option-content">
+                                    <i class="fas fa-lock"></i>
+                                    <span class="option-title">Conditional</span>
+                                    <span class="option-desc">Family triggers when ready</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Recipient Information -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <i class="fas fa-user me-2"></i>Recipient
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="recipient-name" placeholder="e.g., Sarah" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Relationship</label>
+                                    <input type="text" class="form-control" id="recipient-relationship" placeholder="e.g., daughter, grandson, friend">
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="recipient-email" placeholder="their.email@example.com" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Phone (optional)</label>
+                                    <input type="tel" class="form-control" id="recipient-phone" placeholder="555-123-4567">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Content -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <i class="fas fa-pen me-2"></i>Message
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Subject Line <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="message-subject" placeholder="e.g., Happy 18th Birthday, My Dear Sarah" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Your Message <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="message-content" rows="8" placeholder="Write your heartfelt message here. This will be exactly what your loved one receives..." required></textarea>
+                                <small class="text-muted">Tip: Speak from the heart. Share memories, advice, or simply let them know how much they mean to you.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Settings - Scheduled -->
+                    <div class="card mb-4" id="delivery-scheduled-card">
+                        <div class="card-header bg-light">
+                            <i class="fas fa-calendar-alt me-2"></i>Delivery Date
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Delivery Type</label>
+                                    <select class="form-select" id="delivery-type">
+                                        <option value="scheduled">One-time (specific date)</option>
+                                        <option value="recurring">Annual (every year on this date)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6" id="scheduled-date-group">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="scheduled-date">
+                                </div>
+                                <div class="col-md-3" id="recurring-month-group" style="display: none;">
+                                    <label class="form-label">Month</label>
+                                    <select class="form-select" id="recurring-month">
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3" id="recurring-day-group" style="display: none;">
+                                    <label class="form-label">Day</label>
+                                    <select class="form-select" id="recurring-day">
+                                        <!-- Days 1-31 will be added by JS -->
+                                    </select>
+                                </div>
+                                <div class="col-12" id="recurring-description-group" style="display: none;">
+                                    <label class="form-label">Occasion</label>
+                                    <input type="text" class="form-control" id="recurring-description" placeholder="e.g., Sarah's Birthday">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Settings - Conditional -->
+                    <div class="card mb-4" id="delivery-conditional-card" style="display: none;">
+                        <div class="card-header bg-light">
+                            <i class="fas fa-lock me-2"></i>Trigger Conditions
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">Conditional messages are held until a family member manually releases them. Perfect for messages about specific life events.</p>
+                            <div class="mb-3">
+                                <label class="form-label">When should this message be delivered?</label>
+                                <input type="text" class="form-control" id="trigger-condition" placeholder="e.g., When Sarah gets engaged, When my grandson graduates college">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Trigger Keywords (optional)</label>
+                                <input type="text" class="form-control" id="trigger-keywords" placeholder="e.g., engagement, married, wedding">
+                                <small class="text-muted">Comma-separated. Family can use these keywords to trigger the message.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save as Draft Option -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="save-as-draft">
+                        <label class="form-check-label" for="save-as-draft">
+                            Save as draft (don't activate yet)
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-message-btn">
+                    <i class="fas fa-save me-2"></i>Save Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="previewModalLabel">
+                    <i class="fas fa-eye text-primary me-2"></i>Message Preview
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="email-preview">
+                    <div class="email-preview-header">
+                        <p><strong>To:</strong> <span id="preview-recipient"></span></p>
+                        <p><strong>Subject:</strong> <span id="preview-subject"></span></p>
+                        <p><strong>Scheduled:</strong> <span id="preview-schedule"></span></p>
+                    </div>
+                    <div class="email-preview-body" id="preview-content">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="edit-from-preview-btn">
+                    <i class="fas fa-edit me-2"></i>Edit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trigger Confirmation Modal -->
+<div class="modal fade" id="triggerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-paper-plane text-warning me-2"></i>Send Message Now?
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to send this message to <strong id="trigger-recipient-name"></strong>.</p>
+                <p class="text-muted small">This action cannot be undone. The message will be delivered immediately.</p>
+
+                <div id="trigger-keyword-group" style="display: none;">
+                    <label class="form-label">Enter Trigger Keyword</label>
+                    <input type="text" class="form-control" id="trigger-keyword-input" placeholder="Enter the keyword">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirm-trigger-btn">
+                    <i class="fas fa-paper-plane me-2"></i>Send Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

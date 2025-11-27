@@ -1,0 +1,575 @@
+<!-- AI Legacy Storyteller Component -->
+<div class="ai-storyteller" id="ai-storyteller">
+    <!-- Launch Card -->
+    <div id="storyteller-launch" class="storyteller-launch">
+        <div class="storyteller-launch-icon">
+            <i class="fas fa-magic"></i>
+        </div>
+        <div class="storyteller-launch-content">
+            <h4>AI Legacy Storyteller</h4>
+            <p>Answer a few questions and let AI help write their story</p>
+        </div>
+        <button id="start-storyteller-btn" class="btn btn-primary">
+            <i class="fas fa-pen-fancy me-2"></i>Start Interview
+        </button>
+    </div>
+
+    <!-- Interview Modal -->
+    <div class="modal fade" id="storytellerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content storyteller-modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header storyteller-modal-header">
+                    <div class="storyteller-header-icon">
+                        <i class="fas fa-feather-alt"></i>
+                    </div>
+                    <div class="storyteller-header-text">
+                        <h5 class="modal-title">Tell Their Story</h5>
+                        <p class="modal-subtitle" id="storyteller-subtitle">Answer questions to create a beautiful tribute</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="storyteller-progress">
+                    <div class="storyteller-progress-bar" id="storyteller-progress-bar" style="width: 0%"></div>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body storyteller-modal-body">
+                    <!-- Question Screen -->
+                    <div id="storyteller-question-screen">
+                        <div class="storyteller-question-card">
+                            <span class="storyteller-question-number" id="question-number">Question 1 of 5</span>
+                            <h3 class="storyteller-question-title" id="question-title">Childhood & Early Years</h3>
+                            <p class="storyteller-question-text" id="question-text">Tell us about their childhood. Where did they grow up? What were they like as a child?</p>
+                        </div>
+                        <div class="storyteller-answer-area">
+                            <textarea
+                                id="storyteller-answer"
+                                class="storyteller-textarea"
+                                placeholder="Share what you remember..."
+                                rows="5"
+                            ></textarea>
+                            <div class="storyteller-answer-hint">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>Tip: Include specific details, names, and places to make the story vivid</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Follow-up Screen -->
+                    <div id="storyteller-followup-screen" class="d-none">
+                        <div class="storyteller-followup-card">
+                            <div class="storyteller-ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="storyteller-followup-content">
+                                <span class="storyteller-followup-label">AI Follow-up</span>
+                                <p class="storyteller-followup-question" id="followup-question">Loading...</p>
+                            </div>
+                        </div>
+                        <div class="storyteller-answer-area">
+                            <textarea
+                                id="storyteller-followup-answer"
+                                class="storyteller-textarea"
+                                placeholder="Your answer..."
+                                rows="3"
+                            ></textarea>
+                        </div>
+                        <div class="storyteller-interactions-info">
+                            <i class="fas fa-coins"></i>
+                            <span id="interactions-remaining">4 AI questions remaining</span>
+                        </div>
+                    </div>
+
+                    <!-- Generating Screen -->
+                    <div id="storyteller-generating-screen" class="d-none">
+                        <div class="storyteller-generating">
+                            <div class="storyteller-generating-icon">
+                                <i class="fas fa-magic fa-spin"></i>
+                            </div>
+                            <h4>Creating Their Story</h4>
+                            <p>Our AI is crafting a beautiful tribute based on your responses...</p>
+                            <div class="storyteller-generating-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result Screen -->
+                    <div id="storyteller-result-screen" class="d-none">
+                        <div class="storyteller-result-header">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <h4>Story Generated!</h4>
+                        </div>
+                        <div class="storyteller-result-preview">
+                            <div id="generated-story-preview" class="storyteller-story-text">
+                                <!-- Generated story will appear here -->
+                            </div>
+                        </div>
+                        <div class="storyteller-result-actions">
+                            <button id="regenerate-story-btn" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo me-2"></i>Regenerate
+                            </button>
+                            <button id="edit-story-btn" class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-2"></i>Edit
+                            </button>
+                            <button id="use-story-btn" class="btn btn-primary">
+                                <i class="fas fa-check me-2"></i>Use This Story
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer storyteller-modal-footer">
+                    <div class="storyteller-nav-left">
+                        <button id="storyteller-back-btn" class="btn btn-link text-muted" style="display: none;">
+                            <i class="fas fa-arrow-left me-1"></i>Back
+                        </button>
+                    </div>
+                    <div class="storyteller-nav-right">
+                        <button id="storyteller-skip-btn" class="btn btn-outline-secondary me-2">
+                            Skip
+                        </button>
+                        <button id="storyteller-next-btn" class="btn btn-primary">
+                            Next <i class="fas fa-arrow-right ms-1"></i>
+                        </button>
+                        <button id="storyteller-followup-btn" class="btn btn-outline-primary me-2 d-none">
+                            <i class="fas fa-robot me-1"></i>Ask AI for More
+                        </button>
+                        <button id="storyteller-generate-btn" class="btn btn-primary d-none">
+                            <i class="fas fa-magic me-1"></i>Generate Story
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* AI Storyteller Styles */
+.storyteller-launch {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.storyteller-launch-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.storyteller-launch-content {
+    flex: 1;
+}
+
+.storyteller-launch-content h4 {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary, #1a1a2e);
+}
+
+.storyteller-launch-content p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+}
+
+/* Modal Styles */
+.storyteller-modal-content {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.storyteller-modal-header {
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.storyteller-header-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.storyteller-header-text {
+    flex: 1;
+}
+
+.storyteller-header-text .modal-title {
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.storyteller-header-text .modal-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    margin: 4px 0 0 0;
+}
+
+.storyteller-progress {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.storyteller-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.3s ease;
+}
+
+.storyteller-modal-body {
+    padding: 24px;
+    min-height: 350px;
+}
+
+.storyteller-question-card {
+    margin-bottom: 24px;
+}
+
+.storyteller-question-number {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(102, 126, 234, 0.2);
+    border-radius: 20px;
+    color: #667eea;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.storyteller-question-title {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.storyteller-question-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.storyteller-answer-area {
+    margin-bottom: 16px;
+}
+
+.storyteller-textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1.5;
+    resize: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.storyteller-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.storyteller-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.storyteller-answer-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+}
+
+.storyteller-answer-hint i {
+    color: #ffc107;
+}
+
+/* Follow-up Styles */
+.storyteller-followup-card {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.storyteller-ai-avatar {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.storyteller-followup-content {
+    flex: 1;
+}
+
+.storyteller-followup-label {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 4px;
+    color: #667eea;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.storyteller-followup-question {
+    color: #fff;
+    font-size: 1.1rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.storyteller-interactions-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+}
+
+.storyteller-interactions-info i {
+    color: #ffc107;
+}
+
+/* Generating Screen */
+.storyteller-generating {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.storyteller-generating-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.storyteller-generating-icon i {
+    font-size: 2rem;
+    color: white;
+}
+
+.storyteller-generating h4 {
+    color: #fff;
+    margin: 0 0 8px 0;
+}
+
+.storyteller-generating p {
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 24px 0;
+}
+
+.storyteller-generating-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.storyteller-generating-dots span {
+    width: 10px;
+    height: 10px;
+    background: #667eea;
+    border-radius: 50%;
+    animation: dotPulse 1.4s infinite ease-in-out both;
+}
+
+.storyteller-generating-dots span:nth-child(1) { animation-delay: -0.32s; }
+.storyteller-generating-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes dotPulse {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* Result Screen */
+.storyteller-result-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.storyteller-result-header i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.storyteller-result-header h4 {
+    color: #fff;
+    margin: 0;
+}
+
+.storyteller-result-preview {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-bottom: 24px;
+}
+
+.storyteller-story-text {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 20px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+.storyteller-result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Modal Footer */
+.storyteller-modal-footer {
+    background: rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.storyteller-nav-left,
+.storyteller-nav-right {
+    display: flex;
+    align-items: center;
+}
+
+/* Light mode overrides */
+@media (prefers-color-scheme: light) {
+    .storyteller-modal-content {
+        background: #fff;
+        border-color: #e0e0e0;
+    }
+
+    .storyteller-modal-header {
+        background: #f8f9fa;
+        border-bottom-color: #e0e0e0;
+    }
+
+    .storyteller-header-text .modal-title {
+        color: #1a1a2e;
+    }
+
+    .storyteller-header-text .modal-subtitle {
+        color: #666;
+    }
+
+    .storyteller-question-title {
+        color: #1a1a2e;
+    }
+
+    .storyteller-question-text {
+        color: #555;
+    }
+
+    .storyteller-textarea {
+        background: #f8f9fa;
+        border-color: #ddd;
+        color: #333;
+    }
+
+    .storyteller-textarea:focus {
+        background: #fff;
+    }
+
+    .storyteller-textarea::placeholder {
+        color: #999;
+    }
+
+    .storyteller-followup-question {
+        color: #333;
+    }
+
+    .storyteller-story-text {
+        background: #f8f9fa;
+        color: #333;
+    }
+
+    .storyteller-modal-footer {
+        background: #f8f9fa;
+        border-top-color: #e0e0e0;
+    }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .storyteller-launch {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .storyteller-launch-content {
+        order: -1;
+    }
+
+    .storyteller-result-actions {
+        flex-direction: column;
+    }
+
+    .storyteller-result-actions .btn {
+        width: 100%;
+    }
+}
+</style>

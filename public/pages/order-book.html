@@ -1,0 +1,325 @@
+<div class="page-wrapper">
+  <!-- Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="page-hero-title">Memorial Book</h1>
+      <p class="page-hero-subtitle">A beautiful hardcover book preserving their life story forever</p>
+    </div>
+  </section>
+
+  <div class="order-book-page">
+    <div class="container" style="max-width: 1100px;">
+
+      <!-- Book Preview Section -->
+      <section class="book-preview-section">
+        <div class="row g-4">
+          <!-- Book Preview (Left) -->
+          <div class="col-lg-6">
+            <div class="book-preview-container">
+              <div class="book-3d-wrapper">
+                <div class="book-3d template-classic" id="book-preview">
+                  <div class="book-cover" id="book-cover-preview">
+                    <div class="book-cover-photo" id="cover-photo-container">
+                      <img src="" alt="" id="cover-photo" style="display: none;">
+                      <i class="fas fa-user cover-placeholder" id="cover-placeholder"></i>
+                    </div>
+                    <div class="book-cover-text">
+                      <h2 class="book-cover-name" id="cover-name">Memorial Name</h2>
+                      <p class="book-cover-dates" id="cover-dates">1920 - 2024</p>
+                    </div>
+                  </div>
+                  <div class="book-spine"></div>
+                </div>
+              </div>
+              <div class="book-preview-caption">
+                <i class="fas fa-expand-arrows-alt me-2"></i>
+                Hover to see book spine
+              </div>
+            </div>
+          </div>
+
+          <!-- Customization Options (Right) -->
+          <div class="col-lg-6">
+            <div class="card-unified mb-4">
+              <h4 class="order-section-title"><i class="fas fa-palette"></i>Choose Cover Style</h4>
+              <div class="cover-template-grid" id="cover-templates">
+                <div class="cover-template-option active" data-template="classic">
+                  <div class="template-preview template-classic"></div>
+                  <span>Classic</span>
+                </div>
+                <div class="cover-template-option" data-template="modern">
+                  <div class="template-preview template-modern"></div>
+                  <span>Modern</span>
+                </div>
+                <div class="cover-template-option" data-template="nature">
+                  <div class="template-preview template-nature"></div>
+                  <span>Nature</span>
+                </div>
+                <div class="cover-template-option" data-template="faith">
+                  <div class="template-preview template-faith"></div>
+                  <span>Faith</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-unified mb-4">
+              <h4 class="order-section-title"><i class="fas fa-list-check"></i>Book Contents</h4>
+              <p class="text-muted small mb-3">Select which sections to include in your book</p>
+              <div class="book-sections-list">
+                <label class="book-section-toggle">
+                  <input type="checkbox" id="include-bio" checked disabled>
+                  <span class="section-name"><i class="fas fa-book-open"></i> Life Story</span>
+                  <span class="section-badge required">Required</span>
+                </label>
+                <label class="book-section-toggle">
+                  <input type="checkbox" id="include-gallery" checked>
+                  <span class="section-name"><i class="fas fa-images"></i> Photo Gallery</span>
+                  <span class="section-count" id="gallery-count"></span>
+                </label>
+                <label class="book-section-toggle">
+                  <input type="checkbox" id="include-timeline" checked>
+                  <span class="section-name"><i class="fas fa-clock"></i> Timeline</span>
+                  <span class="section-count" id="timeline-count"></span>
+                </label>
+                <label class="book-section-toggle">
+                  <input type="checkbox" id="include-family" checked>
+                  <span class="section-name"><i class="fas fa-sitemap"></i> Family Tree</span>
+                  <span class="section-count" id="family-count"></span>
+                </label>
+                <label class="book-section-toggle">
+                  <input type="checkbox" id="include-residences" checked>
+                  <span class="section-name"><i class="fas fa-home"></i> Places Lived</span>
+                  <span class="section-count" id="residences-count"></span>
+                </label>
+                <label class="book-section-toggle">
+                  <input type="checkbox" id="include-tributes" checked>
+                  <span class="section-name"><i class="fas fa-heart"></i> Tributes</span>
+                  <span class="section-count" id="tributes-count"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="card-unified mb-4">
+              <h4 class="order-section-title"><i class="fas fa-pen-fancy"></i>Dedication Page (Optional)</h4>
+              <textarea class="form-control" id="dedication-text" rows="3"
+                placeholder="Add a personal dedication message that will appear at the beginning of the book..."
+                maxlength="500"></textarea>
+              <small class="text-muted"><span id="dedication-chars">0</span>/500 characters</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sample Pages Preview -->
+      <section class="sample-pages-section">
+        <h4 class="section-title text-center mb-4"><i class="fas fa-file-alt me-2"></i>Sample Inside Pages</h4>
+        <p class="text-center text-muted mb-4">See what your memorial book will look like inside</p>
+        <div class="sample-pages-grid">
+          <div class="sample-page">
+            <div class="sample-page-content title-page">
+              <div class="sample-photo-placeholder"><i class="fas fa-user"></i></div>
+              <div class="sample-name">John Smith</div>
+              <div class="sample-dates">1942 - 2024</div>
+              <div class="sample-subtitle">A Life Remembered</div>
+            </div>
+            <span class="sample-page-label">Title Page</span>
+          </div>
+          <div class="sample-page">
+            <div class="sample-page-content bio-page">
+              <div class="sample-page-title">Life Story</div>
+              <div class="sample-text-lines">
+                <div class="sample-line"></div>
+                <div class="sample-line"></div>
+                <div class="sample-line"></div>
+                <div class="sample-line short"></div>
+                <div class="sample-line"></div>
+                <div class="sample-line"></div>
+                <div class="sample-line short"></div>
+              </div>
+            </div>
+            <span class="sample-page-label">Biography</span>
+          </div>
+          <div class="sample-page">
+            <div class="sample-page-content gallery-page">
+              <div class="sample-page-title">Photo Memories</div>
+              <div class="sample-photo-grid">
+                <div class="sample-photo"><i class="fas fa-image"></i></div>
+                <div class="sample-photo"><i class="fas fa-image"></i></div>
+                <div class="sample-photo"><i class="fas fa-image"></i></div>
+                <div class="sample-photo"><i class="fas fa-image"></i></div>
+              </div>
+            </div>
+            <span class="sample-page-label">Photo Gallery</span>
+          </div>
+          <div class="sample-page">
+            <div class="sample-page-content timeline-page">
+              <div class="sample-page-title">Life Timeline</div>
+              <div class="sample-timeline">
+                <div class="sample-timeline-item"><span class="sample-year">1942</span><div class="sample-line short"></div></div>
+                <div class="sample-timeline-item"><span class="sample-year">1960</span><div class="sample-line short"></div></div>
+                <div class="sample-timeline-item"><span class="sample-year">1965</span><div class="sample-line short"></div></div>
+                <div class="sample-timeline-item"><span class="sample-year">1985</span><div class="sample-line short"></div></div>
+              </div>
+            </div>
+            <span class="sample-page-label">Timeline</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Product Features Section -->
+      <section class="order-features-section">
+        <div class="order-features-grid">
+          <div class="order-feature-card">
+            <div class="order-feature-icon">
+              <i class="fas fa-book"></i>
+            </div>
+            <h5>Premium Hardcover</h5>
+            <p>8.5" x 11" professional hardcover binding with matte laminated cover.</p>
+          </div>
+          <div class="order-feature-card">
+            <div class="order-feature-icon accent">
+              <i class="fas fa-print"></i>
+            </div>
+            <h5>Full Color Printing</h5>
+            <p>Every page printed in vivid full color on premium 80lb paper stock.</p>
+          </div>
+          <div class="order-feature-card">
+            <div class="order-feature-icon">
+              <i class="fas fa-qrcode"></i>
+            </div>
+            <h5>QR Code Included</h5>
+            <p>Back cover features a QR code linking to the online memorial.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Order Details -->
+      <section class="order-details-section">
+        <div class="row g-4">
+          <div class="col-md-7 col-lg-8">
+            <!-- What's Included -->
+            <div class="card-unified mb-4">
+              <h4 class="order-section-title"><i class="fas fa-box-open"></i>What's Included</h4>
+              <ul class="order-checklist">
+                <li><i class="fas fa-check"></i> Custom hardcover memorial book</li>
+                <li><i class="fas fa-check"></i> Full color photo pages</li>
+                <li><i class="fas fa-check"></i> Life story and biography</li>
+                <li><i class="fas fa-check"></i> Family tree visualization</li>
+                <li><i class="fas fa-check"></i> Timeline of life events</li>
+                <li><i class="fas fa-check"></i> Approved tributes from visitors</li>
+                <li><i class="fas fa-check"></i> QR code on back cover</li>
+              </ul>
+            </div>
+
+            <!-- Shipping Info -->
+            <div class="order-shipping-info">
+              <h4>Printing & Shipping</h4>
+              <p>Your book is custom printed on demand. Production takes 3-5 business days, plus 5-7 days for shipping. Total delivery: approximately 2 weeks.</p>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+              <button class="btn btn-primary-unified btn-lg" type="button" id="checkout-button">
+                <i class="fas fa-lock"></i>
+                <span>Order Memorial Book - $79</span>
+              </button>
+              <p class="order-secure-text">
+                <i class="fas fa-shield-alt"></i> Secure payment processed by Stripe
+              </p>
+            </div>
+          </div>
+
+          <div class="col-md-5 col-lg-4">
+            <!-- Order Summary -->
+            <div class="order-summary-card">
+              <div class="order-summary-header">
+                <h5><i class="fas fa-shopping-cart"></i>Order Summary</h5>
+              </div>
+              <div class="order-summary-body">
+                <div class="order-summary-item">
+                  <h6>Memorial Book (Hardcover)</h6>
+                  <p class="order-memorial-name" id="order-memorial-name">For memorial...</p>
+                  <p class="order-item-details">8.5" x 11" • Full Color • <span id="page-estimate">~40</span> Pages</p>
+                </div>
+                <hr>
+                <div class="order-summary-row">
+                  <span>Subtotal</span>
+                  <span>$79.00</span>
+                </div>
+                <div class="order-summary-row">
+                  <span>Printing & Handling</span>
+                  <span>Included</span>
+                </div>
+                <div class="order-summary-row">
+                  <span>Shipping</span>
+                  <span class="order-free-shipping">FREE</span>
+                </div>
+                <hr>
+                <div class="order-summary-row order-total">
+                  <strong>Total (USD)</strong>
+                  <strong>$79.00</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="order-trust-badges">
+              <div class="order-trust-item">
+                <i class="fas fa-print"></i>
+                <span>Professional printing</span>
+              </div>
+              <div class="order-trust-item">
+                <i class="fas fa-truck"></i>
+                <span>Ships in ~2 weeks</span>
+              </div>
+              <div class="order-trust-item">
+                <i class="fas fa-lock"></i>
+                <span>Secure checkout</span>
+              </div>
+            </div>
+
+            <!-- Upsell Bundle -->
+            <div class="upsell-banner" id="bundle-upsell">
+              <div class="upsell-badge">SAVE $28</div>
+              <h5>Upgrade to Legacy Bundle</h5>
+              <p>Get the book + QR tag + 10 keepsake cards for just $109 (normally $137).</p>
+              <button class="btn btn-outline-primary btn-sm w-100" id="upgrade-to-bundle">
+                <i class="fas fa-plus-circle me-2"></i>Upgrade to Bundle - $109
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section class="order-faq-section">
+        <h4 class="order-faq-title">Frequently Asked Questions</h4>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="order-faq-item">
+              <h6>How many pages will my book have?</h6>
+              <p>Page count varies based on content. A typical book is 40-60 pages including photos, biography, tributes, and family tree.</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="order-faq-item">
+              <h6>Can I order additional copies?</h6>
+              <p>Yes! Complete this order, then return to order more copies. Contact us for bulk pricing on 5+ books.</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="order-faq-item">
+              <h6>What if I add more content later?</h6>
+              <p>You can order an updated book anytime. Each book is printed fresh with your current memorial content.</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="order-faq-item">
+              <h6>What's the print quality like?</h6>
+              <p>We use professional print-on-demand with 300 DPI printing on premium 80lb paper with a matte laminated hardcover.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

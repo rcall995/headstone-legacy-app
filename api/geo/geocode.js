@@ -11,17 +11,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Verify auth token
+  // Auth is optional - allow anonymous geocoding for public memorial viewing
+  // This is safe since geocoding doesn't expose any sensitive data
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  const token = authHeader.substring(7);
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-  if (authError || !user) {
-    return res.status(401).json({ error: 'Invalid token' });
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const { error: authError } = await supabase.auth.getUser(token);
+    if (authError) {
+      console.warn('Invalid auth token for geocode, proceeding anyway');
+    }
   }
 
   const { address } = req.body;

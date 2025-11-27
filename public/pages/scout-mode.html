@@ -58,6 +58,23 @@
                     <i class="fas fa-chevron-right"></i>
                 </div>
             </button>
+
+            <!-- Wanted Graves Mode -->
+            <button id="wanted-graves-btn" class="scout-mode-card wanted">
+                <div class="mode-card-icon wanted">
+                    <i class="fas fa-search-location"></i>
+                </div>
+                <div class="mode-card-content">
+                    <div class="mode-card-header">
+                        <h3>Wanted Graves</h3>
+                        <span class="mode-badge wanted" id="wanted-count-badge">0</span>
+                    </div>
+                    <p>Help families find their ancestors - earn 2.5x bonus points!</p>
+                </div>
+                <div class="mode-card-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </button>
         </div>
 
         <!-- Tips Section -->
@@ -72,6 +89,66 @@
     <!-- ========== MAP WIZARD SCREEN ========== -->
     <section id="scout-wizard-screen" class="scout-screen d-none">
         <!-- Map container will be inserted dynamically -->
+    </section>
+
+    <!-- ========== WANTED GRAVES SCREEN ========== -->
+    <section id="wanted-graves-screen" class="scout-screen d-none">
+        <header class="scout-header">
+            <button id="wanted-back-btn" class="scout-back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="scout-header-title">
+                <i class="fas fa-search-location"></i>
+                <span>Wanted Graves</span>
+            </div>
+            <div class="scout-header-spacer"></div>
+        </header>
+
+        <div class="wanted-content">
+            <!-- Stats Bar -->
+            <div class="wanted-stats-bar">
+                <div class="wanted-stat">
+                    <span class="wanted-stat-value" id="wanted-total">0</span>
+                    <span class="wanted-stat-label">Total Wanted</span>
+                </div>
+                <div class="wanted-stat">
+                    <span class="wanted-stat-value" id="wanted-nearby">0</span>
+                    <span class="wanted-stat-label">Near You</span>
+                </div>
+                <div class="wanted-stat bonus">
+                    <span class="wanted-stat-value">2.5x</span>
+                    <span class="wanted-stat-label">Bonus Points</span>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="wanted-filter-tabs">
+                <button class="wanted-filter-tab active" data-filter="all">All</button>
+                <button class="wanted-filter-tab" data-filter="needs_cemetery">Needs Cemetery</button>
+                <button class="wanted-filter-tab" data-filter="needs_pin">Needs GPS Pin</button>
+            </div>
+
+            <!-- Loading State -->
+            <div id="wanted-loading" class="wanted-loading">
+                <div class="spinner-border text-primary"></div>
+                <p>Finding wanted graves...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="wanted-empty" class="wanted-empty d-none">
+                <i class="fas fa-check-circle"></i>
+                <h4>All Caught Up!</h4>
+                <p>No graves currently need location. Check back later or import a family tree!</p>
+                <a href="/import-family-tree" class="btn btn-primary" data-route>
+                    <i class="fas fa-file-import me-2"></i>Import Family Tree
+                </a>
+            </div>
+
+            <!-- Graves List -->
+            <div id="wanted-list" class="wanted-list d-none">
+                <!-- Populated by JS -->
+            </div>
+        </div>
     </section>
 </div>
 
@@ -828,6 +905,281 @@
     height: 100%;
     object-fit: cover;
     z-index: 1;
+}
+
+/* ========== WANTED GRAVES STYLES ========== */
+.mode-card-icon.wanted {
+    background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+}
+
+.scout-mode-card.wanted {
+    position: relative;
+    overflow: hidden;
+}
+
+.scout-mode-card.wanted::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(246, 173, 85, 0.3) 0%, transparent 70%);
+    transform: translate(30%, -30%);
+}
+
+.mode-badge.wanted {
+    background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+    min-width: 28px;
+    text-align: center;
+}
+
+.wanted-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+.wanted-stats-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.wanted-stat {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+}
+
+.wanted-stat.bonus {
+    background: linear-gradient(135deg, rgba(246, 173, 85, 0.2) 0%, rgba(237, 137, 54, 0.2) 100%);
+    border: 1px solid rgba(246, 173, 85, 0.3);
+}
+
+.wanted-stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.wanted-stat.bonus .wanted-stat-value {
+    color: #f6ad55;
+}
+
+.wanted-stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+.wanted-filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.wanted-filter-tab {
+    flex: 1;
+    min-width: fit-content;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wanted-filter-tab:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.wanted-filter-tab.active {
+    background: linear-gradient(135deg, #4fd1c5 0%, #38b2ac 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+.wanted-loading, .wanted-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.wanted-loading .spinner-border {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+}
+
+.wanted-empty i {
+    font-size: 4rem;
+    color: #4fd1c5;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.wanted-empty h4 {
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.wanted-empty p {
+    margin-bottom: 20px;
+}
+
+.wanted-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.wanted-grave-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 16px;
+    transition: all 0.2s ease;
+}
+
+.wanted-grave-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.wanted-grave-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.wanted-grave-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, rgba(246, 173, 85, 0.2) 0%, rgba(237, 137, 54, 0.2) 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f6ad55;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.wanted-grave-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.wanted-grave-name {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wanted-grave-dates {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.wanted-grave-tags {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.wanted-tag {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.wanted-tag.needs-cemetery {
+    background: rgba(255, 99, 132, 0.2);
+    color: #ff6384;
+}
+
+.wanted-tag.needs-pin {
+    background: rgba(79, 209, 197, 0.2);
+    color: #4fd1c5;
+}
+
+.wanted-tag.bonus-points {
+    background: linear-gradient(135deg, rgba(246, 173, 85, 0.25) 0%, rgba(237, 137, 54, 0.25) 100%);
+    color: #f6ad55;
+    font-weight: 600;
+}
+
+.wanted-grave-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+}
+
+.wanted-grave-hint i {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.wanted-grave-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.wanted-action-btn {
+    flex: 1;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #4fd1c5 0%, #38b2ac 100%);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.wanted-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 209, 197, 0.3);
+}
+
+.wanted-action-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.wanted-action-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: none;
 }
 
 /* ========== RESPONSIVE ========== */

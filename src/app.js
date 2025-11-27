@@ -8,7 +8,7 @@ import { initReferralTracking } from '/js/utils/referral-tracker.js';
 document.addEventListener('DOMContentLoaded', () => {
   /* ---------- Service Worker: simple, no auto-reload ---------- */
   if ('serviceWorker' in navigator) {
-    const SW_VERSION = 'v28';            // bump this when you deploy
+    const SW_VERSION = 'v42';            // bump this when you deploy
     const SW_URL = `/serviceworker.js?sw=${SW_VERSION}`;
 
     navigator.serviceWorker.register(SW_URL, { scope: '/' })
@@ -159,6 +159,21 @@ document.addEventListener('DOMContentLoaded', () => {
           ? decodeURIComponent(path.split('/order-tag/')[1])
           : urlParams.get('id');
         await loadOrderTagPage(appRoot, memorialIdOrSlug);
+      } else if (path === '/order-book' || path.startsWith('/order-book/')) {
+        setPageTitle('Order Book');
+        const { loadOrderBookPage } = await import('./pages/order-book.js');
+        // Support both /order-book?id=xxx and /order-book/xxx formats
+        const memorialIdOrSlug = path.startsWith('/order-book/')
+          ? decodeURIComponent(path.split('/order-book/')[1])
+          : urlParams.get('id');
+        await loadOrderBookPage(appRoot, memorialIdOrSlug);
+      } else if (path === '/legacy-messages' || path.startsWith('/legacy-messages/')) {
+        setPageTitle('Legacy Messages');
+        const { loadLegacyMessagesPage } = await import('./pages/legacy-messages.js');
+        const memorialId = path.startsWith('/legacy-messages/')
+          ? decodeURIComponent(path.split('/legacy-messages/')[1])
+          : urlParams.get('id');
+        await loadLegacyMessagesPage(appRoot, memorialId);
       } else if (path === '/welcome') {
         setPageTitle('Welcome');
         const { loadWelcomePage } = await import('./pages/welcome.js');
@@ -195,6 +210,14 @@ document.addEventListener('DOMContentLoaded', () => {
         setPageTitle('Wholesale Dashboard');
         const { loadWholesaleDashboardPage } = await import('./pages/wholesale-dashboard.js');
         await loadWholesaleDashboardPage(appRoot);
+      } else if (path === '/accept-invite') {
+        setPageTitle('Accept Invite');
+        const { loadAcceptInvitePage } = await import('./pages/accept-invite.js');
+        await loadAcceptInvitePage(appRoot, urlParams);
+      } else if (path === '/import-family-tree') {
+        setPageTitle('Import Family Tree');
+        const { loadGedcomImportPage } = await import('./pages/gedcom-import.js');
+        await loadGedcomImportPage(appRoot);
       } else {
         setPageTitle('404 Not Found');
         appRoot.innerHTML = `<p class="text-center text-danger">404: Page not found.</p>`;
@@ -307,19 +330,28 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUser = user;
     const isLoggedIn = !!user;
 
-    // Toggle desktop navigation (marketing vs curator)
+    // Add/remove logged-in class on body for new navigation
+    document.body.classList.toggle('logged-in', isLoggedIn);
+
+    // Toggle desktop navigation (marketing vs curator) - OLD NAV
     document.getElementById('marketing-nav-desktop')?.classList.toggle('d-none', isLoggedIn);
     document.getElementById('curator-nav-desktop')?.classList.toggle('d-none', !isLoggedIn);
     document.getElementById('signInLink-desktop')?.classList.toggle('d-none', isLoggedIn);
     document.getElementById('userDropdown-desktop')?.classList.toggle('d-none', !isLoggedIn);
 
-    // Toggle mobile navigation and sign in button
+    // Toggle mobile navigation and sign in button - OLD NAV
     document.getElementById('mobile-signin-btn')?.classList.toggle('d-none', isLoggedIn);
     document.getElementById('curator-nav-menu-items')?.classList.toggle('d-none', !isLoggedIn);
+
+    // Update NEW navigation with user info
+    if (isLoggedIn) {
+      updateNewNavigation(user);
+    }
 
     // Update notification badges when logged in (non-blocking)
     if (isLoggedIn) {
       updateMenuBadges(user).catch(err => console.warn('[Auth] Badge update failed:', err));
+      updateNewNavBadges(user).catch(err => console.warn('[Auth] New nav badge update failed:', err));
     }
 
     if (!authInitialized) {
@@ -357,9 +389,268 @@ document.addEventListener('DOMContentLoaded', () => {
     router();
   });
 
+  // ===== NEW NAVIGATION HANDLERS =====
+
+  // Update new navigation with user info
+  function updateNewNavigation(user) {
+    if (!user) return;
+
+    const email = user.email || '';
+    const displayName = user.user_metadata?.display_name || email.split('@')[0] || 'User';
+    const initials = displayName.charAt(0).toUpperCase();
+
+    // Update all name/email displays
+    const nameEls = ['app-user-name', 'mobile-menu-name'];
+    const emailEls = ['app-user-email', 'mobile-menu-email'];
+
+    nameEls.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = displayName;
+    });
+
+    emailEls.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = email;
+    });
+
+    // Update avatar initials
+    const avatarEls = ['app-user-avatar', 'app-user-avatar-mobile', 'mobile-menu-avatar'];
+    avatarEls.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = initials;
+    });
+
+    // Load scout stats
+    loadScoutStats(user.id);
+
+    // Load memorial count
+    loadMemorialCount(user.id);
+
+    // Check if admin
+    checkAdminStatus(user);
+  }
+
+  // Load scout stats for navigation display
+  async function loadScoutStats(userId) {
+    try {
+      const { data } = await supabase
+        .from('scout_stats')
+        .select('total_points, current_level')
+        .eq('user_id', userId)
+        .single();
+
+      const points = data?.total_points || 0;
+      const level = data?.current_level || 1;
+
+      // Update points displays
+      const pointsEl = document.getElementById('app-scout-points');
+      if (pointsEl) pointsEl.textContent = `${points} pts`;
+
+      const statEls = ['user-stat-points', 'mobile-stat-points'];
+      statEls.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = points;
+      });
+
+      const levelEls = ['user-stat-level', 'mobile-stat-level'];
+      levelEls.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = level;
+      });
+    } catch (err) {
+      console.warn('[Nav] Failed to load scout stats:', err);
+    }
+  }
+
+  // Load memorial count for navigation display
+  async function loadMemorialCount(userId) {
+    try {
+      const { count } = await supabase
+        .from('memorials')
+        .select('id', { count: 'exact', head: true })
+        .contains('curator_ids', [userId]);
+
+      const memorialEls = ['user-stat-memorials', 'mobile-stat-memorials'];
+      memorialEls.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = count || 0;
+      });
+    } catch (err) {
+      console.warn('[Nav] Failed to load memorial count:', err);
+    }
+  }
+
+  // Check admin status
+  async function checkAdminStatus(user) {
+    // Simple check: certain email domains or specific emails
+    const adminEmails = ['rich@headstonelegacy.com', 'admin@headstonelegacy.com'];
+    const isAdmin = adminEmails.includes(user.email);
+
+    const adminDesktop = document.getElementById('admin-link-desktop');
+    const adminMobile = document.getElementById('admin-link-mobile');
+
+    if (adminDesktop) adminDesktop.style.display = isAdmin ? 'flex' : 'none';
+    if (adminMobile) adminMobile.style.display = isAdmin ? 'flex' : 'none';
+  }
+
+  // Update new nav badges
+  async function updateNewNavBadges(user) {
+    try {
+      // Get draft count
+      const { count: draftCount } = await supabase
+        .from('memorials')
+        .select('id', { count: 'exact', head: true })
+        .contains('curator_ids', [user.id])
+        .eq('status', 'draft');
+
+      // Get pending tribute count
+      const { data: memorials } = await supabase
+        .from('memorials')
+        .select('id')
+        .contains('curator_ids', [user.id]);
+
+      const memorialIds = memorials?.map(m => m.id) || [];
+      let tributeCount = 0;
+
+      if (memorialIds.length > 0) {
+        const { count } = await supabase
+          .from('tributes')
+          .select('id', { count: 'exact', head: true })
+          .in('memorial_id', memorialIds)
+          .eq('status', 'pending');
+        tributeCount = count || 0;
+      }
+
+      // Update draft badges
+      const draftBadgeIds = ['nav-draft-badge', 'mobile-menu-draft-badge'];
+      draftBadgeIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (draftCount > 0) {
+            el.textContent = draftCount;
+            el.style.display = 'flex';
+          } else {
+            el.style.display = 'none';
+          }
+        }
+      });
+
+      // Update tribute badges
+      const tributeBadgeIds = ['nav-tribute-badge', 'bottom-nav-tribute-badge', 'mobile-menu-tribute-badge'];
+      tributeBadgeIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (tributeCount > 0) {
+            el.textContent = tributeCount;
+            el.style.display = 'flex';
+          } else {
+            el.style.display = 'none';
+          }
+        }
+      });
+    } catch (err) {
+      console.warn('[Nav] Failed to update badges:', err);
+    }
+  }
+
+  // Desktop user dropdown toggle
+  const userBtn = document.getElementById('app-user-btn');
+  const userDropdown = document.getElementById('app-user-dropdown');
+
+  if (userBtn && userDropdown) {
+    userBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = userDropdown.classList.contains('show');
+      userDropdown.classList.toggle('show', !isOpen);
+      userBtn.setAttribute('aria-expanded', !isOpen);
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!userDropdown.contains(e.target) && !userBtn.contains(e.target)) {
+        userDropdown.classList.remove('show');
+        userBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  // Mobile menu handlers
+  const mobileMenu = document.getElementById('app-mobile-menu');
+  const mobileMenuToggle = document.getElementById('app-mobile-menu-toggle');
+  const mobileMenuClose = document.getElementById('app-mobile-menu-close');
+  const bottomNavMore = document.getElementById('app-bottom-nav-more');
+
+  function openMobileMenu() {
+    mobileMenu?.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMobileMenu() {
+    mobileMenu?.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  if (mobileMenuToggle) {
+    mobileMenuToggle.addEventListener('click', openMobileMenu);
+  }
+
+  if (mobileMenuClose) {
+    mobileMenuClose.addEventListener('click', closeMobileMenu);
+  }
+
+  if (bottomNavMore) {
+    bottomNavMore.addEventListener('click', openMobileMenu);
+  }
+
+  // Close mobile menu on backdrop click
+  if (mobileMenu) {
+    mobileMenu.addEventListener('click', (e) => {
+      if (e.target === mobileMenu) {
+        closeMobileMenu();
+      }
+    });
+  }
+
+  // Close mobile menu on link click
+  document.querySelectorAll('#app-mobile-menu [data-route-mobile]').forEach(link => {
+    link.addEventListener('click', () => {
+      closeMobileMenu();
+    });
+  });
+
+  // Update active nav item on route change
+  function updateActiveNavItem(path) {
+    // Remove all active states
+    document.querySelectorAll('.app-nav-item, .app-bottom-nav-item, .app-mobile-menu-item').forEach(el => {
+      el.classList.remove('active');
+    });
+
+    // Determine which nav item should be active
+    let activeNav = null;
+    if (path.includes('/memorial-list') && path.includes('status=draft')) {
+      activeNav = 'drafts';
+    } else if (path.includes('/memorial-list') || path === '/memorial-form') {
+      activeNav = 'memorials';
+    } else if (path.includes('/scout')) {
+      activeNav = 'scout';
+    } else if (path.includes('/tributes')) {
+      activeNav = 'tributes';
+    }
+
+    if (activeNav) {
+      document.querySelectorAll(`[data-nav="${activeNav}"]`).forEach(el => {
+        el.classList.add('active');
+      });
+    }
+  }
+
+  // ===== END NEW NAVIGATION HANDLERS =====
+
   // Sign out handlers
   const signOutDesktop = document.getElementById('signOutLink-desktop');
   const signOutMenu = document.getElementById('signOutLink-menu');
+  const appSignoutBtn = document.getElementById('app-signout-btn');
+  const appMobileSignoutBtn = document.getElementById('app-mobile-signout-btn');
 
   async function handleSignOut(e) {
     e.preventDefault();
@@ -379,6 +670,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (signOutMenu) {
     signOutMenu.addEventListener('click', handleSignOut);
+  }
+  if (appSignoutBtn) {
+    appSignoutBtn.addEventListener('click', handleSignOut);
+  }
+  if (appMobileSignoutBtn) {
+    appMobileSignoutBtn.addEventListener('click', (e) => {
+      closeMobileMenu();
+      handleSignOut(e);
+    });
   }
 
 });
