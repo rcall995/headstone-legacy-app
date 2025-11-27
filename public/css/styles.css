@@ -1906,6 +1906,293 @@ a.value-card,
 }
 
 /* ============================================
+   GET STARTED PAGE - Simplified
+   ============================================ */
+
+.hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+}
+
+.hero-badge i {
+    font-size: 0.85rem;
+}
+
+/* Features Grid */
+.features-section {
+    padding: var(--space-3xl) 0;
+    background: var(--bg-white);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+}
+
+@media (min-width: 768px) {
+    .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.feature-card {
+    text-align: center;
+    padding: var(--space-lg);
+    background: var(--bg-cream);
+    border-radius: var(--radius-lg);
+    transition: var(--transition-base);
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--space-md);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.5rem;
+}
+
+.feature-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.feature-card p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Steps Container */
+.steps-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.step {
+    display: flex;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+    position: relative;
+}
+
+.step:last-child {
+    margin-bottom: 0;
+}
+
+.step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 44px;
+    bottom: -24px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary), var(--accent-gold));
+}
+
+.step .step-number {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.step .step-content h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.step .step-content p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* QR Tag Section */
+.qr-section {
+    padding: var(--space-3xl) 0;
+    background: var(--bg-warm);
+}
+
+.qr-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+@media (min-width: 768px) {
+    .qr-card {
+        flex-direction: row;
+    }
+}
+
+.qr-card-content {
+    flex: 1;
+    padding: var(--space-xl);
+}
+
+.qr-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: var(--space-md);
+}
+
+.qr-card-content h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-sm) 0;
+}
+
+.qr-card-content > p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0 0 var(--space-md) 0;
+}
+
+.qr-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-lg) 0;
+}
+
+.qr-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.qr-features li i {
+    color: var(--primary);
+}
+
+.qr-price {
+    margin-bottom: var(--space-md);
+}
+
+.qr-price .price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.qr-price .price-note {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.qr-card-visual {
+    flex: 0 0 200px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xl);
+}
+
+@media (max-width: 767px) {
+    .qr-card-visual {
+        padding: var(--space-lg);
+    }
+}
+
+.qr-mockup {
+    text-align: center;
+    color: #fff;
+}
+
+.qr-mockup i {
+    font-size: 4rem;
+    margin-bottom: var(--space-sm);
+    display: block;
+}
+
+.qr-mockup span {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Trust Section */
+.trust-section {
+    padding: var(--space-xl) 0;
+    background: var(--bg-cream);
+    border-top: 1px solid var(--border-light);
+}
+
+.trust-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-lg) var(--space-xl);
+}
+
+.trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.trust-item i {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+/* ============================================
    SCOUT PAGE
    ============================================ */
 

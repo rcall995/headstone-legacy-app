@@ -33,6 +33,12 @@ const burialStatusOptions = [
     { value: 'unknown', label: 'Unknown', description: 'Burial location unknown' }
 ];
 
+// Auth modal state
+let authModal = null;
+let pendingSaveStatus = null; // 'draft' or 'published'
+let currentAppRoot = null;
+const FORM_STORAGE_KEY = 'headstone_memorial_draft';
+
 function navigateToStep(stepNumber) {
     currentStep = stepNumber;
     document.querySelectorAll('.wizard-step').forEach(step => {
@@ -44,6 +50,238 @@ function navigateToStep(stepNumber) {
         step.classList.toggle('active', stepNum === currentStep);
         step.classList.toggle('completed', stepNum < currentStep);
     });
+}
+
+// --- LOCAL STORAGE AUTO-SAVE ---
+function saveFormToLocalStorage(appRoot) {
+    try {
+        const formData = {
+            name: appRoot.querySelector('#memorial-name')?.value || '',
+            title: appRoot.querySelector('#memorial-title')?.value || '',
+            birthDate: appRoot.querySelector('#memorial-birth-date')?.value || '',
+            deathDate: appRoot.querySelector('#memorial-death-date')?.value || '',
+            story: appRoot.querySelector('#memorial-story')?.value || '',
+            cemeteryName: appRoot.querySelector('#memorial-cemetery-name')?.value || '',
+            cemeteryAddress: appRoot.querySelector('#memorial-cemetery-address')?.value || '',
+            cemeteryLocation: cemeteryLocation,
+            gravesiteLocation: gravesiteLocation,
+            currentStep: currentStep,
+            savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+    } catch (e) {
+        console.warn('Could not save form to localStorage:', e);
+    }
+}
+
+function loadFormFromLocalStorage(appRoot) {
+    try {
+        const saved = localStorage.getItem(FORM_STORAGE_KEY);
+        if (!saved) return false;
+
+        const formData = JSON.parse(saved);
+
+        // Check if data is less than 7 days old
+        const savedDate = new Date(formData.savedAt);
+        const daysSinceSave = (Date.now() - savedDate.getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSinceSave > 7) {
+            clearFormLocalStorage();
+            return false;
+        }
+
+        // Restore form fields
+        if (formData.name) appRoot.querySelector('#memorial-name').value = formData.name;
+        if (formData.title) appRoot.querySelector('#memorial-title').value = formData.title;
+        if (formData.birthDate) appRoot.querySelector('#memorial-birth-date').value = formData.birthDate;
+        if (formData.deathDate) appRoot.querySelector('#memorial-death-date').value = formData.deathDate;
+        if (formData.story) appRoot.querySelector('#memorial-story').value = formData.story;
+        if (formData.cemeteryName) appRoot.querySelector('#memorial-cemetery-name').value = formData.cemeteryName;
+        if (formData.cemeteryAddress) appRoot.querySelector('#memorial-cemetery-address').value = formData.cemeteryAddress;
+
+        // Restore location data
+        if (formData.cemeteryLocation) cemeteryLocation = formData.cemeteryLocation;
+        if (formData.gravesiteLocation) gravesiteLocation = formData.gravesiteLocation;
+
+        return true;
+    } catch (e) {
+        console.warn('Could not load form from localStorage:', e);
+        return false;
+    }
+}
+
+function clearFormLocalStorage() {
+    try {
+        localStorage.removeItem(FORM_STORAGE_KEY);
+    } catch (e) {
+        console.warn('Could not clear localStorage:', e);
+    }
+}
+
+function setupAutoSave(appRoot) {
+    // Auto-save on input changes (debounced)
+    let autoSaveTimer = null;
+    const formInputs = appRoot.querySelectorAll('input, textarea, select');
+
+    formInputs.forEach(input => {
+        input.addEventListener('input', () => {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => saveFormToLocalStorage(appRoot), 1000);
+        });
+    });
+
+    // Also save on step changes
+    const originalNavigate = navigateToStep;
+    // Note: We'll call saveFormToLocalStorage manually in step navigation
+}
+
+// --- AUTH MODAL FUNCTIONS ---
+function initializeAuthModal(appRoot) {
+    const modalEl = appRoot.querySelector('#authModal');
+    if (!modalEl) return;
+
+    authModal = new bootstrap.Modal(modalEl);
+
+    // Sign up form handler
+    const signupForm = appRoot.querySelector('#auth-signup-form');
+    signupForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleSignup(appRoot);
+    });
+
+    // Login form handler
+    const loginForm = appRoot.querySelector('#auth-login-form');
+    loginForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleLogin(appRoot);
+    });
+
+    // Forgot password handler
+    appRoot.querySelector('#auth-forgot-password')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = appRoot.querySelector('#auth-login-email')?.value;
+        if (!email) {
+            showAuthError(appRoot, 'Please enter your email address first');
+            return;
+        }
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email);
+            if (error) throw error;
+            showToast('Password reset email sent! Check your inbox.', 'success');
+        } catch (err) {
+            showAuthError(appRoot, err.message);
+        }
+    });
+}
+
+async function handleSignup(appRoot) {
+    const email = appRoot.querySelector('#auth-signup-email')?.value;
+    const password = appRoot.querySelector('#auth-signup-password')?.value;
+    const btn = appRoot.querySelector('#auth-signup-btn');
+
+    if (!email || !password) {
+        showAuthError(appRoot, 'Please fill in all fields');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...';
+    hideAuthError(appRoot);
+
+    try {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password
+        });
+
+        if (error) throw error;
+
+        // Close modal and continue save
+        authModal.hide();
+        showToast('Account created successfully!', 'success');
+
+        // Continue with the pending save
+        if (pendingSaveStatus) {
+            await completeSaveAfterAuth(appRoot, pendingSaveStatus);
+        }
+    } catch (err) {
+        showAuthError(appRoot, err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Create Account & Save';
+    }
+}
+
+async function handleLogin(appRoot) {
+    const email = appRoot.querySelector('#auth-login-email')?.value;
+    const password = appRoot.querySelector('#auth-login-password')?.value;
+    const btn = appRoot.querySelector('#auth-login-btn');
+
+    if (!email || !password) {
+        showAuthError(appRoot, 'Please fill in all fields');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+    hideAuthError(appRoot);
+
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) throw error;
+
+        // Close modal and continue save
+        authModal.hide();
+        showToast('Logged in successfully!', 'success');
+
+        // Continue with the pending save
+        if (pendingSaveStatus) {
+            await completeSaveAfterAuth(appRoot, pendingSaveStatus);
+        }
+    } catch (err) {
+        showAuthError(appRoot, err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Log In & Save';
+    }
+}
+
+function showAuthError(appRoot, message) {
+    const errorEl = appRoot.querySelector('#auth-error');
+    const messageEl = appRoot.querySelector('#auth-error-message');
+    if (errorEl && messageEl) {
+        messageEl.textContent = message;
+        errorEl.classList.remove('d-none');
+    }
+}
+
+function hideAuthError(appRoot) {
+    const errorEl = appRoot.querySelector('#auth-error');
+    if (errorEl) {
+        errorEl.classList.add('d-none');
+    }
+}
+
+function showAuthModal(appRoot, saveStatus) {
+    pendingSaveStatus = saveStatus;
+    hideAuthError(appRoot);
+
+    // Reset form fields
+    appRoot.querySelector('#auth-signup-email').value = '';
+    appRoot.querySelector('#auth-signup-password').value = '';
+    appRoot.querySelector('#auth-login-email').value = '';
+    appRoot.querySelector('#auth-login-password').value = '';
+
+    authModal.show();
+}
+
+async function completeSaveAfterAuth(appRoot, status) {
+    // Create a fake event to pass to saveMemorial
+    const fakeEvent = { preventDefault: () => {} };
+    await saveMemorial(fakeEvent, null, appRoot, status);
 }
 
 function adjustFormForTier(form, tier) {
@@ -817,8 +1055,12 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
     }
 
     const { data: { user } } = await supabase.auth.getUser();
+
+    // If not logged in, show auth modal
     if (!user) {
-        showToast("You must be signed in to save.", "error");
+        // Save form data to localStorage first
+        saveFormToLocalStorage(appRoot);
+        showAuthModal(appRoot, desiredStatus);
         return;
     }
 
@@ -899,6 +1141,9 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
 
         // Save family nearby members
         await saveFamilyNearby(newMemorialId);
+
+        // Clear localStorage draft since we saved successfully
+        clearFormLocalStorage();
 
         showToast(`Memorial ${desiredStatus}!`, 'success');
 
@@ -2179,6 +2424,23 @@ async function initializePage(appRoot, urlParams) {
 
     // Initialize family nearby (works for both new and existing memorials)
     await initializeFamilyNearby(appRoot, memorialId);
+
+    // Initialize auth modal for anonymous users
+    initializeAuthModal(appRoot);
+
+    // Setup auto-save to localStorage (only for new memorials)
+    if (!memorialId) {
+        setupAutoSave(appRoot);
+
+        // Try to restore from localStorage if there's a saved draft
+        const restored = loadFormFromLocalStorage(appRoot);
+        if (restored) {
+            showToast('Your previous draft has been restored.', 'info');
+        }
+    }
+
+    // Store appRoot for use in auth callbacks
+    currentAppRoot = appRoot;
 
     navigateToStep(1);
 
