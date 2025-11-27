@@ -370,8 +370,8 @@ body.logged-in header.header-visible {
     left: 0;
     right: 0;
     height: var(--bottom-nav-height);
-    background: var(--nav-bg);
-    border-top: 1px solid var(--nav-border);
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
     z-index: 1000;
     padding-bottom: env(safe-area-inset-bottom);
 }
@@ -404,10 +404,13 @@ body.logged-in .app-bottom-nav {
     justify-content: center;
     flex: 1;
     padding: 0.5rem 0.25rem;
-    color: var(--nav-text-muted);
+    color: #6b7280;
     text-decoration: none;
     transition: all 0.15s ease;
     position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
 }
 
 .app-bottom-nav-item.active {
@@ -416,6 +419,18 @@ body.logged-in .app-bottom-nav {
 
 .app-bottom-nav-item:active {
     transform: scale(0.95);
+}
+
+/* Ensure button elements match link styling */
+button.app-bottom-nav-item {
+    color: #6b7280;
+    font-family: inherit;
+}
+
+button.app-bottom-nav-item:hover,
+button.app-bottom-nav-item:focus {
+    color: var(--nav-accent);
+    outline: none;
 }
 
 .app-bottom-nav-icon {
