@@ -406,6 +406,459 @@ function formatMemberDateRange(birthDate, deathDate) {
     return `${birthYear} - ${deathYear}`;
 }
 
+// --- FAMILY NEARBY FUNCTIONS ---
+let familyNearbyPinModal = null;
+let selectedFamilyMember = null;
+
+async function renderFamilyNearby(memorialId, memorialData) {
+    const familyNearbyCard = document.getElementById('family-nearby-card');
+    const familyNearbyList = document.getElementById('family-nearby-list');
+
+    if (!familyNearbyCard || !familyNearbyList) return;
+
+    try {
+        const response = await fetch(`/api/family/list?memorialId=${encodeURIComponent(memorialId)}&includeLinked=true`);
+
+        if (!response.ok) {
+            familyNearbyCard.style.display = 'none';
+            return;
+        }
+
+        const { familyMembers, linkedMemorials, summary } = await response.json();
+
+        // Only show if there are family members that need pinning
+        if (!familyMembers.all || familyMembers.all.length === 0) {
+            familyNearbyCard.style.display = 'none';
+            return;
+        }
+
+        // Build HTML for family members
+        let html = '';
+
+        // Show family members that need pins first (can be helped by visitors)
+        if (familyMembers.needsPin && familyMembers.needsPin.length > 0) {
+            html += `
+                <div class="family-nearby-section mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-map-marker-alt me-1"></i>Needs Location
+                        </span>
+                        <small class="text-muted">Can you help find their grave?</small>
+                    </div>
+                    <div class="row g-2">
+                        ${familyMembers.needsPin.map(fm => renderFamilyNearbyCard(fm, true, memorialData)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show already pinned family members
+        if (familyMembers.pinned && familyMembers.pinned.length > 0) {
+            html += `
+                <div class="family-nearby-section mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>Located
+                        </span>
+                    </div>
+                    <div class="row g-2">
+                        ${familyMembers.pinned.map(fm => renderFamilyNearbyCard(fm, false, memorialData, linkedMemorials)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show those with their own memorial
+        if (familyMembers.hasMemorial && familyMembers.hasMemorial.length > 0) {
+            html += `
+                <div class="family-nearby-section mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-info">
+                            <i class="fas fa-link me-1"></i>Has Memorial
+                        </span>
+                    </div>
+                    <div class="row g-2">
+                        ${familyMembers.hasMemorial.map(fm => renderFamilyNearbyCardLinked(fm, linkedMemorials)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show unknown burial status
+        if (familyMembers.unknown && familyMembers.unknown.length > 0) {
+            html += `
+                <div class="family-nearby-section">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-question me-1"></i>Unknown Location
+                        </span>
+                    </div>
+                    <div class="row g-2">
+                        ${familyMembers.unknown.map(fm => renderFamilyNearbyCard(fm, false, memorialData)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        if (html) {
+            familyNearbyList.innerHTML = html;
+            familyNearbyCard.style.display = 'block';
+
+            // Set up pin button handlers
+            setupFamilyPinHandlers(memorialId, memorialData);
+        } else {
+            familyNearbyCard.style.display = 'none';
+        }
+
+    } catch (error) {
+        console.error('Error loading family nearby:', error);
+        familyNearbyCard.style.display = 'none';
+    }
+}
+
+function renderFamilyNearbyCard(member, needsPin, memorialData) {
+    const initial = member.name ? member.name[0].toUpperCase() : '?';
+    const dateRange = formatMemberDateRange(member.birth_date, member.death_date);
+    const burialInfo = getBurialStatusText(member.burial_status, member.cemetery_name);
+
+    return `
+        <div class="col-6 col-md-4">
+            <div class="family-nearby-card ${needsPin ? 'needs-pin' : ''}" data-family-id="${member.id}">
+                ${member.headstone_photo_url
+                    ? `<img src="${member.headstone_photo_url}" alt="${escapeHtml(member.name)}" class="family-nearby-photo">`
+                    : `<div class="family-nearby-placeholder"><i class="fas fa-user"></i></div>`
+                }
+                <div class="family-nearby-info">
+                    <div class="family-nearby-name">${escapeHtml(member.name)}</div>
+                    <div class="family-nearby-relation">${escapeHtml(member.relationship)}</div>
+                    ${dateRange ? `<div class="family-nearby-dates">${dateRange}</div>` : ''}
+                    ${burialInfo ? `<div class="family-nearby-burial">${burialInfo}</div>` : ''}
+                </div>
+                ${needsPin ? `
+                    <button class="btn btn-sm btn-warning family-pin-btn"
+                            data-family-id="${member.id}"
+                            data-family-name="${escapeHtml(member.name)}"
+                            data-family-relationship="${escapeHtml(member.relationship)}">
+                        <i class="fas fa-map-pin me-1"></i>I Found This Grave
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function renderFamilyNearbyCardLinked(member, linkedMemorials) {
+    const linkedMemorial = linkedMemorials[member.linked_memorial_id];
+    if (!linkedMemorial) return '';
+
+    const initial = linkedMemorial.name ? linkedMemorial.name[0].toUpperCase() : '?';
+    const dateRange = formatMemberDateRange(linkedMemorial.birth_date, linkedMemorial.death_date);
+
+    return `
+        <div class="col-6 col-md-4">
+            <a href="/memorial?id=${encodeURIComponent(member.linked_memorial_id)}" class="family-nearby-card linked" data-route>
+                ${linkedMemorial.main_photo
+                    ? `<img src="${linkedMemorial.main_photo}" alt="${escapeHtml(linkedMemorial.name)}" class="family-nearby-photo">`
+                    : `<div class="family-nearby-placeholder"><i class="fas fa-user"></i></div>`
+                }
+                <div class="family-nearby-info">
+                    <div class="family-nearby-name">${escapeHtml(linkedMemorial.name)}</div>
+                    <div class="family-nearby-relation">${escapeHtml(member.relationship)}</div>
+                    ${dateRange ? `<div class="family-nearby-dates">${dateRange}</div>` : ''}
+                    <div class="family-nearby-link">
+                        <i class="fas fa-external-link-alt me-1"></i>View Memorial
+                    </div>
+                </div>
+            </a>
+        </div>
+    `;
+}
+
+function getBurialStatusText(status, cemeteryName) {
+    switch (status) {
+        case 'same_cemetery':
+            return `<i class="fas fa-map-marker-alt me-1"></i>Same cemetery`;
+        case 'nearby_cemetery':
+            return cemeteryName ? `<i class="fas fa-map-marker-alt me-1"></i>${escapeHtml(cemeteryName)}` : '<i class="fas fa-map-marker-alt me-1"></i>Nearby cemetery';
+        case 'different_cemetery':
+            return cemeteryName ? `<i class="fas fa-map me-1"></i>${escapeHtml(cemeteryName)}` : '<i class="fas fa-map me-1"></i>Different location';
+        default:
+            return '';
+    }
+}
+
+function setupFamilyPinHandlers(memorialId, memorialData) {
+    // Set up click handlers for pin buttons
+    document.querySelectorAll('.family-pin-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const familyId = btn.dataset.familyId;
+            const familyName = btn.dataset.familyName;
+            const familyRelationship = btn.dataset.familyRelationship;
+            openFamilyPinModal(familyId, familyName, familyRelationship, memorialId, memorialData);
+        });
+    });
+}
+
+async function openFamilyPinModal(familyId, familyName, relationship, memorialId, memorialData) {
+    selectedFamilyMember = { id: familyId, name: familyName, relationship };
+
+    // Create modal if it doesn't exist
+    let modalEl = document.getElementById('familyPinModal');
+    if (!modalEl) {
+        const modalHTML = `
+            <div class="modal fade" id="familyPinModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                            <h5 class="modal-title">
+                                <i class="fas fa-map-marker-alt text-warning me-2"></i>
+                                Pin Relative's Grave
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-3">
+                                <p class="mb-2">You're helping locate:</p>
+                                <h5 id="pin-family-name" class="mb-1"></h5>
+                                <p class="text-muted mb-0" id="pin-family-relationship"></p>
+                            </div>
+
+                            <div class="alert alert-info small">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Stand at or near the headstone and use your current location, or take a photo of the headstone.
+                            </div>
+
+                            <div id="pin-location-status" class="mb-3">
+                                <button type="button" class="btn btn-primary w-100" id="get-pin-location-btn">
+                                    <i class="fas fa-crosshairs me-2"></i>Use My Current Location
+                                </button>
+                            </div>
+
+                            <div id="pin-location-result" class="mb-3" style="display: none;">
+                                <div class="d-flex align-items-center gap-2 text-success mb-2">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Location captured!</span>
+                                </div>
+                                <div id="pin-map-preview" style="height: 150px; border-radius: 8px; overflow: hidden;"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-camera me-2"></i>Headstone Photo (Optional)
+                                </label>
+                                <input type="file" class="form-control" id="pin-photo-input" accept="image/*" capture="environment">
+                                <div id="pin-photo-preview" class="mt-2" style="display: none;">
+                                    <img id="pin-photo-img" class="img-fluid rounded" style="max-height: 150px;">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Your Name (Optional)</label>
+                                <input type="text" class="form-control" id="pin-visitor-name" placeholder="Help the family know who helped">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-warning" id="submit-pin-btn" disabled>
+                                <i class="fas fa-map-pin me-2"></i>Submit Pin
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modalEl = document.getElementById('familyPinModal');
+
+        // Set up handlers
+        setupPinModalHandlers(memorialId);
+    }
+
+    // Update modal content
+    document.getElementById('pin-family-name').textContent = familyName;
+    document.getElementById('pin-family-relationship').textContent = `${relationship} of ${memorialData.name}`;
+
+    // Reset state
+    document.getElementById('pin-location-result').style.display = 'none';
+    document.getElementById('get-pin-location-btn').disabled = false;
+    document.getElementById('submit-pin-btn').disabled = true;
+    document.getElementById('pin-photo-input').value = '';
+    document.getElementById('pin-photo-preview').style.display = 'none';
+    document.getElementById('pin-visitor-name').value = '';
+    window.pinLocationData = null;
+
+    // Show modal
+    familyNearbyPinModal = new bootstrap.Modal(modalEl);
+    familyNearbyPinModal.show();
+}
+
+function setupPinModalHandlers(memorialId) {
+    // Get location button
+    document.getElementById('get-pin-location-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('get-pin-location-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Getting location...';
+
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                });
+            });
+
+            window.pinLocationData = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            };
+
+            // Show location result
+            document.getElementById('pin-location-result').style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-check me-2"></i>Location Captured';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+
+            // Render mini map preview
+            const mapContainer = document.getElementById('pin-map-preview');
+            if (window.mapboxgl) {
+                const miniMap = new mapboxgl.Map({
+                    container: mapContainer,
+                    style: 'mapbox://styles/mapbox/satellite-streets-v12',
+                    center: [window.pinLocationData.lng, window.pinLocationData.lat],
+                    zoom: 18,
+                    interactive: false
+                });
+
+                new mapboxgl.Marker({ color: '#f59e0b' })
+                    .setLngLat([window.pinLocationData.lng, window.pinLocationData.lat])
+                    .addTo(miniMap);
+            }
+
+            // Enable submit button
+            document.getElementById('submit-pin-btn').disabled = false;
+
+        } catch (error) {
+            console.error('Geolocation error:', error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-crosshairs me-2"></i>Use My Current Location';
+
+            let errorMessage = 'Could not get your location.';
+            if (error.code === 1) errorMessage = 'Location access denied. Please enable location services.';
+            else if (error.code === 2) errorMessage = 'Location unavailable. Please try again.';
+            else if (error.code === 3) errorMessage = 'Location request timed out. Please try again.';
+
+            showToast(errorMessage, 'warning');
+        }
+    });
+
+    // Photo input handler
+    document.getElementById('pin-photo-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('pin-photo-img').src = e.target.result;
+                document.getElementById('pin-photo-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Submit pin handler
+    document.getElementById('submit-pin-btn').addEventListener('click', async () => {
+        if (!window.pinLocationData || !selectedFamilyMember) {
+            showToast('Please capture your location first', 'warning');
+            return;
+        }
+
+        const btn = document.getElementById('submit-pin-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+
+        try {
+            // Upload photo if provided
+            let photoUrl = null;
+            const photoFile = document.getElementById('pin-photo-input').files[0];
+            if (photoFile) {
+                const formData = new FormData();
+                formData.append('file', photoFile);
+                formData.append('folder', 'family-pins');
+
+                const uploadResponse = await fetch('/api/tools/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (uploadResponse.ok) {
+                    const uploadData = await uploadResponse.json();
+                    photoUrl = uploadData.url;
+                }
+            }
+
+            // Get auth token if logged in
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (session?.access_token) {
+                headers['Authorization'] = `Bearer ${session.access_token}`;
+            }
+
+            // Submit pin
+            const response = await fetch('/api/family/pin-relative', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    familyMemberId: selectedFamilyMember.id,
+                    memorialId: memorialId,
+                    gravesiteLat: window.pinLocationData.lat,
+                    gravesiteLng: window.pinLocationData.lng,
+                    gravesiteAccuracy: window.pinLocationData.accuracy,
+                    photoUrl,
+                    visitorName: document.getElementById('pin-visitor-name').value || null,
+                    deviceId: getDeviceId()
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                familyNearbyPinModal.hide();
+
+                let message = `Thank you for helping locate ${selectedFamilyMember.name}'s grave!`;
+                if (result.points?.earned) {
+                    message += ` You earned ${result.points.earned} points!`;
+                }
+                showToast(message, 'success');
+
+                // Refresh the family nearby section
+                await renderFamilyNearby(memorialId, currentMemorialData);
+            } else {
+                throw new Error(result.error || 'Failed to submit pin');
+            }
+
+        } catch (error) {
+            console.error('Pin submission error:', error);
+            showToast(error.message || 'Failed to submit pin. Please try again.', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-map-pin me-2"></i>Submit Pin';
+        }
+    });
+}
+
+function getDeviceId() {
+    let deviceId = localStorage.getItem('hl_device_id');
+    if (!deviceId) {
+        deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        localStorage.setItem('hl_device_id', deviceId);
+    }
+    return deviceId;
+}
+
 function renderResidences(data) {
     const residencesCard = document.getElementById('residences-card');
     const residences = data.residences || [];
@@ -2230,6 +2683,9 @@ async function initializePage(appRoot, memorialId) {
     // Load family tree and update tab visibility
     await renderFamilyTree(memorialId);
     updateFamilyTabVisibility();
+
+    // Load family members nearby (for visitor pinning)
+    await renderFamilyNearby(memorialId, data);
 
     // Render residence map (async geocoding)
     await renderResidencesMap(data);

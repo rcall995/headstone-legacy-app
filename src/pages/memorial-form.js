@@ -23,6 +23,16 @@ let currentLinkingRelativeGroup = null; // The relative field being linked
 let searchDebounceTimer = null;
 let pendingConnections = []; // Connections to create when saving
 
+// Family nearby state
+let familyNearbyMembers = []; // Loaded family members from DB
+let familyNearbyToDelete = []; // IDs to delete on save
+const burialStatusOptions = [
+    { value: 'same_cemetery', label: 'Same cemetery', description: 'Buried in this same cemetery' },
+    { value: 'nearby_cemetery', label: 'Nearby cemetery', description: 'Buried in a nearby cemetery' },
+    { value: 'different_cemetery', label: 'Different cemetery', description: 'Buried elsewhere' },
+    { value: 'unknown', label: 'Unknown', description: 'Burial location unknown' }
+];
+
 function navigateToStep(stepNumber) {
     currentStep = stepNumber;
     document.querySelectorAll('.wizard-step').forEach(step => {
@@ -887,6 +897,9 @@ async function saveMemorial(e, memorialId, appRoot, desiredStatus = 'draft') {
         // Create any pending family connections
         await createPendingConnections(newMemorialId);
 
+        // Save family nearby members
+        await saveFamilyNearby(newMemorialId);
+
         showToast(`Memorial ${desiredStatus}!`, 'success');
 
         // If published, show success modal with share options and tag upsell
@@ -1496,6 +1509,216 @@ async function sendInvite(appRoot, memorialId) {
     }
 }
 
+// --- Family Nearby Functions ---
+async function initializeFamilyNearby(appRoot, memorialId) {
+    // Reset state
+    familyNearbyMembers = [];
+    familyNearbyToDelete = [];
+
+    // Wire up add button
+    appRoot.querySelector('#add-family-nearby-btn')?.addEventListener('click', () => {
+        addFamilyNearbyField(appRoot, {});
+    });
+
+    // Load existing family members if editing
+    if (memorialId) {
+        await loadFamilyNearby(appRoot, memorialId);
+    }
+}
+
+async function loadFamilyNearby(appRoot, memorialId) {
+    const container = appRoot.querySelector('#family-nearby-container');
+    if (!container) return;
+
+    try {
+        const response = await fetch(`/api/family/list?memorialId=${encodeURIComponent(memorialId)}`);
+        if (!response.ok) return;
+
+        const { familyMembers } = await response.json();
+        familyNearbyMembers = familyMembers.all || [];
+
+        // Render existing members
+        container.innerHTML = '';
+        familyNearbyMembers.forEach(member => {
+            addFamilyNearbyField(appRoot, member);
+        });
+    } catch (error) {
+        console.error('Error loading family nearby:', error);
+    }
+}
+
+function addFamilyNearbyField(appRoot, values = {}) {
+    const container = appRoot.querySelector('#family-nearby-container');
+    if (!container) return;
+
+    const fieldId = values.id || `new_${Date.now()}`;
+    const newField = document.createElement('div');
+    newField.className = 'family-nearby-field card mb-3';
+    newField.dataset.familyId = fieldId;
+
+    newField.innerHTML = `
+        <div class="card-body py-2 px-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm family-nearby-name"
+                           placeholder="Name" value="${escapeHtml(values.name || '')}" required>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm family-nearby-relationship">
+                        <option value="" disabled ${!values.relationship ? 'selected' : ''}>Relation</option>
+                        ${commonRelationships.map(r => `<option value="${r}" ${values.relationship === r ? 'selected' : ''}>${r}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm family-nearby-burial-status">
+                        ${burialStatusOptions.map(opt =>
+                            `<option value="${opt.value}" ${values.burial_status === opt.value ? 'selected' : ''}>${opt.label}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm family-nearby-cemetery"
+                           placeholder="Cemetery name (optional)" value="${escapeHtml(values.cemetery_name || '')}">
+                </div>
+                <div class="col-md-1 text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger family-nearby-remove" title="Remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="row g-2 mt-1">
+                <div class="col-md-3">
+                    <input type="date" class="form-control form-control-sm family-nearby-birth"
+                           placeholder="Birth date" value="${values.birth_date || ''}">
+                    <small class="text-muted">Birth date</small>
+                </div>
+                <div class="col-md-3">
+                    <input type="date" class="form-control form-control-sm family-nearby-death"
+                           placeholder="Death date" value="${values.death_date || ''}">
+                    <small class="text-muted">Death date</small>
+                </div>
+                ${values.gravesite_lat ? `
+                    <div class="col-md-6">
+                        <span class="badge bg-success"><i class="fas fa-check me-1"></i>Location pinned</span>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    // Wire up remove button
+    newField.querySelector('.family-nearby-remove')?.addEventListener('click', () => {
+        if (values.id) {
+            familyNearbyToDelete.push(values.id);
+        }
+        newField.remove();
+    });
+
+    container.appendChild(newField);
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function collectFamilyNearbyData(appRoot) {
+    const container = appRoot.querySelector('#family-nearby-container');
+    if (!container) return [];
+
+    const fields = container.querySelectorAll('.family-nearby-field');
+    const data = [];
+
+    fields.forEach(field => {
+        const name = field.querySelector('.family-nearby-name')?.value?.trim();
+        if (!name) return; // Skip empty entries
+
+        data.push({
+            id: field.dataset.familyId?.startsWith('new_') ? null : field.dataset.familyId,
+            name,
+            relationship: field.querySelector('.family-nearby-relationship')?.value || null,
+            burial_status: field.querySelector('.family-nearby-burial-status')?.value || 'unknown',
+            cemetery_name: field.querySelector('.family-nearby-cemetery')?.value?.trim() || null,
+            birth_date: field.querySelector('.family-nearby-birth')?.value || null,
+            death_date: field.querySelector('.family-nearby-death')?.value || null
+        });
+    });
+
+    return data;
+}
+
+async function saveFamilyNearby(memorialId) {
+    const appRoot = document.querySelector('.memorial-form-app');
+    if (!appRoot) return;
+
+    const familyData = collectFamilyNearbyData(appRoot);
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        // Delete removed members
+        for (const id of familyNearbyToDelete) {
+            await fetch('/api/family/manage', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ id })
+            });
+        }
+
+        // Create or update members
+        for (const member of familyData) {
+            if (member.id) {
+                // Update existing
+                await fetch('/api/family/manage', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        id: member.id,
+                        name: member.name,
+                        relationship: member.relationship,
+                        burialStatus: member.burial_status,
+                        cemeteryName: member.cemetery_name,
+                        birthDate: member.birth_date,
+                        deathDate: member.death_date
+                    })
+                });
+            } else {
+                // Create new
+                await fetch('/api/family/manage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        memorialId,
+                        name: member.name,
+                        relationship: member.relationship,
+                        burialStatus: member.burial_status,
+                        cemeteryName: member.cemetery_name,
+                        birthDate: member.birth_date,
+                        deathDate: member.death_date
+                    })
+                });
+            }
+        }
+
+        // Reset delete list
+        familyNearbyToDelete = [];
+    } catch (error) {
+        console.error('Error saving family nearby:', error);
+    }
+}
+
 // --- Biography Helper Functions ---
 let bioHelperModal = null;
 
@@ -1953,6 +2176,9 @@ async function initializePage(appRoot, urlParams) {
             initializeCollaborators(appRoot, memorialId);
         }
     }
+
+    // Initialize family nearby (works for both new and existing memorials)
+    await initializeFamilyNearby(appRoot, memorialId);
 
     navigateToStep(1);
 

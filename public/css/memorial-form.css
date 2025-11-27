@@ -1094,3 +1094,45 @@
         flex-direction: column;
     }
 }
+
+/* ========== FAMILY NEARBY FORM STYLES ========== */
+.family-nearby-field {
+    border: 1px solid #e8e4df;
+    border-radius: 8px;
+    background: #fff;
+    transition: box-shadow 0.2s ease;
+}
+
+.family-nearby-field:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.family-nearby-field .card-body {
+    padding: 0.75rem !important;
+}
+
+.family-nearby-field input,
+.family-nearby-field select {
+    font-size: 0.875rem;
+}
+
+.family-nearby-field .text-muted {
+    font-size: 0.7rem;
+}
+
+#family-nearby-section .section-title i {
+    color: #f59e0b;
+}
+
+/* Mobile adjustments for family nearby */
+@media (max-width: 767px) {
+    .family-nearby-field .row {
+        margin-bottom: 0.5rem;
+    }
+
+    .family-nearby-field .col-md-3,
+    .family-nearby-field .col-md-2,
+    .family-nearby-field .col-md-1 {
+        margin-bottom: 0.25rem;
+    }
+}

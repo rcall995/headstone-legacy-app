@@ -4676,3 +4676,138 @@ a.value-card,
         font-size: 0.8rem;
     }
 }
+
+/* ============================================
+   FAMILY NEARBY - Visitor Pinning Feature
+   ============================================ */
+
+.family-nearby-card {
+    background: var(--bg-white);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-xs);
+    border: 1px solid var(--border-light);
+    transition: var(--transition-base);
+    height: 100%;
+}
+
+.family-nearby-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.family-nearby-card.needs-pin {
+    border-color: #fbbf24;
+    background: linear-gradient(to bottom, #fffbeb 0%, var(--bg-white) 100%);
+}
+
+.family-nearby-card.linked {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.family-nearby-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-light);
+}
+
+.family-nearby-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--bg-warm) 0%, var(--bg-cream) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    border: 2px solid var(--border-light);
+}
+
+.family-nearby-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.family-nearby-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.family-nearby-relation {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.family-nearby-dates {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.family-nearby-burial {
+    font-size: 0.75rem;
+    color: var(--primary);
+    margin-top: 2px;
+}
+
+.family-nearby-link {
+    font-size: 0.75rem;
+    color: var(--primary);
+    margin-top: 4px;
+}
+
+.family-pin-btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.5rem;
+    margin-top: auto;
+    white-space: nowrap;
+}
+
+.family-nearby-section {
+    margin-bottom: var(--space-md);
+}
+
+/* Family nearby card in memorial page */
+#family-nearby-card .content-card-header {
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+#family-nearby-card .content-card-body {
+    padding: var(--space-md);
+}
+
+/* Mobile adjustments */
+@media (max-width: 576px) {
+    .family-nearby-photo,
+    .family-nearby-placeholder {
+        width: 50px;
+        height: 50px;
+    }
+
+    .family-nearby-name {
+        font-size: 0.85rem;
+    }
+
+    .family-nearby-relation,
+    .family-nearby-dates,
+    .family-nearby-burial {
+        font-size: 0.7rem;
+    }
+
+    .family-pin-btn {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.4rem;
+    }
+}
