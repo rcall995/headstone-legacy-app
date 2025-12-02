@@ -59,7 +59,17 @@ export default async function handler(req, res) {
         }
 
         // Find duplicates
-        const duplicateGroups = findDuplicates(memorials);
+        let duplicateGroups;
+        try {
+            duplicateGroups = findDuplicates(memorials);
+        } catch (findError) {
+            console.error('Error in findDuplicates function:', findError);
+            return res.status(500).json({
+                error: 'Error processing duplicates',
+                details: findError.message,
+                stack: findError.stack
+            });
+        }
 
         return res.status(200).json({
             success: true,
@@ -70,7 +80,11 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error('Find duplicates error:', error);
-        return res.status(500).json({ error: 'Failed to find duplicates' });
+        return res.status(500).json({
+            error: 'Failed to find duplicates',
+            details: error.message,
+            stack: error.stack
+        });
     }
 }
 

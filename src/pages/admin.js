@@ -1201,9 +1201,12 @@ async function scanForDuplicates() {
             }
         });
 
-        if (!response.ok) throw new Error('Failed to scan for duplicates');
-
         const data = await response.json();
+
+        if (!response.ok) {
+            console.error('API Error:', data);
+            throw new Error(data.details || data.error || 'Failed to scan for duplicates');
+        }
         duplicateGroups = data.groups || [];
 
         loading.style.display = 'none';
