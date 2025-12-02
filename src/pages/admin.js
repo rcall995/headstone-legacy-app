@@ -1281,8 +1281,6 @@ function openMergeModal(groupIndex) {
         { key: 'name', label: 'Name' },
         { key: 'birth_date', label: 'Birth Date' },
         { key: 'death_date', label: 'Death Date' },
-        { key: 'birth_place', label: 'Birth Place' },
-        { key: 'death_place', label: 'Death Place' },
         { key: 'cemetery_name', label: 'Cemetery' },
         { key: 'cemetery_address', label: 'Cemetery Address' },
         { key: 'biography', label: 'Biography', truncate: true }

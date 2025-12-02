@@ -33,7 +33,7 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid token' });
         }
 
-        // Get all memorials
+        // Get all memorials - only select columns that exist
         const { data: memorials, error } = await supabase
             .from('memorials')
             .select(`
@@ -41,8 +41,6 @@ export default async function handler(req, res) {
                 name,
                 birth_date,
                 death_date,
-                birth_place,
-                death_place,
                 cemetery_name,
                 cemetery_address,
                 gravesite_lat,
@@ -160,16 +158,14 @@ function findDuplicates(memorials) {
     // Calculate completeness score for a memorial
     const getCompleteness = (m) => {
         let score = 0;
-        if (m.name) score += 10;
-        if (m.birth_date) score += 10;
-        if (m.death_date) score += 10;
-        if (m.birth_place) score += 10;
-        if (m.death_place) score += 10;
-        if (m.cemetery_name) score += 10;
-        if (m.cemetery_address) score += 5;
+        if (m.name) score += 15;
+        if (m.birth_date) score += 15;
+        if (m.death_date) score += 15;
+        if (m.cemetery_name) score += 15;
+        if (m.cemetery_address) score += 10;
         if (m.gravesite_lat) score += 15;
         if (m.main_photo) score += 10;
-        if (m.biography && m.biography.length > 50) score += 10;
+        if (m.biography && m.biography.length > 50) score += 5;
         return score;
     };
 
