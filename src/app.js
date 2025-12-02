@@ -518,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check admin status
   async function checkAdminStatus(user) {
     // Simple check: certain email domains or specific emails
-    const adminEmails = ['rich@headstonelegacy.com', 'admin@headstonelegacy.com', 'rcall995@gmail.com'];
+    const adminEmails = ['rich@headstonelegacy.com', 'admin@headstonelegacy.com', 'rcall995@gmail.com', 'rcall@10kpostcards.com'];
     const isAdmin = adminEmails.includes(user.email) || user.email?.endsWith('@headstonelegacy.com');
 
     const adminDesktop = document.getElementById('admin-link-desktop');
