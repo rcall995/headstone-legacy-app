@@ -125,6 +125,116 @@ function parseGedcomDate(dateStr) {
     return null;
 }
 
+// Check for potential duplicate matches in existing database
+async function findPotentialMatches(memorials, supabase) {
+    // Get all existing memorials for comparison
+    const { data: existingMemorials, error } = await supabase
+        .from('memorials')
+        .select('id, name, birth_date, death_date, cemetery_name');
+
+    if (error || !existingMemorials) {
+        console.error('Error fetching existing memorials:', error);
+        return memorials.map(m => ({ ...m, potentialMatches: [] }));
+    }
+
+    // Normalize name for comparison
+    const normalizeName = (name) => {
+        if (!name) return '';
+        return name.toLowerCase()
+            .replace(/[^a-z\s]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    };
+
+    // Calculate simple similarity score
+    const similarity = (s1, s2) => {
+        if (!s1 || !s2) return 0;
+        const n1 = normalizeName(s1);
+        const n2 = normalizeName(s2);
+        if (n1 === n2) return 1;
+
+        // Check if one contains the other
+        if (n1.includes(n2) || n2.includes(n1)) return 0.8;
+
+        // Check word overlap
+        const words1 = n1.split(' ').filter(w => w.length > 1);
+        const words2 = n2.split(' ').filter(w => w.length > 1);
+        const overlap = words1.filter(w => words2.includes(w)).length;
+        const maxWords = Math.max(words1.length, words2.length);
+        if (maxWords === 0) return 0;
+        return overlap / maxWords;
+    };
+
+    // Extract year from date string
+    const getYear = (dateStr) => {
+        if (!dateStr) return null;
+        const match = dateStr.match(/\d{4}/);
+        return match ? parseInt(match[0], 10) : null;
+    };
+
+    // Check each memorial for matches
+    return memorials.map(memorial => {
+        const matches = [];
+        const memorialBirthYear = getYear(memorial.birthDate);
+        const memorialDeathYear = getYear(memorial.deathDate);
+
+        for (const existing of existingMemorials) {
+            const nameSim = similarity(memorial.name, existing.name);
+
+            // Skip if name similarity is too low
+            if (nameSim < 0.6) continue;
+
+            const existingBirthYear = getYear(existing.birth_date);
+            const existingDeathYear = getYear(existing.death_date);
+
+            // Check date matches
+            let dateScore = 0;
+            let dateMatches = [];
+
+            if (memorialBirthYear && existingBirthYear) {
+                if (memorialBirthYear === existingBirthYear) {
+                    dateScore += 0.5;
+                    dateMatches.push('birth year');
+                }
+            }
+
+            if (memorialDeathYear && existingDeathYear) {
+                if (memorialDeathYear === existingDeathYear) {
+                    dateScore += 0.5;
+                    dateMatches.push('death year');
+                }
+            }
+
+            // Calculate overall match score
+            const overallScore = (nameSim * 0.6) + (dateScore * 0.4);
+
+            // Only include if score is high enough
+            if (overallScore >= 0.5 || (nameSim >= 0.8 && dateScore > 0)) {
+                matches.push({
+                    id: existing.id,
+                    name: existing.name,
+                    birthDate: existing.birth_date,
+                    deathDate: existing.death_date,
+                    cemetery: existing.cemetery_name,
+                    score: Math.round(overallScore * 100),
+                    matchReasons: [
+                        nameSim >= 0.9 ? 'Exact name match' : nameSim >= 0.7 ? 'Similar name' : 'Partial name match',
+                        ...dateMatches.map(d => `Same ${d}`)
+                    ].filter(Boolean)
+                });
+            }
+        }
+
+        // Sort by score descending
+        matches.sort((a, b) => b.score - a.score);
+
+        return {
+            ...memorial,
+            potentialMatches: matches.slice(0, 3) // Top 3 matches
+        };
+    });
+}
+
 function transformToMemorials(parsedData) {
     const { individuals, families } = parsedData;
     const familyMap = new Map(families.map(f => [f.id, f]));
@@ -230,6 +340,12 @@ export default async function handler(req, res) {
         const parsed = parseGedcom(gedcomText);
         const transformed = transformToMemorials(parsed);
 
+        // Check for potential duplicate matches
+        const memorialsWithMatches = await findPotentialMatches(transformed.memorials, supabase);
+
+        // Count how many have potential matches
+        const withMatches = memorialsWithMatches.filter(m => m.potentialMatches.length > 0);
+
         // Return preview data (don't save yet)
         return res.status(200).json({
             success: true,
@@ -238,10 +354,11 @@ export default async function handler(req, res) {
                 totalIndividuals: transformed.total,
                 deceasedIndividuals: transformed.deceased,
                 livingIndividuals: transformed.living,
-                families: transformed.families
+                families: transformed.families,
+                potentialDuplicates: withMatches.length
             },
-            preview: transformed.memorials.slice(0, 50), // Preview first 50
-            allMemorials: transformed.memorials
+            preview: memorialsWithMatches.slice(0, 50), // Preview first 50
+            allMemorials: memorialsWithMatches
         });
 
     } catch (error) {

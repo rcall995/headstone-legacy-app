@@ -5,6 +5,7 @@ import { showToast } from '/js/utils/toasts.js';
 let gedcomFile = null;
 let parsedData = null;
 let selectedIds = new Set();
+let linkedToExisting = new Map(); // gedcomId -> existingMemorialId
 
 export async function loadGedcomImportPage(appRoot) {
     try {
@@ -98,6 +99,7 @@ function initializeUpload() {
         gedcomFile = null;
         parsedData = null;
         selectedIds.clear();
+        linkedToExisting.clear();
         document.getElementById('gedcom-file-input').value = '';
         document.getElementById('file-info')?.classList.add('d-none');
         document.getElementById('parse-btn').disabled = true;
@@ -175,6 +177,7 @@ async function parseGedcomFile() {
         document.getElementById('stat-deceased').textContent = result.stats.deceasedIndividuals;
         document.getElementById('stat-living').textContent = result.stats.livingIndividuals;
         document.getElementById('stat-families').textContent = result.stats.families;
+        document.getElementById('stat-duplicates').textContent = result.stats.potentialDuplicates || 0;
 
         // Populate table
         populatePeopleTable(result.allMemorials);
@@ -202,9 +205,44 @@ function populatePeopleTable(memorials) {
     tbody.innerHTML = memorials.map(m => {
         const needsCemetery = !m.burialPlace;
         const needsLocation = true; // All need GPS
+        const hasMatches = m.potentialMatches && m.potentialMatches.length > 0;
+
+        let matchesHtml = '';
+        if (hasMatches) {
+            matchesHtml = `
+                <div class="potential-matches mt-2 p-2 bg-warning bg-opacity-10 rounded border border-warning">
+                    <small class="text-warning d-block mb-1"><i class="fas fa-exclamation-triangle me-1"></i>Potential match found:</small>
+                    ${m.potentialMatches.map(match => `
+                        <div class="match-option d-flex align-items-center gap-2 mb-1">
+                            <input type="radio" class="form-check-input match-radio"
+                                name="match-${m.gedcomId}"
+                                data-gedcom-id="${m.gedcomId}"
+                                data-match-id="${match.id}"
+                                id="match-${m.gedcomId}-${match.id}">
+                            <label for="match-${m.gedcomId}-${match.id}" class="mb-0 small">
+                                <strong>${escapeHtml(match.name)}</strong>
+                                ${match.birthDate || match.deathDate ? `(${match.birthDate?.substring(0,4) || '?'} - ${match.deathDate?.substring(0,4) || '?'})` : ''}
+                                <span class="badge bg-warning text-dark">${match.score}% match</span>
+                            </label>
+                        </div>
+                    `).join('')}
+                    <div class="match-option d-flex align-items-center gap-2">
+                        <input type="radio" class="form-check-input match-radio"
+                            name="match-${m.gedcomId}"
+                            data-gedcom-id="${m.gedcomId}"
+                            data-match-id="new"
+                            id="match-${m.gedcomId}-new"
+                            checked>
+                        <label for="match-${m.gedcomId}-new" class="mb-0 small text-success">
+                            <i class="fas fa-plus me-1"></i>Import as new person
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
 
         return `
-            <tr data-gedcom-id="${m.gedcomId}">
+            <tr data-gedcom-id="${m.gedcomId}" class="${hasMatches ? 'table-warning' : ''}">
                 <td>
                     <input type="checkbox" class="form-check-input person-checkbox"
                         data-gedcom-id="${m.gedcomId}" checked>
@@ -212,6 +250,7 @@ function populatePeopleTable(memorials) {
                 <td>
                     <strong>${escapeHtml(m.name)}</strong>
                     ${m.relationships?.length > 0 ? `<br><small class="text-muted">${m.relationships.length} relationships</small>` : ''}
+                    ${matchesHtml}
                 </td>
                 <td>
                     ${m.birthDate || '<span class="text-muted">Unknown</span>'}
@@ -223,7 +262,8 @@ function populatePeopleTable(memorials) {
                 </td>
                 <td>${m.burialPlace ? escapeHtml(m.burialPlace) : '<span class="text-muted">Unknown</span>'}</td>
                 <td>
-                    ${needsCemetery ? '<span class="badge bg-warning me-1">Cemetery</span>' : ''}
+                    ${hasMatches ? '<span class="badge bg-warning text-dark me-1">Review</span>' : ''}
+                    ${needsCemetery ? '<span class="badge bg-secondary me-1">Cemetery</span>' : ''}
                     ${needsLocation ? '<span class="badge bg-info">GPS Pin</span>' : ''}
                 </td>
             </tr>
@@ -238,6 +278,21 @@ function populatePeopleTable(memorials) {
                 selectedIds.add(gedcomId);
             } else {
                 selectedIds.delete(gedcomId);
+                linkedToExisting.delete(gedcomId);
+            }
+            updateSelectedCount();
+        });
+    });
+
+    // Add match radio listeners
+    tbody.querySelectorAll('.match-radio').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const gedcomId = e.target.dataset.gedcomId;
+            const matchId = e.target.dataset.matchId;
+            if (matchId === 'new') {
+                linkedToExisting.delete(gedcomId);
+            } else {
+                linkedToExisting.set(gedcomId, matchId);
             }
             updateSelectedCount();
         });
@@ -261,9 +316,22 @@ function selectAll(select) {
 
 function updateSelectedCount() {
     const count = selectedIds.size;
+    const linkedCount = linkedToExisting.size;
+    const newCount = count - linkedCount;
+
     document.getElementById('selected-count').textContent = count;
     document.getElementById('import-count').textContent = count;
     document.getElementById('import-btn').disabled = count === 0;
+
+    // Update summary text if element exists
+    const summaryEl = document.getElementById('import-summary');
+    if (summaryEl) {
+        if (linkedCount > 0) {
+            summaryEl.innerHTML = `<span class="text-success">${newCount} new</span> + <span class="text-warning">${linkedCount} linked to existing</span>`;
+        } else {
+            summaryEl.textContent = `${count} new memorials`;
+        }
+    }
 }
 
 async function importSelected() {
@@ -280,6 +348,12 @@ async function importSelected() {
             throw new Error('Not authenticated');
         }
 
+        // Convert linkedToExisting Map to object for JSON
+        const linkedMappings = {};
+        linkedToExisting.forEach((existingId, gedcomId) => {
+            linkedMappings[gedcomId] = existingId;
+        });
+
         const response = await fetch('/api/gedcom/import', {
             method: 'POST',
             headers: {
@@ -289,7 +363,8 @@ async function importSelected() {
             body: JSON.stringify({
                 fileName: gedcomFile?.name,
                 memorials: parsedData.allMemorials,
-                selectedIds: Array.from(selectedIds)
+                selectedIds: Array.from(selectedIds),
+                linkedToExisting: linkedMappings
             })
         });
 
@@ -307,7 +382,21 @@ async function importSelected() {
         document.getElementById('result-connections').textContent = result.stats.connections;
         document.getElementById('result-wanted').textContent = result.memorials?.filter(m => m.needsLocation).length || 0;
 
-        showToast(`Successfully imported ${result.stats.created} memorials!`, 'success');
+        // Show linked count if any
+        const linkedEl = document.getElementById('result-linked');
+        if (linkedEl) {
+            if (result.stats.linked > 0) {
+                linkedEl.textContent = result.stats.linked;
+                linkedEl.closest('.result-item')?.classList.remove('d-none');
+            } else {
+                linkedEl.closest('.result-item')?.classList.add('d-none');
+            }
+        }
+
+        const message = result.stats.linked > 0
+            ? `Imported ${result.stats.created} new + linked ${result.stats.linked} existing!`
+            : `Successfully imported ${result.stats.created} memorials!`;
+        showToast(message, 'success');
 
     } catch (error) {
         console.error('Import error:', error);

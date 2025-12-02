@@ -45,7 +45,7 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid token' });
         }
 
-        const { fileName, memorials, selectedIds } = req.body;
+        const { fileName, memorials, selectedIds, linkedToExisting = {} } = req.body;
 
         if (!memorials || !Array.isArray(memorials)) {
             return res.status(400).json({ error: 'No memorial data provided' });
@@ -59,6 +59,10 @@ export default async function handler(req, res) {
         if (toImport.length === 0) {
             return res.status(400).json({ error: 'No individuals selected for import' });
         }
+
+        // Separate into new imports vs linked to existing
+        const toCreate = toImport.filter(m => !linkedToExisting[m.gedcomId]);
+        const toLink = toImport.filter(m => linkedToExisting[m.gedcomId]);
 
         // Create import record
         const { data: importRecord, error: importError } = await supabase
@@ -83,10 +87,22 @@ export default async function handler(req, res) {
         // Map gedcomId to memorial ID for relationship linking
         const gedcomToMemorialId = new Map();
         const createdMemorials = [];
+        const linkedMemorials = [];
         const errors = [];
 
-        // First pass: Create all memorials
-        for (const memorial of toImport) {
+        // Pre-populate map with linked existing memorials
+        for (const memorial of toLink) {
+            const existingId = linkedToExisting[memorial.gedcomId];
+            gedcomToMemorialId.set(memorial.gedcomId, existingId);
+            linkedMemorials.push({
+                gedcomId: memorial.gedcomId,
+                name: memorial.name,
+                linkedTo: existingId
+            });
+        }
+
+        // First pass: Create new memorials (skip linked ones)
+        for (const memorial of toCreate) {
             try {
                 const memorialId = generateSlug(memorial.name, memorial.gedcomId);
                 gedcomToMemorialId.set(memorial.gedcomId, memorialId);
@@ -204,6 +220,7 @@ export default async function handler(req, res) {
             stats: {
                 requested: toImport.length,
                 created: createdMemorials.length,
+                linked: linkedMemorials.length,
                 connections: connectionsCreated,
                 errors: errors.length
             },
@@ -213,7 +230,8 @@ export default async function handler(req, res) {
                 name: m.name,
                 needsLocation: m.needs_location,
                 needsCemetery: m.needs_cemetery
-            }))
+            })),
+            linkedMemorials: linkedMemorials.length > 0 ? linkedMemorials : undefined
         });
 
     } catch (error) {
