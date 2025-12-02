@@ -33,29 +33,20 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid token' });
         }
 
-        // Get all memorials - only select columns that exist
+        // Get all memorials - use simple select to avoid column issues
         const { data: memorials, error } = await supabase
             .from('memorials')
-            .select(`
-                id,
-                name,
-                birth_date,
-                death_date,
-                cemetery_name,
-                cemetery_address,
-                gravesite_lat,
-                gravesite_lng,
-                main_photo,
-                biography,
-                source,
-                created_at,
-                status
-            `)
+            .select('id, name, birth_date, death_date, cemetery_name, cemetery_address, gravesite_lat, main_photo, biography, status')
             .order('name');
 
         if (error) {
             console.error('Query error:', error);
-            return res.status(500).json({ error: 'Failed to fetch memorials' });
+            return res.status(500).json({
+                error: 'Failed to fetch memorials',
+                details: error.message,
+                code: error.code,
+                hint: error.hint
+            });
         }
 
         // Find duplicates
