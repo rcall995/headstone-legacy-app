@@ -60,6 +60,24 @@ export default async function handler(req, res) {
                 return res.status(403).json({ error: 'Not authorized to edit this memorial' });
             }
 
+            // Check for duplicate (same memorial, name, relationship)
+            const { data: existing } = await supabase
+                .from('family_members')
+                .select('id')
+                .eq('memorial_id', memorialId)
+                .ilike('name', name)
+                .eq('relationship', relationship)
+                .maybeSingle();
+
+            if (existing) {
+                // Return the existing one instead of creating duplicate
+                return res.status(200).json({
+                    success: true,
+                    familyMember: existing,
+                    message: 'Family member already exists'
+                });
+            }
+
             // Create family member
             const { data: newMember, error } = await supabase
                 .from('family_members')

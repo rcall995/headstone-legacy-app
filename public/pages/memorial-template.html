@@ -9,20 +9,542 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css' rel='stylesheet' />
     <style>
-        /* Example styles, adjust as needed */
-        .memorial-page-header {
-            background-color: #f8f9fa;
-            padding: 2rem 0;
+        :root {
+            --memorial-primary: #005F60;
+            --memorial-primary-light: #007a7a;
+            --memorial-gold: #b8860b;
+            --memorial-gold-light: #d4a855;
+        }
+
+        /* Hero Header Section */
+        .memorial-hero {
+            position: relative;
+            min-height: 200px;
+            background: linear-gradient(135deg, var(--memorial-primary) 0%, var(--memorial-primary-light) 50%, #00959a 100%);
+            overflow: hidden;
+        }
+        @media (min-width: 768px) {
+            .memorial-hero {
+                min-height: 320px;
+            }
+        }
+        .memorial-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+        /* Hide pattern overlay when using image backgrounds */
+        .memorial-hero.no-pattern::before {
+            display: none;
+        }
+        .memorial-hero-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+        }
+        .memorial-hero-content {
+            position: relative;
+            z-index: 1;
+            padding: 1rem 1rem 3rem;
+        }
+        @media (min-width: 768px) {
+            .memorial-hero-content {
+                padding: 2rem 1rem 4rem;
+            }
+        }
+
+        /* Profile Photo */
+        .memorial-profile-section {
+            position: relative;
+            margin-top: -80px;
+            z-index: 10;
+            padding-bottom: 1rem;
+        }
+        .memorial-profile-photo {
+            width: 225px !important;
+            height: 225px !important;
+            min-width: 225px;
+            min-height: 225px;
+            max-width: 225px;
+            max-height: 225px;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+            background: linear-gradient(135deg, var(--memorial-primary), var(--memorial-primary-light));
+            aspect-ratio: 1 / 1;
+        }
+        @media (min-width: 768px) {
+            .memorial-profile-section {
+                margin-top: -120px;
+            }
+            .memorial-profile-photo {
+                width: 360px !important;
+                height: 360px !important;
+                min-width: 360px;
+                min-height: 360px;
+                max-width: 360px;
+                max-height: 360px;
+                border-radius: 20px;
+                border: 6px solid white;
+            }
+        }
+        .memorial-profile-placeholder {
+            width: 225px;
+            height: 225px;
+            border-radius: 16px;
+            border: 5px solid white;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+            background: linear-gradient(135deg, var(--memorial-primary), var(--memorial-primary-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 4rem;
+            font-weight: 300;
+        }
+        @media (min-width: 768px) {
+            .memorial-profile-placeholder {
+                width: 360px;
+                height: 360px;
+                border-radius: 20px;
+                border: 6px solid white;
+                font-size: 6rem;
+            }
+        }
+        .memorial-profile-logo {
+            object-fit: contain;
+            background: white;
+            padding: 20px;
+        }
+        .family-nearby-logo {
+            object-fit: contain;
+            background: white;
+            padding: 10px;
         }
         .memorial-header-name {
-            font-size: 2.5rem;
-            font-weight: bold;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.5px;
         }
+        @media (min-width: 768px) {
+            .memorial-header-name {
+                font-size: 2.2rem;
+            }
+        }
+        .memorial-title-epitaph {
+            font-size: 1rem;
+            max-width: 500px;
+            margin: 0 auto 0.75rem;
+            color: #666;
+        }
+        @media (min-width: 768px) {
+            .memorial-title-epitaph {
+                font-size: 1.1rem;
+                margin: 0 auto 1rem;
+            }
+        }
+
+        /* Life Info Display - Stacked Layout (Born/Died) - Always side by side */
+        .life-info-display-stacked {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 2rem;
+            margin: 1rem 0;
+        }
+        @media (min-width: 768px) {
+            .life-info-display-stacked {
+                gap: 5rem;
+                margin: 2rem 0;
+            }
+        }
+        .life-info-block {
+            text-align: center;
+        }
+        .life-info-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--memorial-primary);
+            text-transform: uppercase;
+            margin-bottom: 0.15rem;
+        }
+        @media (min-width: 768px) {
+            .life-info-label {
+                font-size: 0.75rem;
+                letter-spacing: 2px;
+                margin-bottom: 0.25rem;
+            }
+        }
+        .life-info-date {
+            font-weight: 500;
+            color: #333;
+            font-size: 0.9rem;
+            margin-bottom: 0.1rem;
+        }
+        @media (min-width: 768px) {
+            .life-info-date {
+                font-size: 1rem;
+                margin-bottom: 0.15rem;
+            }
+        }
+        .life-info-place {
+            color: #666;
+            font-size: 0.85rem;
+        }
+        @media (min-width: 768px) {
+            .life-info-place {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Resting Place Section */
+        .resting-place-section {
+            margin: 1rem 0;
+            text-align: center;
+        }
+        @media (min-width: 768px) {
+            .resting-place-section {
+                margin: 2rem 0;
+            }
+        }
+        .resting-place-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--memorial-primary);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+        .resting-place-name {
+            font-weight: 500;
+            color: #333;
+            font-size: 1rem;
+            margin-bottom: 0.15rem;
+        }
+        .resting-place-address {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .view-location-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--memorial-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .view-location-link:hover {
+            color: var(--memorial-primary-light);
+            text-decoration: underline;
+        }
+        .view-location-link i {
+            font-size: 0.8rem;
+        }
+
+        /* Action Buttons */
+        .memorial-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+        .memorial-actions .btn {
+            border-radius: 50px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .btn-memorial-primary {
+            background: var(--memorial-primary);
+            color: white;
+            border: none;
+        }
+        .btn-memorial-primary:hover {
+            background: var(--memorial-primary-light);
+            color: white;
+        }
+        .btn-memorial-outline {
+            background: white;
+            color: var(--memorial-primary);
+            border: 2px solid var(--memorial-primary);
+        }
+        .btn-memorial-gold {
+            background: var(--memorial-gold);
+            color: white;
+            border: none;
+        }
+        .btn-memorial-gold:hover {
+            background: var(--memorial-gold-light);
+            color: white;
+        }
+        .btn-memorial-outline:hover {
+            background: var(--memorial-primary);
+            color: white;
+        }
+
+        /* Engagement Stats */
+        #engagement-section {
+            padding: 1.25rem;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #fffbf0 0%, #fff7e6 100%);
+            border: 1px solid #f0e6d3;
+            margin: 1rem auto;
+            max-width: 500px;
+        }
+        .engagement-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--memorial-gold);
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+        }
+
+        /* Modern Tab Navigation */
+        .memorial-tabs-container {
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .memorial-nav-tabs {
+            border: none;
+            justify-content: center;
+            gap: 0.25rem;
+            padding: 0.75rem 0.5rem;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .memorial-nav-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        @media (min-width: 768px) {
+            .memorial-nav-tabs {
+                gap: 0.5rem;
+                padding: 1rem 0;
+            }
+        }
+        .memorial-nav-tabs .nav-link {
+            border: none;
+            border-radius: 50px;
+            padding: 0.5rem 0.75rem;
+            color: #666;
+            font-weight: 500;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        @media (min-width: 768px) {
+            .memorial-nav-tabs .nav-link {
+                padding: 0.6rem 1.25rem;
+                font-size: 0.9rem;
+                gap: 0.5rem;
+            }
+        }
+        .memorial-nav-tabs .nav-link:hover {
+            background: #f0f0f0;
+            color: var(--memorial-primary);
+        }
+        .memorial-nav-tabs .nav-link.active {
+            background: var(--memorial-primary);
+            color: white;
+        }
+        .memorial-nav-tabs .nav-link i {
+            font-size: 0.8rem;
+        }
+        @media (min-width: 768px) {
+            .memorial-nav-tabs .nav-link i {
+                font-size: 0.85rem;
+            }
+        }
+        .tab-badge {
+            background: #e74c3c;
+            color: white;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 10px;
+            margin-left: 0.25rem;
+        }
+        /* Two-line media tab text */
+        .media-tab-text {
+            white-space: normal;
+            line-height: 1.1;
+            text-align: center;
+            font-size: 0.65rem;
+        }
+        @media (min-width: 768px) {
+            .media-tab-text {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Tab Content Area */
+        .memorial-tab-content {
+            padding: 2rem 0;
+            min-height: 400px;
+            background: #fafafa;
+        }
+        .memorial-content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        /* Force Mapbox maps to fill container with proper aspect ratio */
+        #cemetery-map-container,
+        #residences-map-container {
+            width: 100% !important;
+            aspect-ratio: 4/3 !important;
+            min-height: 250px !important;
+            max-height: 400px !important;
+        }
+        #cemetery-map-container .mapboxgl-map,
+        #residences-map-container .mapboxgl-map {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        #cemetery-map-container .mapboxgl-canvas-container,
+        #residences-map-container .mapboxgl-canvas-container,
+        #cemetery-map-container .mapboxgl-canvas,
+        #residences-map-container .mapboxgl-canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .content-card-header {
+            padding: 1.25rem 1.5rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+            border-bottom: 1px solid #e9ecef;
+        }
+        .content-card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        .content-card-body {
+            padding: 1.5rem;
+        }
+
+        /* Bio Card Styling */
+        #bio-card .card-body {
+            padding: 1.5rem;
+        }
+        #bio-card .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--memorial-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        #bio-card p {
+            color: #444;
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        /* Gallery Styles */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+        .gallery-item {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .gallery-item:hover {
+            transform: scale(1.03);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Videos Grid Styles */
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        .video-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .video-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .video-card video {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            background: #000;
+        }
+        .video-card-info {
+            padding: 12px;
+        }
+        .video-card-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+        .video-card-meta {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        @media (max-width: 576px) {
+            .videos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Legacy styles - keep for compatibility */
         .scrolly-section .card {
             margin-bottom: 1.5rem;
         }
         .full-width-map-section {
-            background-color: #e9ecef;
+            background-color: #fafafa;
             padding-bottom: 2rem;
         }
         .image-zoom-modal .modal-content {
@@ -33,15 +555,20 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             color: white;
             border: none;
             font-size: 2rem;
-            padding: 0.5rem 1rem;
+            padding: 0.75rem 1.25rem;
             cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
         }
-        .modal-nav-btn.prev { left: 10px; }
-        .modal-nav-btn.next { right: 10px; }
+        .modal-nav-btn:hover {
+            background: rgba(0,0,0,0.8);
+        }
+        .modal-nav-btn.prev { left: 15px; }
+        .modal-nav-btn.next { right: 15px; }
 
         /* Candle Section Styles */
         #engagement-section {
@@ -375,84 +902,67 @@
             word-break: break-all;
         }
 
-        /* Family Tree Styles */
-        .family-tree-section {
-            margin-bottom: 1.5rem;
-        }
-        .family-tree-section-title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        .family-tree-grid {
+        /* Family List Styles */
+        .family-list-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
         }
-        .family-member-card {
+        @media (max-width: 768px) {
+            .family-list-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+        .family-list-section {
+            margin-bottom: 0;
+        }
+        .family-list-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary-color, #1a3a4a);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 0.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--accent-color, #b89d66);
+        }
+        .family-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .family-list-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .family-list-item:last-child {
+            border-bottom: none;
+        }
+        .family-member-info {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 0.15rem;
+        }
+        .family-member-link {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--primary-color, #1a3a4a);
             text-decoration: none;
-            color: inherit;
-            padding: 1rem;
-            border-radius: 12px;
-            background: #f9fafb;
-            border: 2px solid transparent;
-            transition: all 0.2s ease;
+            transition: color 0.2s ease;
         }
-        .family-member-card:hover {
-            background: #f0fdf4;
-            border-color: #22c55e;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .family-member-link:hover {
+            color: var(--accent-color, #b89d66);
+            text-decoration: underline;
         }
-        .family-member-photo {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            margin-bottom: 0.75rem;
-        }
-        .family-member-placeholder {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #005F60, #007a7a);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.75rem;
-            font-weight: 600;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            margin-bottom: 0.75rem;
-        }
-        .family-member-name {
-            font-weight: 600;
-            font-size: 0.95rem;
-            text-align: center;
-            color: #1f2937;
-            margin-bottom: 0.25rem;
-        }
-        .family-member-relation {
-            font-size: 0.8rem;
-            color: #6b7280;
-            text-align: center;
+        .family-member-name-text {
+            font-weight: 500;
+            font-size: 1rem;
+            color: #374151;
         }
         .family-member-dates {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            text-align: center;
-            margin-top: 0.25rem;
+            font-size: 0.85rem;
+            color: #6b7280;
         }
     </style>
 </head>
@@ -460,48 +970,55 @@
 
 <div id="app-root">
     <div id="memorial-layout-container" style="display: none;">
-        <div class="memorial-page-header">
-            <div class="container text-center">
-                <div id="display-main-media" class="mb-3"></div>
-                <h1 id="display-name" class="memorial-header-name"></h1>
-                <p id="display-dates" class="text-muted"></p>
-                <div class="d-flex justify-content-center gap-2 mt-3">
-                    <button class="btn btn-dark" id="qr-code-btn" data-bs-toggle="modal" data-bs-target="#qrCodeModal"><i class="fas fa-qrcode me-2"></i> QR Code</button>
-                    <button class="btn btn-primary" id="share-btn"><i class="fas fa-share-alt me-2"></i> Share</button>
-                    <a href="#" id="edit-memorial-button" class="btn btn-secondary" style="display: none;" data-route><i class="fas fa-pencil-alt me-2"></i> Edit</a>
+        <!-- Hero Header with Gradient Background -->
+        <div class="memorial-hero">
+            <div class="memorial-hero-content"></div>
+            <div class="memorial-hero-overlay"></div>
+        </div>
+
+        <!-- Profile Section (overlaps hero) -->
+        <div class="memorial-profile-section text-center">
+            <div class="container">
+                <div id="display-main-media" class="d-inline-block"></div>
+                <h1 id="display-name" class="memorial-header-name mt-3"></h1>
+                <p id="display-title" class="memorial-title-epitaph fst-italic" style="display: none;"></p>
+
+                <!-- Life Info: Born/Died - Stacked Layout -->
+                <div id="display-life-info" class="life-info-display-stacked">
+                    <div id="display-born" class="life-info-block" style="display: none;">
+                        <div class="life-info-label">BORN</div>
+                        <div id="display-birth-date" class="life-info-date"></div>
+                        <div id="display-birth-place" class="life-info-place"></div>
+                    </div>
+                    <div id="display-died" class="life-info-block" style="display: none;">
+                        <div class="life-info-label">DIED</div>
+                        <div id="display-death-date" class="life-info-date"></div>
+                        <div id="display-death-place" class="life-info-place"></div>
+                    </div>
+                </div>
+                <p id="display-dates" class="text-muted" style="display: none;"></p>
+
+                <!-- Resting Place Section -->
+                <div id="display-resting-place" class="resting-place-section" style="display: none;">
+                    <div class="resting-place-label">RESTING PLACE</div>
+                    <div id="display-cemetery-name" class="resting-place-name"></div>
+                    <div id="display-cemetery-address" class="resting-place-address"></div>
+                    <a href="#map-card" class="view-location-link" id="view-location-link" style="display: none;">
+                        <i class="fas fa-map-marker-alt me-1"></i>View Location
+                    </a>
                 </div>
 
-                <!-- Engagement Stats Section -->
-                <div id="engagement-section" class="mt-4">
-                    <div class="engagement-stats d-flex justify-content-center gap-4 mb-3 flex-wrap">
-                        <!-- View Count -->
-                        <div class="stat-item d-flex align-items-center gap-2">
-                            <i class="fas fa-eye text-muted" style="font-size: 1.5rem;"></i>
-                            <div class="text-start">
-                                <span class="view-count h5 mb-0" id="view-count">0</span>
-                                <span class="text-muted small d-block">views</span>
-                            </div>
-                        </div>
-                        <!-- Candle Count -->
-                        <div class="stat-item d-flex align-items-center gap-2">
-                            <div class="candle-icon-container">
-                                <div class="candle-flame" id="candle-flame"></div>
-                                <div class="candle-body"></div>
-                            </div>
-                            <div class="text-start">
-                                <span class="candle-count h5 mb-0" id="candle-count">0</span>
-                                <span class="text-muted small d-block">candles lit</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-center gap-2 flex-wrap">
-                        <button class="btn btn-outline-warning btn-lg" id="light-candle-btn">
-                            <i class="fas fa-fire me-2"></i>Light a Candle
-                        </button>
-                        <button class="btn btn-outline-primary" id="reminder-btn">
-                            <i class="fas fa-bell me-2"></i>Get Reminders
-                        </button>
-                    </div>
+                <!-- Action Buttons -->
+                <div class="memorial-actions">
+                    <button class="btn btn-memorial-primary" id="share-btn"><i class="fas fa-share-alt me-2"></i>Share</button>
+                    <a href="#" id="edit-memorial-button" class="btn btn-memorial-outline" style="display: none;" data-route><i class="fas fa-pencil-alt me-2"></i>Edit</a>
+                    <button class="btn btn-memorial-gold" id="claim-memorial-btn" style="display: none;"><i class="fas fa-hand-holding-heart me-2"></i>Claim Memorial</button>
+                </div>
+
+                <!-- Hidden stats for tracking (no UI) -->
+                <div id="engagement-section" style="display: none;">
+                    <span id="view-count">0</span>
+                    <span id="candle-count">0</span>
                 </div>
             </div>
         </div>
@@ -517,10 +1034,10 @@
                             <span>Story</span>
                         </button>
                     </li>
-                    <li class="nav-item" role="presentation" id="gallery-tab-item" style="display: none;">
-                        <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery-panel" type="button" role="tab" aria-controls="gallery-panel" aria-selected="false">
-                            <i class="fas fa-images"></i>
-                            <span>Photos</span>
+                    <li class="nav-item" role="presentation" id="media-tab-item" style="display: none;">
+                        <button class="nav-link" id="media-tab" data-bs-toggle="tab" data-bs-target="#media-panel" type="button" role="tab" aria-controls="media-panel" aria-selected="false">
+                            <i class="fas fa-photo-video"></i>
+                            <span class="media-tab-text">Photos<br>Videos</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation" id="family-tab-item" style="display: none;">
@@ -531,8 +1048,8 @@
                     </li>
                     <li class="nav-item" role="presentation" id="places-tab-item" style="display: none;">
                         <button class="nav-link" id="places-tab" data-bs-toggle="tab" data-bs-target="#places-panel" type="button" role="tab" aria-controls="places-panel" aria-selected="false">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Places</span>
+                            <i class="fas fa-route"></i>
+                            <span>Journey</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
@@ -549,12 +1066,23 @@
                     <!-- Story Tab -->
                     <div class="tab-pane fade show active" id="story-panel" role="tabpanel" aria-labelledby="story-tab">
                         <div id="bio-card" class="memorial-content-card"></div>
+                        <!-- Cemetery Map - below bio for easy access -->
+                        <div id="map-card" class="memorial-content-card" style="display: none;"></div>
                         <div id="timeline-card" class="memorial-content-card" style="display: none;"></div>
                     </div>
 
-                    <!-- Gallery Tab -->
-                    <div class="tab-pane fade" id="gallery-panel" role="tabpanel" aria-labelledby="gallery-tab">
+                    <!-- Media Tab (Photos + Videos) -->
+                    <div class="tab-pane fade" id="media-panel" role="tabpanel" aria-labelledby="media-tab">
                         <div id="gallery-card" class="memorial-content-card"></div>
+                        <div id="videos-card" class="memorial-content-card" style="display: none;">
+                            <div class="content-card-header">
+                                <h5><i class="fas fa-video me-2"></i>Video Messages</h5>
+                                <p class="text-muted small mb-0">Personal video messages and memories</p>
+                            </div>
+                            <div class="content-card-body">
+                                <div id="videos-grid" class="videos-grid"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Family Tab -->
@@ -570,40 +1098,33 @@
                             </div>
                         </div>
 
-                        <!-- Family Buried Nearby Section - Visitor Can Help Pin -->
-                        <div id="family-nearby-card" class="memorial-content-card" style="display: none;">
-                            <div class="content-card-header" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="fas fa-map-marker-alt text-warning" style="font-size: 1.5rem;"></i>
-                                    <div>
-                                        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Help Find Family Nearby</h5>
-                                        <p class="text-muted small mb-0">These relatives may be buried in this cemetery. Can you help locate them?</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="content-card-body">
-                                <div id="family-nearby-list">
-                                    <!-- Populated by JS -->
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- Places Tab -->
+                    <!-- Journey Tab (Life Milestones, Places) -->
                     <div class="tab-pane fade" id="places-panel" role="tabpanel" aria-labelledby="places-tab">
+                        <!-- Life Milestones / Timeline -->
+                        <div id="journey-timeline-card" class="memorial-content-card" style="display: none;">
+                            <div class="content-card-header">
+                                <h5><i class="fas fa-stream me-2"></i>Life Milestones</h5>
+                                <p class="text-muted small mb-0">Key moments and events in their life</p>
+                            </div>
+                            <div class="content-card-body">
+                                <div id="journey-timeline-content"></div>
+                            </div>
+                        </div>
+
+                        <!-- Places They Lived -->
                         <div id="residences-card" class="memorial-content-card" style="display: none;"></div>
 
                         <div id="residences-map-card" class="memorial-content-card" style="display: none;">
                             <div class="content-card-header">
-                                <h5><i class="fas fa-route me-2"></i>Life Journey Map</h5>
-                                <p class="text-muted small mb-0">Places they called home throughout their life</p>
+                                <h5><i class="fas fa-home me-2"></i>Places Called Home</h5>
+                                <p class="text-muted small mb-0">Where they lived throughout their life</p>
                             </div>
                             <div class="content-card-body">
                                 <div id="residences-map-container" style="height: 350px; width: 100%; border-radius: 8px; overflow: hidden;"></div>
                             </div>
                         </div>
-
-                        <div id="map-card" class="memorial-content-card" style="display: none;"></div>
                     </div>
 
                     <!-- Memories Tab (Tributes + Voice) -->
@@ -665,8 +1186,8 @@
         </div>
     </div>
 
-    <!-- Visitor Call-to-Action Section -->
-    <div id="visitor-cta-section" class="container py-5">
+    <!-- Visitor Call-to-Action Section (hidden by default, shown after memorial loads) -->
+    <div id="visitor-cta-section" class="container py-5" style="display: none;">
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
@@ -675,7 +1196,7 @@
                             <i class="fas fa-heart me-2"></i>
                             Create a Memorial for Your Loved One
                         </h3>
-                        <p class="lead mb-4" style="max-width: 600px; margin: 0 auto;">
+                        <p class="lead mb-4" style="max-width: 600px; margin: 0 auto; color: rgba(255,255,255,0.95);">
                             Honor your family members with a beautiful digital memorial. Add photos, stories, and family connections — just like this one.
                         </p>
                         <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
@@ -686,10 +1207,10 @@
                                 <i class="fas fa-info-circle me-2"></i>Learn More
                             </a>
                         </div>
-                        <p class="mt-3 mb-0 small opacity-75">
-                            <i class="fas fa-check-circle me-1"></i> Free forever
+                        <p class="mt-3 mb-0 small" style="color: rgba(255,255,255,0.85);">
+                            <i class="fas fa-check-circle me-1"></i> Free basic memorial
                             <span class="mx-2">•</span>
-                            <i class="fas fa-qrcode me-1"></i> Add QR code tag for $39
+                            <i class="fas fa-qrcode me-1"></i> Complete Legacy Package $99
                         </p>
                     </div>
                 </div>
@@ -713,8 +1234,7 @@
                 </div>
                 <div class="modal-footer flex-column gap-2">
                     <div class="d-flex justify-content-center gap-2 w-100 flex-wrap">
-                        <a href="#" id="order-tag-btn" class="btn btn-primary" data-route><i class="fas fa-tag me-2"></i> QR Tag $39</a>
-                        <a href="#" id="order-book-btn" class="btn btn-outline-primary" data-route><i class="fas fa-book me-2"></i> Book $79</a>
+                        <a href="#" id="order-tag-btn" class="btn btn-primary" data-route><i class="fas fa-tag me-2"></i> Complete Legacy Package $99</a>
                     </div>
                     <button type="button" class="btn btn-outline-secondary btn-sm" id="download-qr-btn"><i class="fas fa-download me-2"></i> Download QR Image</button>
                 </div>
@@ -731,6 +1251,9 @@
                 </div>
                 <button class="modal-nav-btn prev" id="modal-prev-btn" title="Previous image">❮</button>
                 <button class="modal-nav-btn next" id="modal-next-btn" title="Next image">❯</button>
+                <div class="gallery-swipe-hint" id="gallery-swipe-hint">
+                    <i class="fas fa-chevron-left"></i> Swipe to browse <i class="fas fa-chevron-right"></i>
+                </div>
             </div>
         </div>
     </div>

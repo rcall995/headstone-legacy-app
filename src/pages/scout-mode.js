@@ -15,6 +15,13 @@ let wantedGraves = [];
 let currentWantedFilter = 'all';
 let userLocation = null;
 
+// Batch mode state
+let batchCemetery = { name: '', address: '', lat: null, lng: null };
+let batchCaptures = []; // Array of { photoUrl, localUrl, lat, lng, timestamp }
+let batchGpsWatchId = null; // GPS watch ID for continuous tracking
+let batchCurrentPosition = { lat: null, lng: null }; // Current GPS position
+let batchCameraStream = null; // Camera stream for inline preview
+
 const DEFAULT_CENTER = [-98.5, 39.8];
 
 function cleanupScoutMode() {
@@ -77,6 +84,31 @@ function cleanupScoutMode() {
   currentMode = null;
   wantedGraves = [];
   currentWantedFilter = 'all';
+
+  // Reset batch state
+  batchCemetery = { name: '', address: '', lat: null, lng: null };
+  // Revoke any batch capture URLs
+  batchCaptures.forEach(c => {
+    if (c.localUrl) URL.revokeObjectURL(c.localUrl);
+  });
+  batchCaptures = [];
+  batchCurrentPosition = { lat: null, lng: null };
+
+  // Stop GPS watch
+  if (batchGpsWatchId !== null) {
+    navigator.geolocation.clearWatch(batchGpsWatchId);
+    batchGpsWatchId = null;
+  }
+
+  // Stop camera stream
+  if (batchCameraStream) {
+    batchCameraStream.getTracks().forEach(track => track.stop());
+    batchCameraStream = null;
+  }
+
+  // Hide batch screens
+  document.getElementById('batch-cemetery-screen')?.classList.add('d-none');
+  document.getElementById('batch-capture-screen')?.classList.add('d-none');
 }
 
 // ========== WANTED GRAVES FUNCTIONS ==========
@@ -156,16 +188,16 @@ function renderWantedGraves() {
     listEl.classList.remove('d-none');
     listEl.innerHTML = wantedGraves.map(grave => {
       const tags = [];
-      if (grave.needs_cemetery) {
+      if (grave.needsCemetery) {
         tags.push('<span class="wanted-tag needs-cemetery"><i class="fas fa-church me-1"></i>Needs Cemetery</span>');
       }
-      if (grave.needs_location) {
+      if (grave.needsPin || !grave.hasLocation) {
         tags.push('<span class="wanted-tag needs-pin"><i class="fas fa-map-pin me-1"></i>Needs GPS Pin</span>');
       }
       tags.push('<span class="wanted-tag bonus-points"><i class="fas fa-star me-1"></i>2.5x Points</span>');
 
-      const dates = formatDates(grave.birth_year, grave.death_year);
-      const hint = grave.search_hints || (grave.cemetery_name ? `Cemetery: ${escapeHtml(grave.cemetery_name)}` : 'No hints available');
+      const dates = formatDates(grave.birthDate, grave.deathDate);
+      const hint = grave.searchHints || (grave.cemetery ? `Cemetery: ${escapeHtml(grave.cemetery)}` : 'No hints available');
 
       return `
         <div class="wanted-grave-card" data-id="${grave.id}">
@@ -197,7 +229,11 @@ function renderWantedGraves() {
   }
 }
 
-function formatDates(birthYear, deathYear) {
+function formatDates(birthDate, deathDate) {
+  // Extract year from date strings
+  const birthYear = birthDate ? new Date(birthDate).getFullYear() : null;
+  const deathYear = deathDate ? new Date(deathDate).getFullYear() : null;
+
   if (birthYear && deathYear) {
     return `${birthYear} - ${deathYear}`;
   } else if (birthYear) {
@@ -332,6 +368,338 @@ async function submitWantedLocation(memorialId, lat, lng) {
     console.error('[scout-mode] submit location failed:', error);
     showToast(error.message || 'Failed to submit location', 'error');
     throw error;
+  }
+}
+
+// ========== BATCH MODE FUNCTIONS ==========
+async function reverseGeocode(lat, lng) {
+  try {
+    const response = await fetch(`/api/geo/geocode?lat=${lat}&lng=${lng}`);
+    if (!response.ok) throw new Error('Geocode failed');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('[scout-mode] reverse geocode failed:', error);
+    return null;
+  }
+}
+
+async function startBatchMode() {
+  currentMode = 'multi';
+  const btn = document.getElementById('multi-pin-btn');
+
+  if (btn) {
+    btn.disabled = true;
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    // Get user's current location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          btn.disabled = false;
+          btn.innerHTML = originalContent;
+
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          batchCemetery.lat = lat;
+          batchCemetery.lng = lng;
+
+          // Show cemetery confirmation screen
+          document.getElementById('scout-choice-screen')?.classList.add('d-none');
+          document.getElementById('batch-cemetery-screen')?.classList.remove('d-none');
+
+          // Update GPS display
+          document.getElementById('batchGpsCoords').textContent =
+            `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+          // Reverse geocode for address
+          document.getElementById('batchCemeteryAddress').value = 'Looking up address...';
+          const geoData = await reverseGeocode(lat, lng);
+
+          if (geoData?.address) {
+            document.getElementById('batchCemeteryAddress').value = geoData.address;
+          } else {
+            document.getElementById('batchCemeteryAddress').value = 'Address not found';
+          }
+
+          // Enable the start button
+          document.getElementById('batch-start-capture-btn').disabled = false;
+        },
+        (error) => {
+          btn.disabled = false;
+          btn.innerHTML = originalContent;
+          showToast('Could not get your location. Please enable GPS.', 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = originalContent;
+      showToast('Geolocation is not supported.', 'error');
+    }
+  }
+}
+
+async function startBatchCapture() {
+  const cemeteryName = document.getElementById('batchCemeteryName')?.value?.trim() || 'Unknown Cemetery';
+  batchCemetery.name = cemeteryName;
+
+  // Show capture screen
+  document.getElementById('batch-cemetery-screen')?.classList.add('d-none');
+  document.getElementById('batch-capture-screen')?.classList.remove('d-none');
+
+  // Update cemetery display
+  document.getElementById('batch-cemetery-display').textContent = cemeteryName;
+
+  // Reset captures for this session
+  batchCaptures = [];
+  updateBatchUI();
+
+  // Start continuous GPS tracking
+  if (navigator.geolocation) {
+    // Set initial position from cemetery
+    batchCurrentPosition = { lat: batchCemetery.lat, lng: batchCemetery.lng };
+
+    batchGpsWatchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        batchCurrentPosition = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
+        console.log('[batch] GPS updated:', batchCurrentPosition);
+      },
+      (err) => {
+        console.warn('[batch] GPS watch error:', err);
+      },
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+    );
+  }
+
+  // Initialize inline camera
+  await initBatchCamera();
+}
+
+async function initBatchCamera() {
+  const videoEl = document.getElementById('batch-camera-video');
+  const viewfinderFrame = document.querySelector('.viewfinder-frame');
+  const fallbackMsg = document.querySelector('.viewfinder-hint');
+
+  if (!videoEl) return;
+
+  try {
+    // Request camera access
+    batchCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'environment', // Use back camera
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      },
+      audio: false
+    });
+
+    videoEl.srcObject = batchCameraStream;
+    await videoEl.play();
+    videoEl.classList.add('active');
+
+    // Hide the viewfinder frame since we have live video
+    if (viewfinderFrame) viewfinderFrame.style.display = 'none';
+    if (fallbackMsg) fallbackMsg.textContent = 'Tap camera to capture';
+
+    console.log('[batch] Camera initialized successfully');
+
+  } catch (err) {
+    console.warn('[batch] Camera access denied or unavailable:', err);
+    // Fall back to file input method - show the frame
+    if (viewfinderFrame) viewfinderFrame.style.display = '';
+    if (fallbackMsg) fallbackMsg.textContent = 'Tap camera button to take photo';
+  }
+}
+
+function updateBatchUI() {
+  // Update count
+  document.getElementById('batch-count').textContent = batchCaptures.length;
+
+  // Update done button state
+  document.getElementById('batch-done-btn').disabled = batchCaptures.length === 0;
+
+  // Update photo strip
+  const strip = document.getElementById('batch-photos-strip');
+  if (batchCaptures.length > 0) {
+    strip.classList.remove('d-none');
+    strip.innerHTML = batchCaptures.map((capture, idx) => `
+      <img src="${capture.localUrl}" class="batch-photo-thumb ${idx === batchCaptures.length - 1 ? 'latest' : ''}"
+           data-index="${idx}" alt="Capture ${idx + 1}">
+    `).join('');
+  } else {
+    strip.classList.add('d-none');
+  }
+}
+
+function triggerBatchCapture() {
+  const videoEl = document.getElementById('batch-camera-video');
+
+  // If we have a live video stream, capture from it
+  if (batchCameraStream && videoEl && videoEl.videoWidth > 0) {
+    captureFromVideoStream(videoEl);
+  } else {
+    // Fall back to file input
+    document.getElementById('batch-camera-input')?.click();
+  }
+}
+
+function captureFromVideoStream(videoEl) {
+  // Create canvas to capture frame
+  const canvas = document.createElement('canvas');
+  canvas.width = videoEl.videoWidth;
+  canvas.height = videoEl.videoHeight;
+
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(videoEl, 0, 0);
+
+  // Convert to blob
+  canvas.toBlob(async (blob) => {
+    if (blob) {
+      // Create a File object from the blob
+      const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      await handleBatchPhoto(file);
+    }
+  }, 'image/jpeg', 0.85);
+}
+
+async function handleBatchPhoto(file) {
+  if (!file) return;
+
+  // Flash effect
+  const flash = document.createElement('div');
+  flash.className = 'capture-flash';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 300);
+
+  // Use continuously tracked GPS position (updated by watchPosition)
+  // This gives us the actual position when photo is taken, not a delayed lookup
+  const coords = {
+    lat: batchCurrentPosition.lat || batchCemetery.lat,
+    lng: batchCurrentPosition.lng || batchCemetery.lng
+  };
+
+  console.log('[batch] Photo captured at GPS:', coords);
+  const localUrl = URL.createObjectURL(file);
+
+  // Add to captures
+  batchCaptures.push({
+    file,
+    localUrl,
+    lat: coords.lat,
+    lng: coords.lng,
+    timestamp: Date.now()
+  });
+
+  // Show preview of last capture
+  const previewImg = document.getElementById('batch-preview-img');
+  const previewDiv = document.getElementById('batch-preview');
+  const viewfinder = document.getElementById('batch-viewfinder');
+
+  if (previewImg && previewDiv && viewfinder) {
+    previewImg.src = localUrl;
+    viewfinder.classList.add('d-none');
+    previewDiv.classList.remove('d-none');
+
+    // After 1.5 seconds, return to viewfinder for next capture
+    setTimeout(() => {
+      previewDiv.classList.add('d-none');
+      viewfinder.classList.remove('d-none');
+    }, 1500);
+  }
+
+  updateBatchUI();
+  showToast(`#${batchCaptures.length} captured!`, 'success');
+}
+
+async function saveBatchCaptures() {
+  if (batchCaptures.length === 0) return;
+
+  const btn = document.getElementById('batch-done-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      showToast('Please sign in to save.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-check"></i><span class="done-label">Done</span>';
+      return;
+    }
+
+    const savedCount = { success: 0, failed: 0 };
+
+    // Create clean cemetery name for naming (remove special chars, limit length)
+    const cleanCemeteryName = batchCemetery.name
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .replace(/\s+/g, '_')
+      .substring(0, 30) || 'Cemetery';
+
+    for (let i = 0; i < batchCaptures.length; i++) {
+      const capture = batchCaptures[i];
+      const sequenceNum = String(i + 1).padStart(2, '0');
+
+      try {
+        // Upload photo
+        const fileName = `${user.id}/${Date.now()}-headstone-${Math.random().toString(36).substring(2, 8)}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from('scouted-photos')
+          .upload(fileName, capture.file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('scouted-photos')
+          .getPublicUrl(fileName);
+
+        // Create memorial draft with auto-generated name
+        const memorialId = `scout-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        const autoName = `${cleanCemeteryName}_${sequenceNum}`;
+
+        const { error: insertError } = await supabase
+          .from('memorials')
+          .insert({
+            id: memorialId,
+            name: autoName,
+            main_photo: publicUrl,
+            gravesite_lat: capture.lat,
+            gravesite_lng: capture.lng,
+            gravesite_accuracy: 10,
+            cemetery_name: batchCemetery.name,
+            status: 'draft',
+            tier: 'memorial',
+            curator_ids: [user.id],
+            curators: [{ uid: user.id, email: user.email }],
+            source: 'scout-batch',
+            needs_location: false // GPS is known
+          });
+
+        if (insertError) throw insertError;
+        savedCount.success++;
+      } catch (err) {
+        console.error('[scout-mode] failed to save capture:', err);
+        savedCount.failed++;
+      }
+    }
+
+    showToast(
+      `Saved ${savedCount.success} memorial${savedCount.success !== 1 ? 's' : ''} as drafts!` +
+      (savedCount.failed > 0 ? ` (${savedCount.failed} failed)` : ''),
+      savedCount.failed > 0 ? 'warning' : 'success'
+    );
+
+    cleanupScoutMode();
+    window.dispatchEvent(new CustomEvent('navigate', { detail: '/memorial-list?status=draft' }));
+  } catch (error) {
+    console.error('[scout-mode] save batch failed:', error);
+    showToast('Failed to save captures.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check"></i><span class="done-label">Done</span>';
   }
 }
 
@@ -713,7 +1081,37 @@ export async function loadScoutModePage(appRoot) {
     };
 
     document.getElementById('single-pin-btn')?.addEventListener('click', () => start('single'));
-    document.getElementById('multi-pin-btn')?.addEventListener('click', () => start('multi'));
+    // Batch mode now uses new photo-first flow
+    document.getElementById('multi-pin-btn')?.addEventListener('click', () => startBatchMode());
+
+    // Batch mode cemetery screen handlers
+    document.getElementById('batch-cemetery-back-btn')?.addEventListener('click', () => {
+      document.getElementById('batch-cemetery-screen')?.classList.add('d-none');
+      document.getElementById('scout-choice-screen')?.classList.remove('d-none');
+      currentMode = null;
+    });
+
+    document.getElementById('batch-start-capture-btn')?.addEventListener('click', () => startBatchCapture());
+
+    // Batch mode capture screen handlers
+    document.getElementById('batch-capture-btn')?.addEventListener('click', () => triggerBatchCapture());
+
+    document.getElementById('batch-camera-input')?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) handleBatchPhoto(file);
+      e.target.value = ''; // Reset so same file can be captured again
+    });
+
+    document.getElementById('batch-cancel-btn')?.addEventListener('click', () => {
+      if (batchCaptures.length > 0) {
+        if (!confirm(`You have ${batchCaptures.length} unsaved captures. Cancel anyway?`)) return;
+      }
+      cleanupScoutMode();
+      document.getElementById('batch-capture-screen')?.classList.add('d-none');
+      document.getElementById('scout-choice-screen')?.classList.remove('d-none');
+    });
+
+    document.getElementById('batch-done-btn')?.addEventListener('click', () => saveBatchCaptures());
 
     // Wanted Graves button handler
     document.getElementById('wanted-graves-btn')?.addEventListener('click', () => {

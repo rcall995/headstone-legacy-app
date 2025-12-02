@@ -1,0 +1,324 @@
+<!-- My Legacy Dashboard -->
+<div class="my-legacy-page">
+  <!-- Header -->
+  <section class="my-legacy-header">
+    <div class="container">
+      <div class="legacy-header-content">
+        <div class="legacy-badge">
+          <i class="fas fa-feather-alt"></i>
+          <span>Living Legacy</span>
+        </div>
+        <h1>My Legacy</h1>
+        <p class="legacy-header-subtitle">Write your story. Leave messages for those you love.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="container my-legacy-container">
+    <!-- Loading State -->
+    <div id="legacy-loading" class="legacy-loading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Loading your legacy...</p>
+    </div>
+
+    <!-- Not Logged In State -->
+    <div id="legacy-not-logged-in" class="legacy-not-logged-in" style="display: none;">
+      <div class="not-logged-in-card">
+        <i class="fas fa-user-circle"></i>
+        <h2>Sign In to Start Your Legacy</h2>
+        <p>Create an account to start writing your life story and scheduling messages for your loved ones.</p>
+        <a href="/login?redirect=/my-legacy" data-route class="btn btn-legacy-primary">
+          <i class="fas fa-sign-in-alt"></i>
+          Sign In
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="legacy-dashboard" class="legacy-dashboard" style="display: none;">
+
+      <!-- Profile Section - Hero Style -->
+      <div class="legacy-profile-section">
+        <div class="profile-hero">
+          <div class="profile-photo-wrapper" id="profile-photo-wrapper">
+            <div class="profile-photo-placeholder">
+              <i class="fas fa-user"></i>
+            </div>
+          </div>
+          <div class="profile-details">
+            <h2 id="profile-name">Your Name</h2>
+            <p class="profile-dates" id="profile-dates">
+              <i class="fas fa-birthday-cake"></i>
+              <span>Born: Not set</span>
+            </p>
+          </div>
+          <a href="#" id="edit-profile-btn" class="btn btn-edit-profile">
+            <i class="fas fa-pen"></i>
+            Edit Profile
+          </a>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="legacy-dashboard-grid">
+
+        <!-- Life Story Card -->
+        <div class="dashboard-card story-card">
+          <div class="card-icon-wrap story-icon">
+            <i class="fas fa-book-open"></i>
+          </div>
+          <div class="card-content">
+            <h3>Your Life Story</h3>
+            <p id="story-preview" class="card-description">
+              Tell your story in your own words. Share the moments that mattered, the lessons you learned, and the people who shaped you.
+            </p>
+            <div class="card-status" id="story-status">
+              <span class="status-badge not-started">Not started</span>
+            </div>
+          </div>
+          <a href="#" id="write-story-btn" class="btn btn-card-action">
+            <i class="fas fa-pen"></i>
+            <span id="write-story-text">Start Writing</span>
+          </a>
+        </div>
+
+        <!-- Scheduled Messages Card -->
+        <div class="dashboard-card messages-card">
+          <div class="card-icon-wrap messages-icon">
+            <i class="fas fa-envelope-open-text"></i>
+          </div>
+          <div class="card-content">
+            <h3>Scheduled Messages</h3>
+            <p class="card-description">
+              Write heartfelt messages to be delivered to your loved ones at the perfect moment.
+            </p>
+            <div id="messages-list" class="messages-preview-list">
+              <!-- Will be populated by JS -->
+            </div>
+            <div class="card-status">
+              <span class="status-count" id="messages-count">0 messages</span>
+            </div>
+          </div>
+          <a href="#" id="create-message-btn" class="btn btn-card-action">
+            <i class="fas fa-plus"></i>
+            New Message
+          </a>
+        </div>
+
+        <!-- Executor Card -->
+        <div class="dashboard-card executor-card">
+          <div class="card-icon-wrap executor-icon">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="card-content">
+            <h3>Your Executor</h3>
+            <p class="card-description">
+              Choose someone you trust to activate your legacy when the time comes.
+            </p>
+            <div id="executor-content" class="executor-status">
+              <!-- Will be populated by JS -->
+            </div>
+          </div>
+          <a href="#" id="manage-executor-btn" class="btn btn-card-action">
+            <i class="fas fa-user-plus"></i>
+            <span id="manage-executor-text">Designate Executor</span>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Privacy Notice -->
+      <div class="legacy-privacy-notice">
+        <i class="fas fa-lock"></i>
+        <div>
+          <strong>Your legacy is private</strong>
+          <p>Only you can see this content. Your executor will be able to access and activate it when the time comes.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Legacy CTA (for users without a living legacy) -->
+    <div id="legacy-create-cta" class="legacy-create-cta" style="display: none;">
+      <div class="create-cta-card">
+        <div class="create-cta-icon">
+          <i class="fas fa-feather-alt"></i>
+        </div>
+        <h2>Start Your Living Legacy</h2>
+        <p>You haven't started your legacy yet. Create your profile to begin writing your story and scheduling messages for your loved ones.</p>
+        <button id="create-legacy-btn" class="btn btn-legacy-primary btn-lg">
+          <i class="fas fa-plus"></i>
+          Create My Legacy
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message Creation Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="messageModalLabel">Create Scheduled Message</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="message-form">
+          <!-- Recipient -->
+          <div class="mb-3">
+            <label for="recipient-name" class="form-label">Recipient Name</label>
+            <input type="text" class="form-control" id="recipient-name" placeholder="e.g., Sarah" required>
+          </div>
+          <div class="mb-3">
+            <label for="recipient-email" class="form-label">Recipient Email</label>
+            <input type="email" class="form-control" id="recipient-email" placeholder="Their email address" required>
+          </div>
+          <div class="mb-3">
+            <label for="recipient-relationship" class="form-label">Relationship</label>
+            <select class="form-select" id="recipient-relationship">
+              <option value="">Select relationship...</option>
+              <option value="daughter">Daughter</option>
+              <option value="son">Son</option>
+              <option value="spouse">Spouse</option>
+              <option value="grandchild">Grandchild</option>
+              <option value="sibling">Sibling</option>
+              <option value="friend">Friend</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <!-- Message Title -->
+          <div class="mb-3">
+            <label for="message-title" class="form-label">Message Title</label>
+            <input type="text" class="form-control" id="message-title" placeholder="e.g., For Your Wedding Day">
+          </div>
+
+          <!-- Delivery Type -->
+          <div class="mb-3">
+            <label for="delivery-type" class="form-label">When to Deliver</label>
+            <select class="form-select" id="delivery-type" required>
+              <option value="">Select delivery trigger...</option>
+              <option value="date">Specific Date</option>
+              <option value="milestone">Life Milestone</option>
+              <option value="anniversary">Annual Anniversary</option>
+              <option value="conditional">"Open When" Condition</option>
+            </select>
+          </div>
+
+          <!-- Conditional Fields -->
+          <div id="date-fields" class="delivery-fields" style="display: none;">
+            <div class="mb-3">
+              <label for="delivery-date" class="form-label">Delivery Date</label>
+              <input type="date" class="form-control" id="delivery-date">
+            </div>
+          </div>
+
+          <div id="milestone-fields" class="delivery-fields" style="display: none;">
+            <div class="mb-3">
+              <label for="milestone-type" class="form-label">Milestone</label>
+              <select class="form-select" id="milestone-type">
+                <option value="18th_birthday">18th Birthday</option>
+                <option value="21st_birthday">21st Birthday</option>
+                <option value="graduation">Graduation</option>
+                <option value="wedding">Wedding Day</option>
+                <option value="first_child">Birth of First Child</option>
+                <option value="retirement">Retirement</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="anniversary-fields" class="delivery-fields" style="display: none;">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="anniversary-type" class="form-label">Anniversary Type</label>
+                  <select class="form-select" id="anniversary-type">
+                    <option value="birth">Birthday</option>
+                    <option value="death">Passing Anniversary</option>
+                    <option value="christmas">Christmas</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="years-after" class="form-label">Starting Year</label>
+                  <input type="number" class="form-control" id="years-after" placeholder="How many years after">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="conditional-fields" class="delivery-fields" style="display: none;">
+            <div class="mb-3">
+              <label class="form-label">"Open When" Condition</label>
+              <div class="open-when-options">
+                <button type="button" class="open-when-btn" data-condition="sad">When you're sad</button>
+                <button type="button" class="open-when-btn" data-condition="scared">When you're scared</button>
+                <button type="button" class="open-when-btn" data-condition="lonely">When you feel alone</button>
+                <button type="button" class="open-when-btn" data-condition="courage">When you need courage</button>
+                <button type="button" class="open-when-btn" data-condition="proud">When I'm proud of you</button>
+                <button type="button" class="open-when-btn" data-condition="miss">When you miss me</button>
+              </div>
+              <input type="hidden" id="open-when-condition">
+            </div>
+          </div>
+
+          <!-- Message Content -->
+          <div class="mb-3">
+            <label for="message-content" class="form-label">Your Message</label>
+            <textarea class="form-control" id="message-content" rows="6" placeholder="Write your message here..." required></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-legacy-primary" id="save-message-btn">
+          <i class="fas fa-save"></i> Save Message
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Executor Modal -->
+<div class="modal fade" id="executorModal" tabindex="-1" aria-labelledby="executorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="executorModalLabel">Designate Your Executor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="executor-info">
+          Your executor is someone you trust to activate your legacy when the time comes. They will be able to:
+        </p>
+        <ul class="executor-permissions">
+          <li><i class="fas fa-check text-success"></i> Confirm your passing and activate your legacy</li>
+          <li><i class="fas fa-check text-success"></i> Trigger scheduled message deliveries</li>
+          <li><i class="fas fa-check text-success"></i> Make your memorial publicly visible</li>
+        </ul>
+        <hr>
+        <form id="executor-form">
+          <div class="mb-3">
+            <label for="executor-email" class="form-label">Executor's Email</label>
+            <input type="email" class="form-control" id="executor-email" placeholder="Their email address" required>
+            <small class="form-text text-muted">They will receive an invitation to become your executor.</small>
+          </div>
+          <div class="mb-3">
+            <label for="executor-name" class="form-label">Executor's Name (optional)</label>
+            <input type="text" class="form-control" id="executor-name" placeholder="Their name">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-legacy-primary" id="save-executor-btn">
+          <i class="fas fa-user-shield"></i> Save Executor
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

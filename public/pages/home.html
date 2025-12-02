@@ -3,33 +3,44 @@
   <div class="hero-content-wrapper">
     <div class="hero-badge">
       <i class="fas fa-heart"></i>
-      <span>Preserve Their Legacy</span>
+      <span>Preserve Every Story</span>
     </div>
 
     <h1 class="hero-headline">
-      Their story<br class="mobile-only"> deserves more than<br class="desktop-only">
+      Every life<br>
+      deserves more than<br class="desktop-only">
       <span class="hero-highlight">a name and two dates.</span>
     </h1>
 
     <p class="hero-subtext">
-      Create a beautiful digital memorial. Add a QR code to their grave. Anyone who visits can discover their full life story.
+      Create beautiful digital memorials for loved ones, or plan your own legacy with messages that reach your family for years to come.
     </p>
 
-    <div class="hero-cta-stack">
-      <a class="btn btn-hero-primary" href="/memorial-form" data-route>
-        <i class="fas fa-plus-circle"></i>
-        <span>Create Free Memorial</span>
+    <!-- Dual Path CTAs -->
+    <div class="hero-dual-paths">
+      <a class="hero-path-card" href="/memorial-form" data-route>
+        <div class="path-icon memorial">
+          <i class="fas fa-dove"></i>
+        </div>
+        <h3>Honor a Loved One</h3>
+        <p>Create a memorial for someone who has passed</p>
+        <span class="path-cta">Create Memorial <i class="fas fa-arrow-right"></i></span>
       </a>
-      <a class="btn btn-hero-secondary" href="/get-started" data-route>
-        <span>See How It Works</span>
-        <i class="fas fa-arrow-right"></i>
+
+      <a class="hero-path-card" href="/plan-your-legacy" data-route>
+        <div class="path-icon legacy">
+          <i class="fas fa-feather-alt"></i>
+        </div>
+        <h3>Plan Your Legacy</h3>
+        <p>Write your story and schedule future messages</p>
+        <span class="path-cta">Start Planning <i class="fas fa-arrow-right"></i></span>
       </a>
     </div>
 
     <div class="hero-trust-badges">
       <div class="trust-item">
         <i class="fas fa-check-circle"></i>
-        <span>Always Free</span>
+        <span>Free to Start</span>
       </div>
       <div class="trust-item">
         <i class="fas fa-shield-alt"></i>
@@ -43,79 +54,29 @@
   </div>
 </section>
 
-<!-- Value Proposition Cards -->
-<section class="value-cards-section">
+<!-- Search Section -->
+<section class="search-section-prominent">
   <div class="container">
-    <a href="/order-tag" class="value-card" data-route>
-      <div class="value-card-icon">
-        <i class="fas fa-qrcode"></i>
-      </div>
-      <div class="value-card-content">
-        <h3>QR Code Tags</h3>
-        <p>Weatherproof tags attach to any headstone. Visitors scan to see the memorial.</p>
-        <span class="value-card-price">From $39</span>
-      </div>
-      <i class="fas fa-chevron-right value-card-arrow"></i>
-    </a>
-
-    <a href="/scout" class="value-card" data-route>
-      <div class="value-card-icon accent">
-        <i class="fas fa-map-marker-alt"></i>
-      </div>
-      <div class="value-card-content">
-        <h3>Scout Mode</h3>
-        <p>Help document cemeteries. Pin grave locations for families to find.</p>
-        <span class="value-card-badge">Join the Community</span>
-      </div>
-      <i class="fas fa-chevron-right value-card-arrow"></i>
-    </a>
-  </div>
-</section>
-
-<!-- How It Works - Visual Steps -->
-<section class="steps-section">
-  <div class="container">
-    <h2 class="section-title">How It Works</h2>
-
-    <div class="steps-timeline">
-      <div class="step-item">
-        <div class="step-number">1</div>
-        <div class="step-content">
-          <h4>Create Memorial</h4>
-          <p>Add photos, stories, and family connections</p>
-        </div>
-      </div>
-
-      <div class="step-item">
-        <div class="step-number">2</div>
-        <div class="step-content">
-          <h4>Order QR Tag</h4>
-          <p>Get a weatherproof tag for the headstone</p>
-        </div>
-      </div>
-
-      <div class="step-item">
-        <div class="step-number">3</div>
-        <div class="step-content">
-          <h4>Share Forever</h4>
-          <p>Anyone can scan and discover their story</p>
-        </div>
-      </div>
+    <div class="search-header">
+      <h2 class="search-title">Find a Memorial</h2>
+      <p class="search-subtitle">Search by name to find and visit their story</p>
     </div>
-  </div>
-</section>
-
-<!-- Recent Memorials -->
-<section class="recent-memorials-section">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title">Recent Memorials</h2>
-    </div>
-    <div class="recent-memorials-grid" id="recent-memorials-container">
-      <div class="text-center py-4">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+    <div class="search-wrapper">
+      <div class="search-input-container">
+        <i class="fas fa-search search-icon"></i>
+        <input
+          type="text"
+          id="memorial-search-input"
+          class="search-input"
+          placeholder="Enter a name to search..."
+          autocomplete="off"
+        >
+        <button type="button" id="search-clear-btn" class="search-clear-btn" style="display: none;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="search-results-container" class="search-results-container" style="display: none;">
+        <!-- Search results will be populated here -->
       </div>
     </div>
   </div>
@@ -127,19 +88,170 @@
     <div class="section-header">
       <h2 class="section-title">Explore Memorials</h2>
       <p class="section-subtitle">Find memorials near you</p>
+      <p id="memorial-map-count" class="memorial-count-text"></p>
     </div>
     <div id="homepage-map-container" class="map-container-home"></div>
+  </div>
+</section>
+
+<!-- Recent Memorials -->
+<section class="recent-memorials-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Recent Memorials</h2>
+      <p class="section-subtitle">Stories worth remembering</p>
+    </div>
+    <div class="recent-memorials-grid" id="recent-memorials-container">
+      <div class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing/Packages Section -->
+<section class="home-pricing-section">
+  <div class="container">
+    <div class="section-header text-center">
+      <h2 class="section-title">Preserve Their Memory Forever</h2>
+      <p class="section-subtitle">Choose the option that's right for your family</p>
+    </div>
+
+    <div class="home-pricing-grid">
+      <!-- Free Memorial -->
+      <div class="home-pricing-card">
+        <div class="home-pricing-header">
+          <h3>Free Memorial</h3>
+          <div class="home-pricing-price">
+            <span class="price-amount">$0</span>
+            <span class="price-period">forever</span>
+          </div>
+        </div>
+        <ul class="home-pricing-features">
+          <li><i class="fas fa-check"></i> Digital memorial page</li>
+          <li><i class="fas fa-check"></i> Up to 10 photos</li>
+          <li><i class="fas fa-check"></i> Write their story</li>
+          <li><i class="fas fa-check"></i> Family connections</li>
+          <li><i class="fas fa-check"></i> Receive tributes</li>
+        </ul>
+        <a href="/memorial-form" class="btn btn-home-pricing-outline" data-route>
+          Create Free Memorial
+        </a>
+      </div>
+
+      <!-- Complete Legacy Package -->
+      <div class="home-pricing-card featured">
+        <div class="home-pricing-badge">Most Popular</div>
+        <div class="home-pricing-header">
+          <h3>Complete Legacy Package</h3>
+          <div class="home-pricing-price">
+            <span class="price-amount">$99</span>
+            <span class="price-period">one-time</span>
+          </div>
+        </div>
+        <ul class="home-pricing-features">
+          <li><i class="fas fa-check"></i> <strong>Stainless steel QR plaque</strong></li>
+          <li><i class="fas fa-check"></i> Lifetime digital memorial</li>
+          <li><i class="fas fa-check"></i> Unlimited photos & videos</li>
+          <li><i class="fas fa-check"></i> Living Legacy messages</li>
+          <li><i class="fas fa-check"></i> Family tree connections</li>
+          <li><i class="fas fa-check"></i> Lifetime replacement guarantee</li>
+        </ul>
+        <a href="/order-tag" class="btn btn-home-pricing-primary" data-route>
+          Get Complete Package
+        </a>
+      </div>
+
+      <!-- Family Bundle -->
+      <div class="home-pricing-card">
+        <div class="home-pricing-badge savings">Save $38</div>
+        <div class="home-pricing-header">
+          <h3>Family Bundle</h3>
+          <div class="home-pricing-price">
+            <span class="price-amount">$259</span>
+            <span class="price-period">for 3 plaques</span>
+          </div>
+        </div>
+        <ul class="home-pricing-features">
+          <li><i class="fas fa-check"></i> <strong>3 Stainless steel QR plaques</strong></li>
+          <li><i class="fas fa-check"></i> 3 Lifetime digital memorials</li>
+          <li><i class="fas fa-check"></i> All premium features included</li>
+          <li><i class="fas fa-check"></i> Perfect for family plots</li>
+          <li><i class="fas fa-check"></i> Lifetime replacement guarantee</li>
+        </ul>
+        <a href="/order-tag" class="btn btn-home-pricing-outline" data-route>
+          Get Family Bundle
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Scout Community Section -->
+<section class="scout-highlight-section">
+  <div class="container">
+    <div class="scout-highlight-badge">
+      <i class="fas fa-users"></i>
+      <span>Community Powered</span>
+    </div>
+
+    <h2 class="scout-highlight-title">Join the Scout Community</h2>
+    <p class="scout-highlight-subtitle">
+      Help preserve history while exploring cemeteries. Scouts document graves,
+      pin locations, and help families find their ancestors.
+    </p>
+
+    <div class="scout-features">
+      <div class="scout-feature">
+        <div class="scout-feature-icon">
+          <i class="fas fa-map-pin"></i>
+        </div>
+        <h4>Pin Grave Locations</h4>
+        <p>Drop GPS pins so families can find their loved ones</p>
+      </div>
+
+      <div class="scout-feature">
+        <div class="scout-feature-icon wanted">
+          <i class="fas fa-search-location"></i>
+        </div>
+        <h4>Find Wanted Graves</h4>
+        <p>Help reunite families with ancestors they're searching for</p>
+      </div>
+
+      <div class="scout-feature">
+        <div class="scout-feature-icon points">
+          <i class="fas fa-star"></i>
+        </div>
+        <h4>Earn Points</h4>
+        <p>Get recognized for your contributions to the community</p>
+      </div>
+    </div>
+
+    <div class="scout-highlight-cta">
+      <a href="/about-scouting" class="btn btn-scout-primary" data-route>
+        <span>Learn About Scouting</span>
+        <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
   </div>
 </section>
 
 <!-- Final CTA -->
 <section class="final-cta-section">
   <div class="cta-content">
-    <h2>Start Preserving Their Story</h2>
-    <p>Join thousands of families keeping memories alive</p>
-    <a class="btn btn-cta-light" href="/memorial-form" data-route>
-      <i class="fas fa-plus-circle"></i>
-      Create Memorial
-    </a>
+    <h2>Every Story Deserves to Be Told</h2>
+    <p>Honor those who've passed or plan your own legacy for generations to come</p>
+    <div class="final-cta-buttons">
+      <a class="btn btn-cta-light" href="/memorial-form" data-route>
+        <i class="fas fa-dove"></i>
+        Create Memorial
+      </a>
+      <a class="btn btn-cta-outline" href="/plan-your-legacy" data-route>
+        <i class="fas fa-feather-alt"></i>
+        Plan Your Legacy
+      </a>
+    </div>
   </div>
 </section>

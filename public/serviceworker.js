@@ -1,5 +1,5 @@
 /* serviceworker.js */
-const CACHE_VERSION = 'v42'; // Add Memorial Book ordering system
+const CACHE_VERSION = 'v110'; // Use logo as favicon
 const CACHE_NAME = `headstone-memorial-cache-${CACHE_VERSION}`;
 
 const urlsToCache = [
@@ -17,7 +17,6 @@ const urlsToCache = [
   '/js/pages/curator-panel.js',
   '/js/pages/scout-mode.js',
   '/js/pages/tributes-list.js',
-  '/favicon.png',
   '/logo1.png',
   '/images/icons/icon-192x192.png',
   '/images/icons/icon-512x512.png',
@@ -26,7 +25,11 @@ const urlsToCache = [
   '/pages/tributes-list.html',
   '/pages/home.html',
   '/pages/order-book.html',
-  '/js/pages/order-book.js'
+  '/js/pages/order-book.js',
+  '/pages/plan-your-legacy.html',
+  '/js/pages/plan-your-legacy.js',
+  '/pages/my-legacy.html',
+  '/js/pages/my-legacy.js'
 ];
 
 // Install: Pre-cache the app shell

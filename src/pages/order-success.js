@@ -1,6 +1,7 @@
 // /js/pages/order-success.js - Order confirmation page
 import { supabase } from '/js/supabase-client.js';
 import { showToast } from '/js/utils/toasts.js';
+import { markReferralConverted } from '/js/utils/referral-tracker.js';
 
 // Product tier display names
 const TIER_NAMES = {
@@ -81,8 +82,8 @@ async function loadOrderDetails() {
       viewBtn.href = `/memorial?id=${order.memorial_id}`;
     }
 
-    // Clear referral from localStorage since conversion is complete
-    localStorage.removeItem('hl_referral');
+    // Track referral conversion (credits the partner, clears localStorage)
+    await markReferralConverted(order.id, 15.00);
 
   } catch (error) {
     console.error('Error loading order:', error);

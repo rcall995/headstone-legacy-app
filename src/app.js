@@ -8,7 +8,7 @@ import { initReferralTracking } from '/js/utils/referral-tracker.js';
 document.addEventListener('DOMContentLoaded', () => {
   /* ---------- Service Worker: simple, no auto-reload ---------- */
   if ('serviceWorker' in navigator) {
-    const SW_VERSION = 'v42';            // bump this when you deploy
+    const SW_VERSION = 'v110';            // bump this when you deploy
     const SW_URL = `/serviceworker.js?sw=${SW_VERSION}`;
 
     navigator.serviceWorker.register(SW_URL, { scope: '/' })
@@ -102,6 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.classList.add('scout-active');
     }
 
+    // Show loading immediately to prevent flash of previous content
+    appRoot.innerHTML = `
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    `;
+
     try {
       if (path === '/') {
         setPageTitle('Home');
@@ -120,13 +129,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const { loadGetStartedPage } = await import('./pages/get-started.js');
         await loadGetStartedPage(appRoot);
       } else if (path === '/how-it-works') {
-        setPageTitle('How It Works');
-        const { loadHowItWorksPage } = await import('./pages/how-it-works.js');
-        await loadHowItWorksPage(appRoot);
+        // Redirect to /get-started (consolidated page)
+        handleNavigation('/get-started');
+        return;
       } else if (path === '/scout') {
         setPageTitle('About Scouting');
         const { loadScoutPage } = await import('./pages/scout.js');
         await loadScoutPage(appRoot);
+      } else if (path === '/about-scouting') {
+        setPageTitle('About Scouting');
+        const { loadAboutScoutingPage } = await import('./pages/about-scouting.js');
+        await loadAboutScoutingPage(appRoot);
       } else if (path === '/scout-mode') {
         setPageTitle('Scout Mode');
         const { loadScoutModePage } = await import('./pages/scout-mode.js');
@@ -160,13 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
           : urlParams.get('id');
         await loadOrderTagPage(appRoot, memorialIdOrSlug);
       } else if (path === '/order-book' || path.startsWith('/order-book/')) {
-        setPageTitle('Order Book');
-        const { loadOrderBookPage } = await import('./pages/order-book.js');
-        // Support both /order-book?id=xxx and /order-book/xxx formats
+        // Legacy route - redirect to order-tag (book product discontinued)
         const memorialIdOrSlug = path.startsWith('/order-book/')
           ? decodeURIComponent(path.split('/order-book/')[1])
           : urlParams.get('id');
-        await loadOrderBookPage(appRoot, memorialIdOrSlug);
+        window.history.replaceState({}, '', memorialIdOrSlug ? `/order-tag/${memorialIdOrSlug}` : '/order-tag');
+        await loadOrderTagPage(appRoot, memorialIdOrSlug);
       } else if (path === '/legacy-messages' || path.startsWith('/legacy-messages/')) {
         setPageTitle('Legacy Messages');
         const { loadLegacyMessagesPage } = await import('./pages/legacy-messages.js');
@@ -190,6 +202,22 @@ document.addEventListener('DOMContentLoaded', () => {
         setPageTitle('Pending Tributes');
         const { loadTributesListPage } = await import('./pages/tributes-list.js');
         await loadTributesListPage(appRoot);
+      } else if (path === '/plan-your-legacy') {
+        setPageTitle('Plan Your Legacy');
+        const { loadPlanYourLegacyPage } = await import('./pages/plan-your-legacy.js');
+        await loadPlanYourLegacyPage(appRoot);
+      } else if (path === '/my-legacy') {
+        setPageTitle('My Legacy');
+        const { loadMyLegacyPage } = await import('./pages/my-legacy.js');
+        await loadMyLegacyPage(appRoot);
+      } else if (path === '/accept-executor') {
+        setPageTitle('Accept Executor Invitation');
+        const { loadAcceptExecutorPage } = await import('./pages/accept-executor.js');
+        await loadAcceptExecutorPage(appRoot, urlParams);
+      } else if (path === '/executor-dashboard') {
+        setPageTitle('Executor Dashboard');
+        const { loadExecutorDashboardPage } = await import('./pages/executor-dashboard.js');
+        await loadExecutorDashboardPage(appRoot);
       } else if (path === '/partners') {
         setPageTitle('Partner Program');
         const { loadPartnersPage } = await import('./pages/partners.js');
@@ -326,6 +354,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Supabase Auth State Listener
   supabase.auth.onAuthStateChange((event, session) => {
     console.log('[Auth] State change:', event, session ? 'logged in' : 'logged out');
+
+    // Skip router refresh on token refresh events to avoid losing form data
+    if (event === 'TOKEN_REFRESHED' && authInitialized) {
+      console.log('[Auth] Token refreshed, skipping page reload to preserve form data');
+      return;
+    }
+
     const user = session?.user || null;
     currentUser = user;
     const isLoggedIn = !!user;
@@ -437,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .from('scout_stats')
         .select('total_points, current_level')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       const points = data?.total_points || 0;
       const level = data?.current_level || 1;

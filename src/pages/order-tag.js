@@ -2,6 +2,10 @@ import { supabase } from '/js/supabase-client.js';
 import { showToast } from '/js/utils/toasts.js';
 import { getStoredReferral } from '/js/utils/referral-tracker.js';
 
+// Current selected package
+let selectedTier = 'legacy';
+let selectedPrice = 99;
+
 async function showMemorialSelector(appRoot, user) {
     let memorialListHTML = '';
 
@@ -9,7 +13,7 @@ async function showMemorialSelector(appRoot, user) {
         // Not logged in - show sign-in prompt
         memorialListHTML = `
             <div class="text-center py-4">
-                <p class="text-muted mb-3">Sign in to see your memorials and order a QR tag.</p>
+                <p class="text-muted mb-3">Sign in to see your memorials and order a QR plaque.</p>
                 <a href="/login" class="btn btn-hero-primary" data-route>
                     <i class="fas fa-sign-in-alt me-2"></i>Sign In
                 </a>
@@ -46,7 +50,7 @@ async function showMemorialSelector(appRoot, user) {
                             </div>
                             <div class="memorial-select-info">
                                 <h4>${m.name}</h4>
-                                <span class="btn btn-sm btn-hero-secondary">Order Tag</span>
+                                <span class="btn btn-sm btn-hero-secondary">Order Package</span>
                             </div>
                         </a>
                     `).join('')}
@@ -59,8 +63,8 @@ async function showMemorialSelector(appRoot, user) {
         <div class="page-wrapper">
             <section class="page-hero">
                 <div class="container">
-                    <h1 class="page-hero-title">QR Code Tags</h1>
-                    <p class="page-hero-subtitle">Transform any headstone into a digital memorial with our weatherproof QR tags.</p>
+                    <h1 class="page-hero-title">Complete Legacy Package</h1>
+                    <p class="page-hero-subtitle">Everything you need to preserve their memory forever</p>
                 </div>
             </section>
 
@@ -86,14 +90,14 @@ async function showMemorialSelector(appRoot, user) {
                                 <i class="fas fa-infinity"></i>
                             </div>
                             <h3>Lifetime Guarantee</h3>
-                            <p>If your tag ever fades or becomes unreadable, we'll replace it free. Forever.</p>
+                            <p>If your plaque ever fades or becomes unreadable, we'll replace it free. Forever.</p>
                         </div>
                     </div>
 
                     <div class="qr-price-banner">
                         <div class="qr-price-content">
-                            <span class="qr-price">$39</span>
-                            <span class="qr-price-details">one-time • free shipping • lifetime guarantee</span>
+                            <span class="qr-price">$99</span>
+                            <span class="qr-price-details">QR Plaque + Lifetime Memorial + Living Legacy Features</span>
                         </div>
                     </div>
                 </div>
@@ -102,12 +106,58 @@ async function showMemorialSelector(appRoot, user) {
             <section class="memorial-select-section">
                 <div class="container">
                     <h2 class="section-title">Select a Memorial</h2>
-                    <p class="section-subtitle">Choose which memorial to order a QR tag for</p>
+                    <p class="section-subtitle">Choose which memorial to order a Complete Legacy Package for</p>
                     ${memorialListHTML}
                 </div>
             </section>
         </div>
     `;
+}
+
+function setupPackageSelection() {
+    const packageCards = document.querySelectorAll('.order-package-card');
+
+    packageCards.forEach(card => {
+        card.addEventListener('click', () => {
+            // Remove selected from all
+            packageCards.forEach(c => {
+                c.classList.remove('selected');
+                const btn = c.querySelector('.btn-package-select');
+                if (btn) btn.innerHTML = 'Select This Package';
+            });
+
+            // Add selected to clicked
+            card.classList.add('selected');
+            const btn = card.querySelector('.btn-package-select');
+            if (btn) btn.innerHTML = '<i class="fas fa-check-circle"></i> Selected';
+
+            // Update state
+            selectedTier = card.dataset.tier;
+            selectedPrice = parseInt(card.dataset.price);
+
+            // Update order summary
+            updateOrderSummary();
+        });
+    });
+}
+
+function updateOrderSummary() {
+    const packageNameEl = document.getElementById('order-package-name');
+    const itemDetailsEl = document.getElementById('order-item-details');
+    const subtotalEl = document.getElementById('order-subtotal');
+    const totalEl = document.getElementById('order-total');
+
+    if (selectedTier === 'family') {
+        if (packageNameEl) packageNameEl.textContent = 'Family Bundle';
+        if (itemDetailsEl) itemDetailsEl.textContent = '3 QR Plaques + 3 Lifetime Memorials';
+        if (subtotalEl) subtotalEl.textContent = '$259.00';
+        if (totalEl) totalEl.textContent = '$259.00';
+    } else {
+        if (packageNameEl) packageNameEl.textContent = 'Complete Legacy Package';
+        if (itemDetailsEl) itemDetailsEl.textContent = '1 QR Plaque + Lifetime Memorial';
+        if (subtotalEl) subtotalEl.textContent = '$99.00';
+        if (totalEl) totalEl.textContent = '$99.00';
+    }
 }
 
 async function handleCheckout(memorialId, memorialName) {
@@ -131,7 +181,12 @@ async function handleCheckout(memorialId, memorialName) {
 
         // Get referral data if exists
         const referral = getStoredReferral();
-        const requestBody = { memorialId, memorialName, tier: 'premium', quantity: 1 };
+        const requestBody = {
+            memorialId,
+            memorialName,
+            tier: selectedTier,
+            quantity: selectedTier === 'family' ? 3 : 1
+        };
         if (referral) {
             requestBody.referralCode = referral.code;
             requestBody.partnerId = referral.partnerId;
@@ -180,10 +235,10 @@ export async function loadOrderTagPage(appRoot, memorialId) {
 
         // For actual checkout, user must be logged in
         if (!user) {
-            showToast('You must be signed in to order a tag.', 'error');
+            showToast('You must be signed in to order.', 'error');
             appRoot.innerHTML = `<div class="container py-5 text-center">
                 <h2>Authentication Required</h2>
-                <p>Please <a href="/login">sign in</a> to order a physical tag for your memorial.</p>
+                <p>Please <a href="/login">sign in</a> to order a Complete Legacy Package for your memorial.</p>
             </div>`;
             return;
         }
@@ -210,6 +265,9 @@ export async function loadOrderTagPage(appRoot, memorialId) {
         if(orderMemorialNameEl) {
             orderMemorialNameEl.textContent = `For: ${memorial.name}`;
         }
+
+        // Setup package selection
+        setupPackageSelection();
 
         const checkoutButton = document.getElementById('checkout-button');
         if(checkoutButton) {

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Header Backgrounds - Admin | Living Legacy</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .admin-header h1 {
+            color: var(--primary);
+            margin: 0;
+        }
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .preset-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .preset-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .preset-preview {
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+        }
+        .preset-info {
+            padding: 1rem;
+        }
+        .preset-info h3 {
+            margin: 0 0 0.5rem;
+            color: #333;
+        }
+        .preset-info small {
+            color: #666;
+            font-size: 0.8rem;
+        }
+        .preset-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .preset-actions button {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn-edit {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .btn-delete {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .btn-toggle {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .btn-toggle.inactive {
+            background: #fafafa;
+            color: #9e9e9e;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .upload-section h2 {
+            margin: 0 0 1rem;
+            color: var(--primary);
+        }
+        .upload-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input {
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        .upload-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .upload-btn:hover {
+            background: var(--primary-dark);
+        }
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Preview */
+        .upload-preview {
+            margin-top: 1rem;
+            display: none;
+        }
+        .upload-preview.visible {
+            display: block;
+        }
+        .upload-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .status-message.success {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+        .status-message.error {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        .status-message.warning {
+            display: block;
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffcc80;
+        }
+
+        /* Add via URL section */
+        .url-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .url-section h3 {
+            margin: 0 0 1rem;
+            color: #333;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            margin-bottom: 1rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Badge for inactive */
+        .badge-inactive {
+            display: inline-block;
+            background: #ffebee;
+            color: #c62828;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .upload-form {
+                grid-template-columns: 1fr;
+            }
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="admin-container">
+        <a href="/memorial-list" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Memorials
+        </a>
+
+        <div class="admin-header">
+            <h1><i class="fas fa-panorama"></i> Header Backgrounds</h1>
+            <button id="init-defaults-btn" class="upload-btn" style="background: #666;">
+                <i class="fas fa-sync"></i> Reset to Defaults
+            </button>
+        </div>
+
+        <div id="status-message" class="status-message"></div>
+
+        <!-- Upload New Image -->
+        <div class="upload-section">
+            <h2><i class="fas fa-cloud-upload-alt"></i> Upload New Background</h2>
+            <div class="upload-form">
+                <div class="form-group">
+                    <label for="preset-label">Display Name</label>
+                    <input type="text" id="preset-label" placeholder="e.g., Golden Gate Bridge" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="preset-file">Image File</label>
+                    <input type="file" id="preset-file" accept="image/*">
+                </div>
+                <button id="upload-btn" class="upload-btn" disabled>
+                    <i class="fas fa-upload"></i> Upload
+                </button>
+            </div>
+            <div id="upload-preview" class="upload-preview">
+                <img id="preview-img" src="" alt="Preview">
+            </div>
+        </div>
+
+        <!-- Add via URL -->
+        <div class="url-section">
+            <h3><i class="fas fa-link"></i> Or Add via URL</h3>
+            <div class="upload-form">
+                <div class="form-group">
+                    <label for="url-label">Display Name</label>
+                    <input type="text" id="url-label" placeholder="e.g., Sunset Beach" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="url-input">Image URL</label>
+                    <input type="url" id="url-input" placeholder="https://images.unsplash.com/...">
+                </div>
+                <button id="add-url-btn" class="upload-btn" style="background: #1976d2;">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+            </div>
+        </div>
+
+        <!-- Existing Presets -->
+        <h2 style="margin-bottom: 1rem;"><i class="fas fa-images"></i> Current Backgrounds</h2>
+        <div id="presets-grid" class="presets-grid">
+            <div class="preset-card" style="display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary);"></i>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+        import { initializeAuth, getCurrentUser } from '/js/auth-manager.js';
+
+        // Initialize
+        const API_BASE = '/api/admin/header-presets';
+        let presets = [];
+
+        // DOM elements
+        const presetsGrid = document.getElementById('presets-grid');
+        const statusMessage = document.getElementById('status-message');
+        const uploadBtn = document.getElementById('upload-btn');
+        const presetLabel = document.getElementById('preset-label');
+        const presetFile = document.getElementById('preset-file');
+        const uploadPreview = document.getElementById('upload-preview');
+        const previewImg = document.getElementById('preview-img');
+        const urlLabel = document.getElementById('url-label');
+        const urlInput = document.getElementById('url-input');
+        const addUrlBtn = document.getElementById('add-url-btn');
+        const initDefaultsBtn = document.getElementById('init-defaults-btn');
+
+        function showStatus(message, type = 'success') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            setTimeout(() => {
+                statusMessage.className = 'status-message';
+            }, 5000);
+        }
+
+        async function loadPresets() {
+            try {
+                const response = await fetch(API_BASE);
+                const data = await response.json();
+
+                if (!data.tableExists) {
+                    showStatus('Header presets table not found. Please create it in Supabase.', 'warning');
+                }
+
+                presets = data.presets || [];
+                renderPresets();
+            } catch (error) {
+                console.error('Error loading presets:', error);
+                showStatus('Failed to load presets: ' + error.message, 'error');
+            }
+        }
+
+        function renderPresets() {
+            if (presets.length === 0) {
+                presetsGrid.innerHTML = `
+                    <div class="preset-card" style="display: flex; align-items: center; justify-content: center; min-height: 200px; grid-column: 1/-1;">
+                        <p style="color: #666;">No presets found. Upload your first background image above.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            presetsGrid.innerHTML = presets.map(preset => {
+                const isGradient = preset.image_url?.startsWith('gradient:');
+                const bgStyle = isGradient
+                    ? `background: ${preset.image_url.replace('gradient:', '')}`
+                    : `background-image: url('${preset.preview_url || preset.image_url}')`;
+
+                return `
+                    <div class="preset-card" data-id="${preset.id}">
+                        <div class="preset-preview" style="${bgStyle}"></div>
+                        <div class="preset-info">
+                            <h3>
+                                ${preset.label}
+                                ${preset.is_active === false ? '<span class="badge-inactive">Inactive</span>' : ''}
+                                ${preset.is_default ? '<span style="color: var(--primary); font-size: 0.8rem;"><i class="fas fa-star"></i></span>' : ''}
+                            </h3>
+                            <small>${preset.name}</small>
+                            <div class="preset-actions">
+                                <button class="btn-toggle ${preset.is_active === false ? 'inactive' : ''}" onclick="togglePreset('${preset.id}', ${preset.is_active !== false})">
+                                    <i class="fas fa-${preset.is_active !== false ? 'eye' : 'eye-slash'}"></i>
+                                    ${preset.is_active !== false ? 'Active' : 'Hidden'}
+                                </button>
+                                <button class="btn-delete" onclick="deletePreset('${preset.id}', '${preset.label}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // File preview
+        presetFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    previewImg.src = evt.target.result;
+                    uploadPreview.classList.add('visible');
+                    uploadBtn.disabled = !presetLabel.value.trim();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                uploadPreview.classList.remove('visible');
+                uploadBtn.disabled = true;
+            }
+        });
+
+        presetLabel.addEventListener('input', () => {
+            uploadBtn.disabled = !presetLabel.value.trim() || !presetFile.files[0];
+        });
+
+        // Upload new image
+        uploadBtn.addEventListener('click', async () => {
+            const label = presetLabel.value.trim();
+            const file = presetFile.files[0];
+
+            if (!label || !file) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    const response = await fetch(`${API_BASE}?action=upload`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            label,
+                            imageData: evt.target.result,
+                            fileName: file.name
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showStatus(`Successfully added "${label}" as a new background!`, 'success');
+                        presetLabel.value = '';
+                        presetFile.value = '';
+                        uploadPreview.classList.remove('visible');
+                        loadPresets();
+                    } else {
+                        throw new Error(data.error || 'Upload failed');
+                    }
+
+                    uploadBtn.disabled = true;
+                    uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+                };
+                reader.readAsDataURL(file);
+            } catch (error) {
+                console.error('Upload error:', error);
+                showStatus('Upload failed: ' + error.message, 'error');
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+            }
+        });
+
+        // Add via URL
+        addUrlBtn.addEventListener('click', async () => {
+            const label = urlLabel.value.trim();
+            const url = urlInput.value.trim();
+
+            if (!label || !url) {
+                showStatus('Please enter both a name and URL', 'error');
+                return;
+            }
+
+            addUrlBtn.disabled = true;
+            addUrlBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+            try {
+                const response = await fetch(`${API_BASE}?action=add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: label.toLowerCase().replace(/\s+/g, '-'),
+                        label,
+                        image_url: url
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showStatus(`Successfully added "${label}"!`, 'success');
+                    urlLabel.value = '';
+                    urlInput.value = '';
+                    loadPresets();
+                } else {
+                    throw new Error(data.error || 'Failed to add');
+                }
+            } catch (error) {
+                console.error('Add error:', error);
+                showStatus('Failed to add: ' + error.message, 'error');
+            }
+
+            addUrlBtn.disabled = false;
+            addUrlBtn.innerHTML = '<i class="fas fa-plus"></i> Add';
+        });
+
+        // Toggle preset visibility
+        window.togglePreset = async (id, currentlyActive) => {
+            try {
+                const response = await fetch(API_BASE, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id,
+                        is_active: !currentlyActive
+                    })
+                });
+
+                if (response.ok) {
+                    showStatus(`Preset ${currentlyActive ? 'hidden' : 'activated'}`, 'success');
+                    loadPresets();
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                showStatus('Failed to update: ' + error.message, 'error');
+            }
+        };
+
+        // Delete preset
+        window.deletePreset = async (id, label) => {
+            if (!confirm(`Are you sure you want to delete "${label}"?`)) return;
+
+            try {
+                const response = await fetch(API_BASE, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+
+                if (response.ok) {
+                    showStatus(`Deleted "${label}"`, 'success');
+                    loadPresets();
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                showStatus('Failed to delete: ' + error.message, 'error');
+            }
+        };
+
+        // Initialize with defaults
+        initDefaultsBtn.addEventListener('click', async () => {
+            if (!confirm('This will reset all presets to the defaults. Continue?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}?action=init`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                showStatus(data.message, 'success');
+                loadPresets();
+            } catch (error) {
+                showStatus('Failed to initialize: ' + error.message, 'error');
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAuth();
+            loadPresets();
+        });
+    </script>
+</body>
+</html>

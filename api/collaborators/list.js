@@ -52,8 +52,14 @@ export default async function handler(req, res) {
       .eq('status', 'active')
       .single();
 
+    // If user doesn't have access, return empty list (don't block viewing)
     if (!isLegacyCurator && !userAccess) {
-      return res.status(403).json({ error: 'You do not have access to this memorial' });
+      return res.status(200).json({
+        collaborators: [],
+        currentUserRole: null,
+        canInvite: false,
+        canManage: false
+      });
     }
 
     // Get all collaborators

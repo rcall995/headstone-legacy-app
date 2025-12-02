@@ -1,4 +1,5 @@
-<link rel="stylesheet" href="/css/memorial-form.css">
+<link rel="stylesheet" href="/css/memorial-form.css?v=60">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 
 <div class="memorial-form-app">
     <form id="memorialForm" novalidate>
@@ -23,15 +24,15 @@
                 </div>
                 <div class="wizard-progress-step" data-step="5">
                     <div class="step-number">5</div>
-                    <span class="step-label">Location</span>
+                    <span class="step-label">Journey</span>
                 </div>
             </div>
         </div>
 
         <!-- Step 1: Person (Basic Info) -->
         <div class="wizard-step" data-step="1">
-            <!-- Hidden tier field - everyone gets full features -->
-            <input type="hidden" name="tier" value="historian">
+            <!-- Tier field - basic (free) or premium (paid) -->
+            <input type="hidden" name="tier" id="memorial-tier" value="basic">
 
             <!-- Basic Information -->
             <div class="form-section">
@@ -46,12 +47,70 @@
                         <input type="text" class="form-control" id="memorial-title" placeholder="e.g., Loving Father and Husband">
                     </div>
                     <div class="form-group">
-                        <label for="memorial-birth-date" class="form-label">Date of Birth</label>
-                        <input type="date" class="form-control" id="memorial-birth-date">
+                        <label class="form-label">Date of Birth</label>
+                        <div class="date-input-group">
+                            <div class="date-input-row">
+                                <input type="number" class="form-control date-year-input" id="memorial-birth-year" placeholder="Year" min="1000" max="2100">
+                                <button type="button" class="btn btn-sm btn-outline-secondary date-expand-btn" data-target="birth">
+                                    <i class="fas fa-calendar-alt"></i> Full date
+                                </button>
+                            </div>
+                            <div class="date-full-inputs d-none" id="birth-full-date">
+                                <select class="form-select form-select-sm date-month-input" id="memorial-birth-month">
+                                    <option value="">Month</option>
+                                    <option value="01">January</option>
+                                    <option value="02">February</option>
+                                    <option value="03">March</option>
+                                    <option value="04">April</option>
+                                    <option value="05">May</option>
+                                    <option value="06">June</option>
+                                    <option value="07">July</option>
+                                    <option value="08">August</option>
+                                    <option value="09">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <input type="number" class="form-control form-control-sm date-day-input" id="memorial-birth-day" placeholder="Day" min="1" max="31">
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="memorial-death-date" class="form-label">Date of Death</label>
-                        <input type="date" class="form-control" id="memorial-death-date">
+                        <label for="memorial-birth-place" class="form-label">Place of Birth</label>
+                        <input type="text" class="form-control" id="memorial-birth-place" placeholder="City, State or Country">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date of Death</label>
+                        <div class="date-input-group">
+                            <div class="date-input-row">
+                                <input type="number" class="form-control date-year-input" id="memorial-death-year" placeholder="Year" min="1000" max="2100">
+                                <button type="button" class="btn btn-sm btn-outline-secondary date-expand-btn" data-target="death">
+                                    <i class="fas fa-calendar-alt"></i> Full date
+                                </button>
+                            </div>
+                            <div class="date-full-inputs d-none" id="death-full-date">
+                                <select class="form-select form-select-sm date-month-input" id="memorial-death-month">
+                                    <option value="">Month</option>
+                                    <option value="01">January</option>
+                                    <option value="02">February</option>
+                                    <option value="03">March</option>
+                                    <option value="04">April</option>
+                                    <option value="05">May</option>
+                                    <option value="06">June</option>
+                                    <option value="07">July</option>
+                                    <option value="08">August</option>
+                                    <option value="09">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <input type="number" class="form-control form-control-sm date-day-input" id="memorial-death-day" placeholder="Day" min="1" max="31">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="memorial-death-place" class="form-label">Place of Death</label>
+                        <input type="text" class="form-control" id="memorial-death-place" placeholder="City, State or Country">
                     </div>
                 </div>
             </div>
@@ -79,6 +138,27 @@
                 </div>
 
                 <textarea id="memorial-story" class="form-control story-textarea" rows="12" placeholder="Write their story here..."></textarea>
+
+                <!-- Enhance existing story section -->
+                <div class="enhance-story-section mt-3" id="enhance-story-section">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="toggle-enhance-story">
+                            <i class="fas fa-plus-circle me-1"></i>Add more with AI
+                        </button>
+                        <span class="text-muted small">Enhance your existing story without losing what you've written</span>
+                    </div>
+                    <div class="enhance-story-input-group" id="enhance-story-input-group" style="display: none;">
+                        <textarea class="form-control" id="enhance-story-input" rows="2" placeholder="e.g., He also served in the Army for 4 years, or She was an avid gardener who won several local awards..."></textarea>
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="button" class="btn btn-primary btn-sm" id="enhance-story-btn">
+                                <i class="fas fa-wand-magic-sparkles me-1"></i>Add to Story
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="cancel-enhance-story">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -87,21 +167,152 @@
             <div class="form-section">
                 <h4 class="section-title"><i class="fas fa-image me-2"></i>Main Photo</h4>
                 <p class="section-subtitle">This will be the primary photo displayed on the memorial</p>
-                <div class="photo-upload-area">
-                    <input type="file" class="form-control" id="main-photo" accept="image/*" capture="environment">
-                    <small class="form-text text-muted">Maximum file size: 10MB</small>
+
+                <!-- Main Photo with Cropping -->
+                <div class="main-photo-container">
+                    <div id="main-photo-preview-cropped" class="main-photo-preview-cropped">
+                        <div class="main-photo-placeholder" id="main-photo-placeholder">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Click to add photo</span>
+                        </div>
+                        <img id="main-photo-cropped-img" src="" alt="Main photo" style="display: none;">
+                        <div class="main-photo-actions" id="main-photo-actions" style="display: none;">
+                            <button type="button" class="btn btn-sm btn-light" id="edit-main-photo-btn" title="Edit crop">
+                                <i class="fas fa-crop-alt"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light" id="remove-main-photo-btn" title="Remove photo">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" class="d-none" id="main-photo" accept="image/*">
+                    <input type="hidden" id="main-photo-cropped-data">
+                    <small class="form-text text-muted mt-2 d-block text-center">Click to upload a photo, then crop to focus on the face</small>
                 </div>
-                <div id="main-photo-preview" class="photo-preview-grid"></div>
             </div>
 
-            <div class="form-section">
+            <div class="form-section" id="photo-gallery-section">
                 <h4 class="section-title"><i class="fas fa-images me-2"></i>Photo Gallery</h4>
                 <p class="section-subtitle">Add additional photos to create a beautiful gallery</p>
                 <div class="photo-upload-area">
                     <input type="file" class="form-control" id="memorial-photos" accept="image/*" capture="environment" multiple>
-                    <small class="form-text text-muted">Maximum 20 photos, 10MB each</small>
+                    <small class="form-text text-muted">Add as many photos as you like, 10MB each</small>
                 </div>
                 <div id="photos-preview" class="photo-preview-grid"></div>
+            </div>
+
+            <!-- Video Messages Section (Premium Only) -->
+            <div class="form-section" id="video-messages-section">
+                <h4 class="section-title"><i class="fas fa-video me-2"></i>Video Messages</h4>
+                <p class="section-subtitle">Add personal video messages to share memories and stories</p>
+
+                <!-- Video Options -->
+                <div class="video-options-container">
+                    <div class="video-option-card" id="record-video-btn">
+                        <div class="video-option-icon">
+                            <i class="fas fa-circle text-danger"></i>
+                        </div>
+                        <div class="video-option-content">
+                            <strong>Record a Video</strong>
+                            <p class="mb-0 small text-muted">Use your camera to record a personal message</p>
+                        </div>
+                        <i class="fas fa-chevron-right video-option-arrow"></i>
+                    </div>
+
+                    <div class="video-option-card" id="upload-video-btn">
+                        <div class="video-option-icon">
+                            <i class="fas fa-upload text-primary"></i>
+                        </div>
+                        <div class="video-option-content">
+                            <strong>Upload a Video</strong>
+                            <p class="mb-0 small text-muted">Upload an existing video file (max 50MB)</p>
+                        </div>
+                        <i class="fas fa-chevron-right video-option-arrow"></i>
+                    </div>
+                </div>
+
+                <input type="file" class="d-none" id="video-file-input" accept="video/*">
+
+                <!-- Video Preview List -->
+                <div id="videos-preview" class="videos-preview-list"></div>
+            </div>
+
+            <!-- Header Background Image -->
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-panorama me-2"></i>Header Background</h4>
+                <p class="section-subtitle">Choose a background for the memorial page header</p>
+
+                <input type="hidden" id="header-image-value" value="">
+                <input type="hidden" id="header-image-type" value="preset">
+
+                <!-- Preset Options -->
+                <div class="header-preset-grid" id="header-preset-grid">
+                    <div class="header-preset-item selected" data-preset="default" title="Teal (Default)">
+                        <div class="header-preset-preview" style="background: linear-gradient(135deg, #005F60 0%, #007a7a 50%, #00959a 100%);"></div>
+                        <span class="header-preset-label">Teal</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="sunset-sky" title="Sunset Sky">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=400&h=200&fit=crop" alt="Sunset">
+                        <span class="header-preset-label">Sunset</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="forest-path" title="Forest Path">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=200&fit=crop" alt="Forest">
+                        <span class="header-preset-label">Forest</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="ocean-waves" title="Ocean Waves">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=200&fit=crop" alt="Ocean">
+                        <span class="header-preset-label">Beach</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="mountain-peaks" title="Mountain Peaks">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=200&fit=crop" alt="Mountains">
+                        <span class="header-preset-label">Mountains</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="clouds" title="Peaceful Clouds">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=400&h=200&fit=crop" alt="Clouds">
+                        <span class="header-preset-label">Sky</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="autumn-leaves" title="Autumn Leaves">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1760370048204-1abcd672609f?w=400&h=200&fit=crop" alt="Autumn">
+                        <span class="header-preset-label">Autumn</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="starry-night" title="Starry Night">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=200&fit=crop" alt="Stars">
+                        <span class="header-preset-label">Stars</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="buffalo-skyline" title="Buffalo NY City Hall">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1594050304868-c9299fdba722?w=400&h=200&fit=crop" alt="Buffalo City Hall">
+                        <span class="header-preset-label">Buffalo</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="nyc-skyline" title="New York City Skyline">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&h=200&fit=crop" alt="NYC">
+                        <span class="header-preset-label">NYC</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="phoenix-skyline" title="Phoenix AZ - Camelback Mountain">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1688066212257-3bb83619d81b?w=400&h=200&fit=crop" alt="Phoenix Camelback">
+                        <span class="header-preset-label">Phoenix</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="niagara-falls" title="Niagara Falls">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1489447068241-b3490214e879?w=400&h=200&fit=crop" alt="Niagara Falls">
+                        <span class="header-preset-label">Niagara</span>
+                    </div>
+                    <div class="header-preset-item" data-preset="sedona-az" title="Sedona Arizona - Bell Rock">
+                        <img class="header-preset-preview" src="https://images.unsplash.com/photo-1702260031554-0c3a45de71d3?w=400&h=200&fit=crop" alt="Sedona Bell Rock">
+                        <span class="header-preset-label">Sedona</span>
+                    </div>
+                </div>
+
+                <!-- Custom Upload Option -->
+                <div class="custom-header-upload mt-3">
+                    <label class="form-label"><i class="fas fa-upload me-2"></i>Or upload your own image</label>
+                    <input type="file" class="form-control" id="header-image-upload" accept="image/*">
+                    <small class="form-text text-muted">Recommended: 1920x400 pixels or larger. Landscape orientation works best.</small>
+                </div>
+                <div id="header-image-preview" class="header-image-preview mt-2" style="display: none;">
+                    <img id="header-preview-img" src="" alt="Header preview" class="header-preview-img">
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-header-btn" id="remove-header-image">
+                        <i class="fas fa-times"></i> Remove
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -114,21 +325,6 @@
                 <button type="button" class="add-field-btn" id="add-relative-button">
                     <i class="fas fa-plus"></i>
                     Add Family Member
-                </button>
-            </div>
-
-            <!-- Family Members Nearby Section -->
-            <div class="form-section" id="family-nearby-section">
-                <h4 class="section-title"><i class="fas fa-map-marker-alt me-2 text-warning"></i>Family Buried Nearby</h4>
-                <p class="section-subtitle">Add family members who may be buried in the same cemetery or nearby. Visitors can help pin their locations!</p>
-
-                <div id="family-nearby-container" class="dynamic-fields-container mb-3">
-                    <!-- Family members will be rendered here -->
-                </div>
-
-                <button type="button" class="add-field-btn" id="add-family-nearby-btn">
-                    <i class="fas fa-plus"></i>
-                    Add Family Member Buried Nearby
                 </button>
             </div>
 
@@ -175,7 +371,7 @@
             </div>
         </div>
 
-        <!-- Step 5: Location -->
+        <!-- Step 5: Journey -->
         <div class="wizard-step" data-step="5">
             <!-- Cemetery Location -->
             <div class="form-section">
@@ -205,31 +401,52 @@
                 <!-- Gravesite Pin Section -->
                 <div class="gravesite-pin-section mt-4" id="gravesite-pin-section">
                     <h5 class="section-subtitle"><i class="fas fa-map-pin me-2 text-danger"></i>Exact Gravesite Location <span class="badge bg-secondary ms-2">Optional</span></h5>
-                    <p class="text-muted small">Pin the exact location of the grave to help visitors find it within the cemetery.</p>
 
-                    <div class="gravesite-status-card" id="gravesite-status-card">
-                        <div id="gravesite-not-set" class="gravesite-status">
+                    <!-- Status Card (default view) -->
+                    <div id="gravesite-status-view" class="gravesite-status-card">
+                        <div id="gravesite-no-location" class="text-center py-3">
                             <i class="fas fa-map-marker-alt text-muted fa-2x mb-2"></i>
-                            <p class="mb-2">No gravesite pin set</p>
-                            <div class="d-flex gap-2 justify-content-center flex-wrap">
-                                <button type="button" class="btn btn-primary" id="set-gravesite-gps-btn">
-                                    <i class="fas fa-crosshairs me-2"></i>Use My GPS
+                            <p class="text-muted mb-3">No gravesite location set</p>
+                            <button type="button" class="btn btn-primary" id="gravesite-set-btn">
+                                <i class="fas fa-map-pin me-2"></i>Set Gravesite Location
+                            </button>
+                        </div>
+                        <div id="gravesite-has-location" class="text-center py-3" style="display: none;">
+                            <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                            <p class="text-success fw-bold mb-1">Gravesite location set</p>
+                            <p class="text-muted small mb-3" id="gravesite-coords-display"></p>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn btn-outline-primary" id="gravesite-adjust-btn">
+                                    <i class="fas fa-edit me-2"></i>Adjust Location
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary" id="set-gravesite-map-btn">
-                                    <i class="fas fa-hand-pointer me-2"></i>Pick on Map
+                                <button type="button" class="btn btn-outline-danger" id="gravesite-remove-btn">
+                                    <i class="fas fa-trash me-2"></i>Remove Location
                                 </button>
                             </div>
                         </div>
-                        <div id="gravesite-is-set" class="gravesite-status" style="display: none;">
-                            <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
-                            <p class="mb-1 fw-bold text-success">Gravesite pinned!</p>
-                            <p class="small text-muted mb-2" id="gravesite-coords"></p>
-                            <div class="d-flex gap-2 justify-content-center">
-                                <button type="button" class="btn btn-sm btn-outline-primary" id="update-gravesite-btn">
-                                    <i class="fas fa-sync-alt me-1"></i>Update
+                    </div>
+
+                    <!-- Map Editor (hidden by default) -->
+                    <div id="gravesite-map-editor" class="gravesite-map-editor" style="display: none;">
+                        <div class="gravesite-map-instructions">
+                            <i class="fas fa-hand-pointer me-2"></i>
+                            <strong>Drag the map</strong> to position the red pin on the exact gravesite, then click <strong>Save Location</strong>.
+                        </div>
+                        <div class="gravesite-inline-map-container">
+                            <div id="gravesite-inline-map" class="gravesite-inline-map"></div>
+                            <div class="gravesite-center-pin">📍</div>
+                            <div class="gravesite-map-controls">
+                                <button type="button" class="btn btn-sm btn-light" id="gravesite-gps-btn" title="Use my GPS location">
+                                    <i class="fas fa-crosshairs"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger" id="remove-gravesite-btn">
-                                    <i class="fas fa-times me-1"></i>Remove
+                            </div>
+                        </div>
+                        <div class="gravesite-map-footer">
+                            <span class="text-muted small" id="gravesite-coords-text">Move map to set location</span>
+                            <div class="gravesite-map-actions">
+                                <button type="button" class="btn btn-secondary btn-sm" id="gravesite-cancel-btn">Cancel</button>
+                                <button type="button" class="btn btn-success btn-sm" id="gravesite-save-btn">
+                                    <i class="fas fa-check me-1"></i>Save Location
                                 </button>
                             </div>
                         </div>
@@ -258,11 +475,137 @@
             <div class="form-section">
                 <h4 class="section-title"><i class="fas fa-star me-2"></i>Life Milestones</h4>
                 <p class="section-subtitle">Document important events and achievements</p>
+
+                <!-- Milestone Wizard Prompt -->
+                <div class="milestone-wizard-prompt mb-3">
+                    <div class="milestone-wizard-card" id="open-milestone-wizard-btn">
+                        <div class="milestone-wizard-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <div class="milestone-wizard-content">
+                            <strong>Use Guided Wizard</strong>
+                            <p class="mb-0 small text-muted">Answer questions about education, career, family & more</p>
+                        </div>
+                        <i class="fas fa-chevron-right milestone-wizard-arrow"></i>
+                    </div>
+                </div>
+
                 <div id="milestones-container" class="dynamic-fields-container"></div>
                 <button type="button" class="add-field-btn" id="add-milestone-button">
                     <i class="fas fa-plus"></i>
-                    Add Milestone
+                    Add Milestone Manually
                 </button>
+            </div>
+
+            <!-- World Events -->
+            <div class="form-section" id="world-events-section" style="display: none;">
+                <h4 class="section-title"><i class="fas fa-globe-americas me-2"></i>World Events</h4>
+                <p class="section-subtitle">Select historical events that occurred during their lifetime to display on the timeline</p>
+                <div class="world-events-controls mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-primary me-2" id="select-all-events">Select All</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselect-all-events">Deselect All</button>
+                </div>
+                <div id="world-events-container" class="world-events-grid"></div>
+            </div>
+
+            <!-- Living Legacy Messages (Premium Only) -->
+            <div class="form-section" id="living-legacy-section" style="display: none;">
+                <div class="section-header-with-badge">
+                    <h4 class="section-title"><i class="fas fa-envelope-open-text me-2"></i>Living Legacy Messages</h4>
+                    <span class="badge bg-primary">Premium</span>
+                </div>
+                <p class="section-subtitle">Schedule heartfelt messages to be delivered to loved ones on special dates - birthdays, anniversaries, graduations, or whenever they need to hear from you.</p>
+
+                <!-- Upgrade prompt for basic tier -->
+                <div id="living-legacy-upgrade-prompt" class="upgrade-prompt-card">
+                    <div class="upgrade-prompt-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="upgrade-prompt-content">
+                        <h5>Unlock Living Legacy Messages</h5>
+                        <p>Schedule messages to be delivered to family members on birthdays, holidays, or special milestones. Keep your voice alive for generations.</p>
+                        <a href="/order-tag" class="btn btn-primary" data-route>
+                            <i class="fas fa-crown me-2"></i>Upgrade to Complete Legacy Package
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Messages List (Premium users) -->
+                <div id="living-legacy-content" style="display: none;">
+                    <div id="legacy-messages-list" class="legacy-messages-list">
+                        <div class="text-center py-4 text-muted" id="no-messages-placeholder">
+                            <i class="fas fa-inbox fa-2x mb-2 opacity-50"></i>
+                            <p>No scheduled messages yet</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="add-field-btn" id="add-legacy-message-btn">
+                        <i class="fas fa-plus"></i>
+                        Schedule a Message
+                    </button>
+                </div>
+            </div>
+
+            <!-- Privacy Settings -->
+            <div class="form-section">
+                <h4 class="section-title"><i class="fas fa-eye-slash me-2"></i>Privacy Settings</h4>
+                <p class="section-subtitle">Control what visitors can see on this memorial</p>
+                <div class="privacy-toggles">
+                    <div class="privacy-toggle-item">
+                        <div class="privacy-toggle-info">
+                            <label for="show-recent">Show on Recent Memorials</label>
+                            <small>Allow this memorial to appear on the home page</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="show-recent" checked>
+                        </div>
+                    </div>
+                    <div class="privacy-toggle-item">
+                        <div class="privacy-toggle-info">
+                            <label for="show-dates">Show Dates</label>
+                            <small>Display birth and death dates</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="show-dates" checked>
+                        </div>
+                    </div>
+                    <div class="privacy-toggle-item">
+                        <div class="privacy-toggle-info">
+                            <label for="show-timeline">Show Timeline</label>
+                            <small>Display life events and milestones</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="show-timeline" checked>
+                        </div>
+                    </div>
+                    <div class="privacy-toggle-item">
+                        <div class="privacy-toggle-info">
+                            <label for="show-gallery">Show Photo Gallery</label>
+                            <small>Display the photo gallery section</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="show-gallery" checked>
+                        </div>
+                    </div>
+                    <div class="privacy-toggle-item">
+                        <div class="privacy-toggle-info">
+                            <label for="show-family-tree">Show Family Tree</label>
+                            <small>Display relatives and family connections</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="show-family-tree" checked>
+                        </div>
+                    </div>
+                    <div class="privacy-toggle-item">
+                        <div class="privacy-toggle-info">
+                            <label for="show-guest-book">Show Guest Book</label>
+                            <small>Allow visitors to leave tributes and light candles</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="show-guest-book" checked>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -320,10 +663,16 @@
                                 <button class="btn btn-sm btn-outline-primary" id="copy-link-btn">
                                     <i class="fas fa-link me-1"></i>Copy Link
                                 </button>
+                                <a href="#" class="btn btn-sm btn-outline-primary share-btn-facebook" id="share-facebook-btn" target="_blank">
+                                    <i class="fab fa-facebook-f me-1"></i>Facebook
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-info share-btn-twitter" id="share-twitter-btn" target="_blank">
+                                    <i class="fab fa-twitter me-1"></i>Twitter / X
+                                </a>
                                 <a href="#" class="btn btn-sm btn-outline-success" id="share-whatsapp-btn" target="_blank">
                                     <i class="fab fa-whatsapp me-1"></i>WhatsApp
                                 </a>
-                                <a href="#" class="btn btn-sm btn-outline-primary" id="share-email-btn">
+                                <a href="#" class="btn btn-sm btn-outline-secondary" id="share-email-btn">
                                     <i class="fas fa-envelope me-1"></i>Email
                                 </a>
                             </div>
@@ -337,10 +686,10 @@
                                     <i class="fas fa-qrcode text-primary" style="font-size: 2rem;"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="fw-bold mb-2">Add a QR Code to the Headstone</h6>
-                                    <p class="text-muted small mb-3">Visitors can scan and discover the full story. Weatherproof tag, lifetime guarantee.</p>
+                                    <h6 class="fw-bold mb-2">Get the Complete Legacy Package</h6>
+                                    <p class="text-muted small mb-3">QR plaque + lifetime memorial + Living Legacy features. Weatherproof, lifetime guarantee.</p>
                                     <a href="#" class="btn btn-primary btn-sm" id="order-tag-from-success-btn">
-                                        <i class="fas fa-tag me-1"></i>Order Tag - $39
+                                        <i class="fas fa-tag me-1"></i>Complete Legacy Package - $99
                                     </a>
                                 </div>
                             </div>
@@ -448,6 +797,17 @@
                 <div class="bio-preview-section mt-4" id="bio-preview-section" style="display: none;">
                     <h6 class="fw-bold mb-2"><i class="fas fa-file-alt me-2"></i>Generated Biography <small class="text-muted fw-normal">(edit as needed)</small></h6>
                     <textarea class="form-control" id="bio-preview-content" rows="8" style="resize: vertical;"></textarea>
+
+                    <!-- Enhance bio section -->
+                    <div class="enhance-bio-section mt-3 p-3 bg-light rounded">
+                        <label class="form-label fw-semibold mb-2">
+                            <i class="fas fa-plus-circle text-primary me-1"></i>Add more to this biography
+                        </label>
+                        <textarea class="form-control" id="enhance-bio-input" rows="2" placeholder="e.g., He also served in the Army for 4 years, or She was an avid gardener who won several local awards..."></textarea>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="enhance-bio-btn">
+                            <i class="fas fa-wand-magic-sparkles me-1"></i>Add to Biography
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Error display -->
@@ -466,53 +826,579 @@
     </div>
 </div>
 
-<!-- Memorial Search Modal (for linking family members) -->
+<!-- Add Family Member Modal (Search-First Flow) -->
 <div class="modal fade" id="memorialSearchModal" tabindex="-1" aria-labelledby="memorialSearchModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="memorialSearchModalLabel">
-                    <i class="fas fa-link text-primary me-2"></i>Link to Memorial
+                    <i class="fas fa-user-plus text-primary me-2"></i>Add Family Member
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted small">Search for an existing memorial to create a family connection</p>
+                <!-- Step 1: Search -->
+                <div id="family-search-step">
+                    <p class="text-muted mb-3">Search for an existing memorial to avoid creating duplicates</p>
 
-                <!-- Search input -->
-                <div class="input-group mb-3">
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" id="memorial-search-input" placeholder="Search by name..." autocomplete="off">
-                </div>
-
-                <!-- Search results -->
-                <div id="memorial-search-results" class="memorial-search-results">
-                    <div class="search-empty-state text-center py-4 text-muted">
-                        <i class="fas fa-users fa-2x mb-2 opacity-50"></i>
-                        <p class="mb-0">Type a name to search existing memorials</p>
+                    <!-- Search input -->
+                    <div class="input-group input-group-lg mb-3">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="memorial-search-input" placeholder="Type name to search..." autocomplete="off">
                     </div>
-                </div>
 
-                <!-- Currently selected -->
-                <div id="memorial-search-selected" class="memorial-search-selected d-none">
-                    <label class="form-label small text-muted">Selected Memorial:</label>
-                    <div class="selected-memorial-card">
-                        <img id="selected-memorial-photo" src="" alt="" class="selected-memorial-photo">
-                        <div class="selected-memorial-info">
-                            <strong id="selected-memorial-name"></strong>
-                            <small id="selected-memorial-dates" class="text-muted d-block"></small>
+                    <!-- Search results -->
+                    <div id="memorial-search-results" class="memorial-search-results">
+                        <div class="search-empty-state text-center py-4 text-muted">
+                            <i class="fas fa-users fa-2x mb-2 opacity-50"></i>
+                            <p class="mb-0">Start typing to find existing memorials</p>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger" id="clear-memorial-selection">
-                            <i class="fas fa-times"></i>
-                        </button>
                     </div>
-                    <input type="hidden" id="selected-memorial-id">
+
+                    <!-- No match option -->
+                    <div id="create-new-option" class="create-new-memorial-option d-none">
+                        <div class="divider-text"><span>or</span></div>
+                        <button type="button" class="btn btn-outline-primary w-100" id="create-new-memorial-btn">
+                            <i class="fas fa-plus me-2"></i>Create New Memorial for "<span id="search-name-echo"></span>"
+                        </button>
+                        <p class="text-muted small text-center mt-2 mb-0">No existing memorial found? Start a new one.</p>
+                    </div>
+                </div>
+
+                <!-- Step 2: Select Relationship (shown after selection) -->
+                <div id="family-relationship-step" class="d-none">
+                    <!-- Selected memorial display -->
+                    <div id="memorial-search-selected" class="memorial-search-selected mb-4">
+                        <label class="form-label small text-muted">Selected:</label>
+                        <div class="selected-memorial-card">
+                            <img id="selected-memorial-photo" src="" alt="" class="selected-memorial-photo">
+                            <div class="selected-memorial-info">
+                                <strong id="selected-memorial-name"></strong>
+                                <small id="selected-memorial-dates" class="text-muted d-block"></small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="change-selection-btn">
+                                <i class="fas fa-edit"></i> Change
+                            </button>
+                        </div>
+                        <input type="hidden" id="selected-memorial-id">
+                        <input type="hidden" id="selected-is-new-memorial" value="false">
+                    </div>
+
+                    <!-- Relationship selector -->
+                    <div class="relationship-selector">
+                        <label class="form-label">How are they related to <strong id="current-memorial-name-ref"></strong>?</label>
+                        <select class="form-select form-select-lg" id="family-relationship-select">
+                            <option value="" disabled selected>Select relationship...</option>
+                            <option value="Spouse">Spouse</option>
+                            <option value="Father">Father</option>
+                            <option value="Mother">Mother</option>
+                            <option value="Son">Son</option>
+                            <option value="Daughter">Daughter</option>
+                            <option value="Brother">Brother</option>
+                            <option value="Sister">Sister</option>
+                            <option value="Grandfather">Grandfather</option>
+                            <option value="Grandmother">Grandmother</option>
+                            <option value="Grandson">Grandson</option>
+                            <option value="Granddaughter">Granddaughter</option>
+                            <option value="Uncle">Uncle</option>
+                            <option value="Aunt">Aunt</option>
+                            <option value="Nephew">Nephew</option>
+                            <option value="Niece">Niece</option>
+                            <option value="Other">Other...</option>
+                        </select>
+                        <input type="text" class="form-control mt-2 d-none" id="family-relationship-other" placeholder="Enter relationship (e.g., Stepfather, Godparent)">
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="confirm-memorial-link-btn" disabled>
-                    <i class="fas fa-link me-2"></i>Link Memorial
+                    <i class="fas fa-user-plus me-2"></i>Add to Family
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Family Connection Suggestions Modal -->
+<div class="modal fade" id="familySuggestionsModal" tabindex="-1" aria-labelledby="familySuggestionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="familySuggestionsModalLabel">
+                    <i class="fas fa-magic text-primary me-2"></i>Suggested Family Connections
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3" id="family-suggestions-intro">
+                    Based on existing family connections, these additional relationships can be created:
+                </p>
+
+                <!-- Suggestion groups will be dynamically populated -->
+                <div id="family-suggestions-list" class="family-suggestions-list">
+                    <!-- Example structure (populated by JS):
+                    <div class="suggestion-group mb-3">
+                        <h6 class="text-muted mb-2">Grandparents for Donald:</h6>
+                        <div class="form-check suggestion-item p-2 bg-light rounded mb-2">
+                            <input class="form-check-input" type="checkbox" checked>
+                            <label class="form-check-label">
+                                <strong>Fred (Pop) R Call Sr.</strong> as <span class="badge bg-primary">Grandfather</span>
+                            </label>
+                        </div>
+                    </div>
+                    -->
+                </div>
+
+                <div id="no-suggestions-message" class="text-center py-4 text-muted d-none">
+                    <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                    <p class="mb-0">All family connections are already set up!</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Skip</button>
+                <button type="button" class="btn btn-primary" id="confirm-family-suggestions-btn">
+                    <i class="fas fa-check me-2"></i>Add Selected Connections
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Crop Modal -->
+<div class="modal fade" id="photoCropModal" tabindex="-1" aria-labelledby="photoCropModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="photoCropModalLabel">
+                    <i class="fas fa-crop-alt text-primary me-2"></i>Crop Photo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">Drag to reposition, scroll to zoom. Focus on the face for best results.</p>
+                <div class="crop-container">
+                    <img id="crop-image" src="" alt="Image to crop">
+                </div>
+                <div class="crop-controls mt-3">
+                    <div class="d-flex justify-content-center gap-2 mb-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="crop-zoom-out" title="Zoom out">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="crop-zoom-in" title="Zoom in">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="crop-rotate-left" title="Rotate left">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="crop-rotate-right" title="Rotate right">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="crop-reset" title="Reset">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="apply-crop-btn">
+                    <i class="fas fa-check me-1"></i>Apply Crop
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Milestone Wizard Modal -->
+<div class="modal fade" id="milestoneWizardModal" tabindex="-1" aria-labelledby="milestoneWizardModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title" id="milestoneWizardModalLabel">
+                        <i class="fas fa-magic text-primary me-2"></i>Life Milestones Wizard
+                    </h5>
+                    <p class="text-muted small mb-0">Answer optional questions to document their life journey</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Wizard Progress -->
+                <div class="milestone-wizard-progress mb-4">
+                    <div class="mw-progress-bar">
+                        <div class="mw-progress-fill" id="mw-progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="mw-progress-steps">
+                        <div class="mw-step active" data-step="1">
+                            <span class="mw-step-icon"><i class="fas fa-graduation-cap"></i></span>
+                            <span class="mw-step-label">Education</span>
+                        </div>
+                        <div class="mw-step" data-step="2">
+                            <span class="mw-step-icon"><i class="fas fa-heart"></i></span>
+                            <span class="mw-step-label">Family</span>
+                        </div>
+                        <div class="mw-step" data-step="3">
+                            <span class="mw-step-icon"><i class="fas fa-briefcase"></i></span>
+                            <span class="mw-step-label">Career</span>
+                        </div>
+                        <div class="mw-step" data-step="4">
+                            <span class="mw-step-icon"><i class="fas fa-medal"></i></span>
+                            <span class="mw-step-label">Military</span>
+                        </div>
+                        <div class="mw-step" data-step="5">
+                            <span class="mw-step-icon"><i class="fas fa-church"></i></span>
+                            <span class="mw-step-label">Faith</span>
+                        </div>
+                        <div class="mw-step" data-step="6">
+                            <span class="mw-step-icon"><i class="fas fa-trophy"></i></span>
+                            <span class="mw-step-label">Awards</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Birth year reference -->
+                <div class="alert alert-light border mb-4" id="mw-birth-year-display">
+                    <strong>Creating milestones for:</strong> <span id="mw-person-name">-</span>
+                    <span class="text-muted ms-2" id="mw-birth-year-hint"></span>
+                </div>
+
+                <!-- Step 1: Education -->
+                <div class="mw-step-content" data-step="1">
+                    <h5 class="mw-step-title"><i class="fas fa-graduation-cap text-primary me-2"></i>Education</h5>
+                    <p class="text-muted small">All fields are optional - fill in what you know</p>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-school me-2 text-muted"></i>High School</label>
+                        <div class="row g-2">
+                            <div class="col-md-8">
+                                <input type="text" class="form-control" id="mw-highschool-name" placeholder="School name">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control" id="mw-highschool-year" placeholder="Grad year" min="1900" max="2100">
+                            </div>
+                        </div>
+                        <small class="text-muted" id="mw-highschool-hint"></small>
+                    </div>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-university me-2 text-muted"></i>College/University</label>
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <input type="text" class="form-control" id="mw-college-name" placeholder="School name">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="mw-college-degree" placeholder="Degree (e.g., B.S. Engineering)">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control" id="mw-college-year" placeholder="Year" min="1900" max="2100">
+                            </div>
+                        </div>
+                        <small class="text-muted" id="mw-college-hint"></small>
+                    </div>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-user-graduate me-2 text-muted"></i>Advanced Degree (Optional)</label>
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <input type="text" class="form-control" id="mw-advanced-name" placeholder="School name">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="mw-advanced-degree" placeholder="Degree (e.g., M.D., J.D.)">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control" id="mw-advanced-year" placeholder="Year" min="1900" max="2100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Family -->
+                <div class="mw-step-content d-none" data-step="2">
+                    <h5 class="mw-step-title"><i class="fas fa-heart text-danger me-2"></i>Marriage & Family</h5>
+                    <p class="text-muted small">All fields are optional - add multiple marriages if applicable</p>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-ring me-2 text-muted"></i>Marriages</label>
+                        <div id="mw-marriages-container">
+                            <div class="mw-marriage-block mb-3 p-3 border rounded bg-light" data-marriage="1">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong class="text-muted small">Marriage #1</strong>
+                                    <button type="button" class="btn btn-outline-danger btn-sm mw-remove-marriage" style="display:none;">×</button>
+                                </div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-5">
+                                        <input type="text" class="form-control mw-spouse-name" placeholder="Spouse's name">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="number" class="form-control mw-wedding-year" placeholder="Wedding year" min="1900" max="2100">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" class="form-control mw-wedding-location" placeholder="Location">
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <select class="form-select form-select-sm mw-marriage-status">
+                                            <option value="">Status (optional)</option>
+                                            <option value="married">Currently Married</option>
+                                            <option value="widowed">Widowed</option>
+                                            <option value="divorced">Divorced</option>
+                                            <option value="deceased">Spouse Deceased</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="number" class="form-control form-control-sm mw-marriage-end-year" placeholder="End year (if applicable)" min="1900" max="2100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="mw-add-marriage">
+                            <i class="fas fa-plus me-1"></i>Add Another Marriage
+                        </button>
+                    </div>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-baby me-2 text-muted"></i>Children</label>
+                        <p class="text-muted small">Add each child - you can specify which marriage they're from</p>
+                        <div id="mw-children-container">
+                            <div class="mw-child-row row g-2 mb-2">
+                                <div class="col-md-5">
+                                    <input type="text" class="form-control mw-child-name" placeholder="Child's name">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" class="form-control mw-child-year" placeholder="Birth year" min="1900" max="2100">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select mw-child-parent">
+                                        <option value="">With...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-outline-danger btn-sm w-100 mw-remove-child" style="display:none;">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="mw-add-child">
+                            <i class="fas fa-plus me-1"></i>Add Another Child
+                        </button>
+                    </div>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-users me-2 text-muted"></i>Grandchildren</label>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <input type="number" class="form-control" id="mw-grandchildren-count" placeholder="Number of grandchildren" min="0" max="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Career -->
+                <div class="mw-step-content d-none" data-step="3">
+                    <h5 class="mw-step-title"><i class="fas fa-briefcase text-warning me-2"></i>Career</h5>
+                    <p class="text-muted small">Document their professional journey</p>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-building me-2 text-muted"></i>Primary Career/Employer</label>
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <input type="text" class="form-control" id="mw-job-title" placeholder="Job title/profession">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="mw-employer" placeholder="Company/Organization">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" id="mw-job-years" placeholder="Years (e.g., 1960-1995)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-umbrella-beach me-2 text-muted"></i>Retirement</label>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <input type="number" class="form-control" id="mw-retirement-year" placeholder="Retirement year" min="1900" max="2100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-plus-circle me-2 text-muted"></i>Other Jobs (Optional)</label>
+                        <div id="mw-jobs-container">
+                            <div class="mw-job-row row g-2 mb-2">
+                                <div class="col-md-5">
+                                    <input type="text" class="form-control mw-other-job-title" placeholder="Job title">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control mw-other-employer" placeholder="Employer">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control mw-other-job-years" placeholder="Years">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-outline-danger btn-sm w-100 mw-remove-job" style="display:none;">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="mw-add-job">
+                            <i class="fas fa-plus me-1"></i>Add Job
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Military -->
+                <div class="mw-step-content d-none" data-step="4">
+                    <h5 class="mw-step-title"><i class="fas fa-medal text-success me-2"></i>Military Service</h5>
+                    <p class="text-muted small">Honor their service to the country</p>
+
+                    <div class="mw-question-card">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="mw-served-military">
+                            <label class="form-check-label" for="mw-served-military">
+                                <strong>Served in the military</strong>
+                            </label>
+                        </div>
+
+                        <div id="mw-military-details" class="d-none">
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Branch</label>
+                                    <select class="form-select" id="mw-military-branch">
+                                        <option value="">Select branch...</option>
+                                        <option value="Army">Army</option>
+                                        <option value="Navy">Navy</option>
+                                        <option value="Air Force">Air Force</option>
+                                        <option value="Marines">Marines</option>
+                                        <option value="Coast Guard">Coast Guard</option>
+                                        <option value="Space Force">Space Force</option>
+                                        <option value="National Guard">National Guard</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Rank at Discharge</label>
+                                    <input type="text" class="form-control" id="mw-military-rank" placeholder="e.g., Sergeant, Captain">
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Service Dates</label>
+                                    <input type="text" class="form-control" id="mw-military-dates" placeholder="e.g., 1965-1969">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Conflict/War (if applicable)</label>
+                                    <select class="form-select" id="mw-military-conflict">
+                                        <option value="">Select...</option>
+                                        <option value="World War I">World War I</option>
+                                        <option value="World War II">World War II</option>
+                                        <option value="Korean War">Korean War</option>
+                                        <option value="Vietnam War">Vietnam War</option>
+                                        <option value="Gulf War">Gulf War</option>
+                                        <option value="War in Afghanistan">War in Afghanistan</option>
+                                        <option value="Iraq War">Iraq War</option>
+                                        <option value="Peacetime">Peacetime Service</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small">Medals/Honors</label>
+                                <input type="text" class="form-control" id="mw-military-medals" placeholder="e.g., Purple Heart, Bronze Star">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Faith & Community -->
+                <div class="mw-step-content d-none" data-step="5">
+                    <h5 class="mw-step-title"><i class="fas fa-church text-info me-2"></i>Faith & Community</h5>
+                    <p class="text-muted small">Religious milestones and community involvement</p>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-pray me-2 text-muted"></i>Religious Milestones</label>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="mw-baptism-church" placeholder="Church/Place of worship">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="mw-denomination" placeholder="Faith/Denomination">
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <input type="number" class="form-control" id="mw-baptism-year" placeholder="Baptism year" min="1900" max="2100">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control" id="mw-confirmation-year" placeholder="Confirmation year" min="1900" max="2100">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="mw-religious-role" placeholder="Role (e.g., Deacon)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-hands-helping me-2 text-muted"></i>Organizations & Clubs</label>
+                        <textarea class="form-control" id="mw-organizations" rows="3" placeholder="e.g., Rotary Club, Masons, VFW, Lions Club, volunteer organizations..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Step 6: Awards & Achievements -->
+                <div class="mw-step-content d-none" data-step="6">
+                    <h5 class="mw-step-title"><i class="fas fa-trophy text-warning me-2"></i>Awards & Achievements</h5>
+                    <p class="text-muted small">Special recognition and accomplishments</p>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-award me-2 text-muted"></i>Awards & Honors</label>
+                        <div id="mw-awards-container">
+                            <div class="mw-award-row row g-2 mb-2">
+                                <div class="col-md-7">
+                                    <input type="text" class="form-control mw-award-name" placeholder="Award name">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" class="form-control mw-award-year" placeholder="Year" min="1900" max="2100">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-outline-danger btn-sm w-100 mw-remove-award" style="display:none;">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="mw-add-award">
+                            <i class="fas fa-plus me-1"></i>Add Award
+                        </button>
+                    </div>
+
+                    <div class="mw-question-card">
+                        <label class="form-label"><i class="fas fa-star me-2 text-muted"></i>Other Achievements</label>
+                        <textarea class="form-control" id="mw-other-achievements" rows="3" placeholder="e.g., Published a book, patented an invention, ran a marathon, community recognition..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Summary (shown after completing all steps) -->
+                <div class="mw-step-content d-none" data-step="summary">
+                    <h5 class="mw-step-title"><i class="fas fa-list-check text-success me-2"></i>Milestones to Add</h5>
+                    <p class="text-muted small">Review the milestones we'll add based on your answers</p>
+                    <div id="mw-summary-list" class="mw-summary-list"></div>
+                    <div class="alert alert-info mt-3" id="mw-no-milestones" style="display: none;">
+                        <i class="fas fa-info-circle me-2"></i>No milestones were entered. You can go back and add information or close this wizard.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" id="mw-skip-btn">
+                    <i class="fas fa-forward me-1"></i>Skip
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="mw-prev-btn" style="display: none;">
+                    <i class="fas fa-chevron-left me-1"></i>Back
+                </button>
+                <button type="button" class="btn btn-primary" id="mw-next-btn">
+                    Next<i class="fas fa-chevron-right ms-1"></i>
+                </button>
+                <button type="button" class="btn btn-success" id="mw-finish-btn" style="display: none;">
+                    <i class="fas fa-check me-1"></i>Add Milestones
                 </button>
             </div>
         </div>
@@ -611,6 +1497,254 @@
                         <span>Edit anytime</span>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Video Recording Modal -->
+<div class="modal fade" id="videoRecordModal" tabindex="-1" aria-labelledby="videoRecordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoRecordModalLabel">
+                    <i class="fas fa-video text-danger me-2"></i>Record Video Message
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Camera Permission Request -->
+                <div id="video-permission-request" class="text-center py-4">
+                    <i class="fas fa-video fa-3x text-muted mb-3"></i>
+                    <h5>Camera Access Required</h5>
+                    <p class="text-muted">We need access to your camera and microphone to record a video message.</p>
+                    <button type="button" class="btn btn-primary" id="request-camera-btn">
+                        <i class="fas fa-camera me-2"></i>Enable Camera
+                    </button>
+                </div>
+
+                <!-- Video Recording Interface -->
+                <div id="video-recording-interface" style="display: none;">
+                    <div class="video-preview-container">
+                        <video id="video-preview" autoplay muted playsinline class="video-preview"></video>
+                        <div id="recording-indicator" class="recording-indicator" style="display: none;">
+                            <span class="recording-dot"></span>
+                            <span id="recording-time">0:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Recording Controls -->
+                    <div class="video-controls mt-3">
+                        <div class="d-flex justify-content-center gap-3">
+                            <button type="button" class="btn btn-danger btn-lg rounded-circle" id="start-recording-btn" title="Start Recording">
+                                <i class="fas fa-circle"></i>
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-lg rounded-circle" id="stop-recording-btn" style="display: none;" title="Stop Recording">
+                                <i class="fas fa-stop"></i>
+                            </button>
+                        </div>
+                        <p class="text-center text-muted mt-2 mb-0">
+                            <small id="video-recording-hint">Click the red button to start recording (max 2 minutes)</small>
+                        </p>
+                    </div>
+
+                    <!-- Camera Selection -->
+                    <div class="camera-selection mt-3" id="camera-selection">
+                        <label class="form-label small text-muted">Camera:</label>
+                        <select class="form-select form-select-sm" id="camera-select"></select>
+                    </div>
+                </div>
+
+                <!-- Video Playback/Review -->
+                <div id="video-review-interface" style="display: none;">
+                    <div class="video-preview-container">
+                        <video id="video-playback" controls class="video-preview"></video>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Title (optional)</label>
+                        <input type="text" class="form-control" id="video-title-input" placeholder="e.g., A message from Dad">
+                    </div>
+                </div>
+
+                <!-- Error Display -->
+                <div class="alert alert-danger mt-3" id="video-error" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-primary" id="retake-video-btn" style="display: none;">
+                    <i class="fas fa-redo me-1"></i>Retake
+                </button>
+                <button type="button" class="btn btn-success" id="save-video-btn" style="display: none;">
+                    <i class="fas fa-check me-1"></i>Save Video
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Legacy Message Modal -->
+<div class="modal fade" id="legacyMessageModal" tabindex="-1" aria-labelledby="legacyMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title" id="legacyMessageModalLabel">
+                        <i class="fas fa-envelope-open-text text-primary me-2"></i>Schedule a Message
+                    </h5>
+                    <p class="text-muted small mb-0">Create a message to be delivered on a special date</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="legacy-message-id">
+
+                <!-- Recipient Info -->
+                <div class="legacy-message-section">
+                    <h6 class="legacy-section-title"><i class="fas fa-user me-2"></i>Who is this for?</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Recipient Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="lm-recipient-name" placeholder="e.g., Sarah" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="lm-recipient-email" placeholder="sarah@example.com" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Relationship</label>
+                            <select class="form-select" id="lm-recipient-relationship">
+                                <option value="">Select relationship...</option>
+                                <option value="daughter">Daughter</option>
+                                <option value="son">Son</option>
+                                <option value="spouse">Spouse</option>
+                                <option value="grandchild">Grandchild</option>
+                                <option value="sibling">Sibling</option>
+                                <option value="friend">Friend</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Trigger -->
+                <div class="legacy-message-section">
+                    <h6 class="legacy-section-title"><i class="fas fa-calendar-alt me-2"></i>When should it be delivered?</h6>
+                    <div class="delivery-type-options">
+                        <div class="delivery-type-card" data-type="date">
+                            <div class="delivery-type-icon"><i class="fas fa-calendar-day"></i></div>
+                            <div class="delivery-type-info">
+                                <strong>Specific Date</strong>
+                                <small>Deliver on a chosen date</small>
+                            </div>
+                        </div>
+                        <div class="delivery-type-card" data-type="milestone">
+                            <div class="delivery-type-icon"><i class="fas fa-graduation-cap"></i></div>
+                            <div class="delivery-type-info">
+                                <strong>Life Milestone</strong>
+                                <small>Graduation, wedding, etc.</small>
+                            </div>
+                        </div>
+                        <div class="delivery-type-card" data-type="anniversary">
+                            <div class="delivery-type-icon"><i class="fas fa-heart"></i></div>
+                            <div class="delivery-type-info">
+                                <strong>Anniversary</strong>
+                                <small>Birthday, yearly remembrance</small>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="lm-delivery-type" value="">
+
+                    <!-- Date Picker (for specific date) -->
+                    <div class="delivery-details mt-3" id="delivery-date-options" style="display: none;">
+                        <label class="form-label">Delivery Date</label>
+                        <input type="date" class="form-control" id="lm-delivery-date">
+                    </div>
+
+                    <!-- Milestone Options -->
+                    <div class="delivery-details mt-3" id="delivery-milestone-options" style="display: none;">
+                        <label class="form-label">Select Milestone</label>
+                        <select class="form-select" id="lm-milestone-type">
+                            <option value="">Choose a milestone...</option>
+                            <option value="graduation">Graduation</option>
+                            <option value="wedding">Wedding Day</option>
+                            <option value="first_child">Birth of First Child</option>
+                            <option value="birthday_18">18th Birthday</option>
+                            <option value="birthday_21">21st Birthday</option>
+                            <option value="birthday_30">30th Birthday</option>
+                            <option value="birthday_50">50th Birthday</option>
+                            <option value="retirement">Retirement</option>
+                            <option value="custom">Custom Milestone</option>
+                        </select>
+                        <div class="mt-2" id="milestone-year-container" style="display: none;">
+                            <label class="form-label">Expected Year (approximate)</label>
+                            <input type="number" class="form-control" id="lm-milestone-year" min="2024" max="2100" placeholder="e.g., 2030">
+                        </div>
+                    </div>
+
+                    <!-- Anniversary Options -->
+                    <div class="delivery-details mt-3" id="delivery-anniversary-options" style="display: none;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Anniversary Type</label>
+                                <select class="form-select" id="lm-anniversary-type">
+                                    <option value="">Choose type...</option>
+                                    <option value="birthday">Their Birthday (Annual)</option>
+                                    <option value="death">Remembrance Day (Annual)</option>
+                                    <option value="wedding">Wedding Anniversary</option>
+                                    <option value="custom">Custom Annual Date</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="anniversary-custom-date" style="display: none;">
+                                <label class="form-label">Date (Month/Day)</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <select class="form-select" id="lm-anniversary-month">
+                                            <option value="">Month</option>
+                                            <option value="1">January</option>
+                                            <option value="2">February</option>
+                                            <option value="3">March</option>
+                                            <option value="4">April</option>
+                                            <option value="5">May</option>
+                                            <option value="6">June</option>
+                                            <option value="7">July</option>
+                                            <option value="8">August</option>
+                                            <option value="9">September</option>
+                                            <option value="10">October</option>
+                                            <option value="11">November</option>
+                                            <option value="12">December</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" class="form-control" id="lm-anniversary-day" min="1" max="31" placeholder="Day">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Content -->
+                <div class="legacy-message-section">
+                    <h6 class="legacy-section-title"><i class="fas fa-pen me-2"></i>Your Message</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Subject Line <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="lm-subject" placeholder="e.g., Happy Birthday, my dear Sarah" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="lm-content" rows="8" placeholder="Write your heartfelt message here..." required></textarea>
+                        <small class="text-muted">Write from the heart. This message will be delivered exactly as you write it.</small>
+                    </div>
+                </div>
+
+                <!-- Error Display -->
+                <div class="alert alert-danger mt-3" id="lm-error" style="display: none;"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-legacy-message-btn">
+                    <i class="fas fa-paper-plane me-2"></i>Schedule Message
+                </button>
             </div>
         </div>
     </div>

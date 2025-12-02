@@ -40,7 +40,32 @@ export default async function handler(req, res) {
             filter = 'all' // all, needs_cemetery, needs_pin
         } = req.query;
 
-        // Build query for memorials needing location
+        // First, get active grave searches (families actively looking)
+        const { data: activeSearches, error: searchError } = await supabase
+            .from('grave_searches')
+            .select(`
+                memorial_id,
+                search_hints,
+                known_cemetery,
+                known_region,
+                urgency,
+                reward_points
+            `)
+            .eq('status', 'active');
+
+        const searchMemorialIds = (activeSearches || []).map(s => s.memorial_id);
+        const searchHintsMap = {};
+        (activeSearches || []).forEach(s => {
+            searchHintsMap[s.memorial_id] = {
+                hints: s.search_hints,
+                cemetery: s.known_cemetery,
+                region: s.known_region,
+                urgency: s.urgency,
+                reward: s.reward_points
+            };
+        });
+
+        // Build query for memorials needing location OR with active searches
         let query = supabase
             .from('memorials')
             .select(`
@@ -51,6 +76,8 @@ export default async function handler(req, res) {
                 cemetery_name,
                 cemetery_lat,
                 cemetery_lng,
+                gravesite_lat,
+                gravesite_lng,
                 needs_location,
                 needs_cemetery,
                 search_hints,
@@ -58,14 +85,42 @@ export default async function handler(req, res) {
                 imported_by,
                 created_at
             `)
-            .or('needs_location.eq.true,needs_cemetery.eq.true')
             .order('created_at', { ascending: false });
 
-        // Apply filters
+        // Exclude Living Legacies - they're for living people who don't have gravesites yet
+        query = query.neq('status', 'living_legacy');
+
+        // Apply filters - include active searches + flagged memorials
         if (filter === 'needs_cemetery') {
-            query = query.eq('needs_cemetery', true);
+            if (searchMemorialIds.length > 0) {
+                query = query.or(`needs_cemetery.eq.true,id.in.(${searchMemorialIds.join(',')})`);
+            } else {
+                query = query.eq('needs_cemetery', true);
+            }
         } else if (filter === 'needs_pin') {
-            query = query.eq('needs_location', true).not('cemetery_name', 'is', null);
+            // Needs exact gravesite pin (has cemetery but no pin)
+            if (searchMemorialIds.length > 0) {
+                query = query.or(`needs_location.eq.true,id.in.(${searchMemorialIds.join(',')})`)
+                    .not('cemetery_name', 'is', null)
+                    .is('gravesite_lat', null);
+            } else {
+                query = query.eq('needs_location', true)
+                    .not('cemetery_name', 'is', null)
+                    .is('gravesite_lat', null);
+            }
+        } else {
+            // All wanted - flagged OR active searches OR genuinely missing location
+            // Only show memorials that are ACTUALLY missing critical location data:
+            // - No cemetery name AND no gravesite pin (we don't know where they're buried)
+            // - OR explicitly flagged as needing location
+            if (searchMemorialIds.length > 0) {
+                query = query.or(`needs_location.eq.true,needs_cemetery.eq.true,id.in.(${searchMemorialIds.join(',')})`);
+            } else {
+                // Show memorials that are genuinely missing location:
+                // - No cemetery name (we don't know the cemetery) AND no gravesite pin
+                // - Memorials WITH a cemetery name are considered "found" even without exact pin
+                query = query.is('gravesite_lat', null).is('cemetery_name', null);
+            }
         }
 
         // Apply pagination
@@ -87,10 +142,12 @@ export default async function handler(req, res) {
 
             results = memorials
                 .map(m => {
-                    // Calculate distance if memorial has cemetery coordinates
+                    // Calculate distance - prefer gravesite, fall back to cemetery coords
                     let distance = null;
-                    if (m.cemetery_lat && m.cemetery_lng) {
-                        distance = haversineDistance(userLat, userLng, m.cemetery_lat, m.cemetery_lng);
+                    const memLat = m.gravesite_lat || m.cemetery_lat;
+                    const memLng = m.gravesite_lng || m.cemetery_lng;
+                    if (memLat && memLng) {
+                        distance = haversineDistance(userLat, userLng, memLat, memLng);
                     }
                     return { ...m, distance };
                 })
@@ -133,9 +190,12 @@ export default async function handler(req, res) {
             deathDate: m.death_date,
             cemetery: m.cemetery_name,
             hasKnownCemetery: !!m.cemetery_name,
-            hasCemeteryCoords: !!(m.cemetery_lat && m.cemetery_lng),
-            needsCemetery: m.needs_cemetery,
-            needsPin: m.needs_location,
+            hasLocation: !!(m.gravesite_lat || m.cemetery_lat),
+            // needsCemetery: true if no cemetery name is set (regardless of database flag)
+            // If cemetery_name exists, we know the cemetery
+            needsCemetery: !m.cemetery_name,
+            // needsPin: true if no exact gravesite GPS coordinates
+            needsPin: !m.gravesite_lat,
             searchHints: m.search_hints,
             source: m.source,
             distance: m.distance ? Math.round(m.distance * 10) / 10 : null,
@@ -143,15 +203,51 @@ export default async function handler(req, res) {
             createdAt: m.created_at
         }));
 
-        // Get total count
-        const { count } = await supabase
-            .from('memorials')
-            .select('id', { count: 'exact', head: true })
-            .or('needs_location.eq.true,needs_cemetery.eq.true');
+        // Get total count - memorials missing GPS coordinates (excluding Living Legacies)
+        let totalCount = 0;
+
+        if (searchMemorialIds.length > 0) {
+            // Count flagged + active searches
+            const { count: flaggedCount } = await supabase
+                .from('memorials')
+                .select('id', { count: 'exact', head: true })
+                .neq('status', 'living_legacy')
+                .or('needs_location.eq.true,needs_cemetery.eq.true');
+
+            totalCount = flaggedCount || 0;
+
+            // Add active searches count (exclude duplicates)
+            const { count: searchOnlyCount } = await supabase
+                .from('memorials')
+                .select('id', { count: 'exact', head: true })
+                .neq('status', 'living_legacy')
+                .in('id', searchMemorialIds)
+                .eq('needs_location', false)
+                .eq('needs_cemetery', false);
+
+            totalCount += searchOnlyCount || 0;
+        } else {
+            // Count memorials genuinely missing location (no cemetery AND no gravesite pin)
+            const { count: missingGpsCount } = await supabase
+                .from('memorials')
+                .select('id', { count: 'exact', head: true })
+                .neq('status', 'living_legacy')
+                .is('gravesite_lat', null)
+                .is('cemetery_name', null);
+
+            totalCount = missingGpsCount || 0;
+        }
+
+        // Calculate nearby count if location provided
+        let nearbyCount = 0;
+        if (lat && lng) {
+            nearbyCount = results.filter(m => m.distance !== null && m.distance <= parseFloat(radius)).length;
+        }
 
         return res.status(200).json({
             success: true,
-            total: count || 0,
+            total: totalCount,
+            nearby: nearbyCount,
             returned: formatted.length,
             offset: parseInt(offset),
             graves: formatted

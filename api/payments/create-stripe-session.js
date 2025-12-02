@@ -10,20 +10,24 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Product tiers with pricing
 const PRODUCTS = {
-  basic: {
-    name: 'QR Memorial Tag - Basic',
-    description: 'Aluminum tag with adhesive backing',
-    price: 2900, // $29.00 in cents
+  legacy: {
+    name: 'Complete Legacy Package',
+    description: 'Stainless steel QR plaque + lifetime memorial + Living Legacy features',
+    price: 9900, // $99.00 in cents
+    quantity: 1
   },
+  family: {
+    name: 'Family Bundle',
+    description: '3 Stainless steel QR plaques + lifetime memorials + Living Legacy features',
+    price: 25900, // $259.00 in cents
+    quantity: 3
+  },
+  // Legacy product names redirect to new packages
   premium: {
-    name: 'Stainless Steel QR Tag',
-    description: 'Laser-engraved stainless steel with lifetime guarantee',
-    price: 3900, // $39.00 in cents
-  },
-  deluxe: {
-    name: 'QR Memorial Tag - Deluxe',
-    description: 'Bronze tag with decorative border & premium packaging',
-    price: 7900, // $79.00 in cents
+    name: 'Complete Legacy Package',
+    description: 'Stainless steel QR plaque + lifetime memorial + Living Legacy features',
+    price: 9900,
+    quantity: 1
   }
 };
 

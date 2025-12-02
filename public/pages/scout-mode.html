@@ -45,14 +45,14 @@
             <!-- Batch Mode -->
             <button id="multi-pin-btn" class="scout-mode-card">
                 <div class="mode-card-icon batch">
-                    <i class="fas fa-layer-group"></i>
+                    <i class="fas fa-camera"></i>
                 </div>
                 <div class="mode-card-content">
                     <div class="mode-card-header">
-                        <h3>Batch Mode</h3>
+                        <h3>Walk & Capture</h3>
                         <span class="mode-badge secondary">Pro</span>
                     </div>
-                    <p>Quickly drop multiple pins, then add details later</p>
+                    <p>Snap headstone photos as you walk - GPS auto-pins each grave</p>
                 </div>
                 <div class="mode-card-arrow">
                     <i class="fas fa-chevron-right"></i>
@@ -150,9 +150,116 @@
             </div>
         </div>
     </section>
+
+    <!-- ========== BATCH MODE CEMETERY SCREEN ========== -->
+    <section id="batch-cemetery-screen" class="scout-screen d-none">
+    <header class="scout-header">
+        <button id="batch-cemetery-back-btn" class="scout-back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="scout-header-title">
+            <i class="fas fa-layer-group"></i>
+            <span>Batch Mode</span>
+        </div>
+        <div class="scout-header-spacer"></div>
+    </header>
+
+    <div class="batch-cemetery-content">
+        <div class="batch-cemetery-icon">
+            <i class="fas fa-church"></i>
+        </div>
+        <h2>Confirm Cemetery</h2>
+        <p class="batch-cemetery-subtitle">We detected your location. Please confirm or edit the cemetery details.</p>
+
+        <div class="batch-cemetery-form">
+            <div class="scout-form-group">
+                <label class="scout-label" for="batchCemeteryName">
+                    <i class="fas fa-church"></i>
+                    Cemetery Name
+                </label>
+                <input id="batchCemeteryName" type="text" class="scout-input" placeholder="Enter cemetery name">
+            </div>
+            <div class="scout-form-group">
+                <label class="scout-label" for="batchCemeteryAddress">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Address
+                </label>
+                <input id="batchCemeteryAddress" type="text" class="scout-input" placeholder="Loading from GPS..." readonly>
+            </div>
+            <div class="batch-gps-info">
+                <i class="fas fa-crosshairs"></i>
+                <span id="batchGpsCoords">Getting location...</span>
+            </div>
+        </div>
+
+        <button id="batch-start-capture-btn" class="scout-btn primary full-width" disabled>
+            <i class="fas fa-camera"></i>
+            Start Capturing Headstones
+        </button>
+    </div>
+</section>
+
+<!-- ========== BATCH MODE CAPTURE SCREEN ========== -->
+<section id="batch-capture-screen" class="scout-screen batch-fullscreen d-none">
+    <!-- Camera/capture UI -->
+    <div id="batch-capture-ui">
+        <!-- Top bar with cemetery info and count -->
+        <div class="batch-top-bar">
+            <div class="batch-cemetery-badge">
+                <i class="fas fa-church"></i>
+                <span id="batch-cemetery-display">Cemetery Name</span>
+            </div>
+            <div class="batch-capture-count">
+                <span id="batch-count">0</span>
+                <span>captured</span>
+            </div>
+        </div>
+
+        <!-- Captured photos strip -->
+        <div id="batch-photos-strip" class="batch-photos-strip d-none">
+            <!-- Thumbnails populated by JS -->
+        </div>
+
+        <!-- Center area - shows viewfinder or last capture -->
+        <div class="batch-center-area">
+            <!-- Viewfinder (shown when ready to capture) -->
+            <div id="batch-viewfinder" class="batch-viewfinder">
+                <video id="batch-camera-video" class="batch-camera-video" autoplay playsinline muted></video>
+                <div class="viewfinder-frame"></div>
+                <p class="viewfinder-hint">Tap camera to capture headstone</p>
+            </div>
+
+            <!-- Last capture preview (shown after capture) -->
+            <div id="batch-preview" class="batch-preview d-none">
+                <img id="batch-preview-img" src="" alt="Last capture">
+                <div class="batch-preview-overlay">
+                    <p class="preview-saved-text"><i class="fas fa-check-circle"></i> Saved!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom capture controls -->
+        <div class="batch-bottom-bar">
+            <button id="batch-cancel-btn" class="batch-control-btn secondary" title="Cancel">
+                <i class="fas fa-times"></i>
+            </button>
+            <button id="batch-capture-btn" class="batch-capture-button" title="Take Photo">
+                <div class="capture-ring"></div>
+                <i class="fas fa-camera"></i>
+            </button>
+            <button id="batch-done-btn" class="batch-control-btn primary" title="Save All & Finish" disabled>
+                <i class="fas fa-check"></i>
+                <span class="done-label">Done</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden file input for camera -->
+    <input type="file" id="batch-camera-input" accept="image/*" capture="environment" class="d-none">
+</section>
 </div>
 
-<!-- ========== ADD PIN MODAL (Batch Mode) ========== -->
+<!-- ========== ADD PIN MODAL (Legacy - kept for single mode) ========== -->
 <div class="modal fade scout-modal" id="addPinModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -1182,6 +1289,390 @@
     box-shadow: none;
 }
 
+/* ========== BATCH MODE CEMETERY SCREEN ========== */
+.batch-cemetery-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px;
+    text-align: center;
+}
+
+.batch-cemetery-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+    margin-bottom: 24px;
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+}
+
+.batch-cemetery-content h2 {
+    color: white;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.batch-cemetery-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    max-width: 300px;
+    margin-bottom: 32px;
+}
+
+.batch-cemetery-form {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 32px;
+}
+
+.batch-gps-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(79, 209, 197, 0.1);
+    border: 1px solid rgba(79, 209, 197, 0.2);
+    border-radius: 10px;
+    color: #4fd1c5;
+    font-size: 0.85rem;
+    margin-top: 16px;
+}
+
+.scout-btn.full-width {
+    width: 100%;
+    max-width: 400px;
+}
+
+/* ========== BATCH MODE CAPTURE SCREEN ========== */
+#batch-capture-screen {
+    background: #000;
+    position: fixed !important;
+    inset: 0;
+    z-index: 9999 !important; /* Above everything including FAB */
+}
+
+#batch-capture-screen.batch-fullscreen {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+#batch-capture-ui {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 10000;
+}
+
+.batch-center-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.batch-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+}
+
+.batch-cemetery-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(102, 126, 234, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 8px 14px;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.batch-cemetery-badge i {
+    color: #a78bfa;
+}
+
+.batch-capture-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    background: rgba(79, 209, 197, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 8px 14px;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.85rem;
+}
+
+.batch-capture-count span:first-child {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #4fd1c5;
+}
+
+.batch-photos-strip {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.batch-photo-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.batch-photo-thumb:hover {
+    border-color: #4fd1c5;
+    transform: scale(1.05);
+}
+
+.batch-photo-thumb.latest {
+    border-color: #4fd1c5;
+    box-shadow: 0 0 12px rgba(79, 209, 197, 0.5);
+}
+
+.batch-viewfinder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.batch-camera-video {
+    width: 100%;
+    max-width: 90vw;
+    max-height: 60vh;
+    border-radius: 16px;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    background: #000;
+    display: none;
+    object-fit: contain;
+}
+
+.batch-camera-video.active {
+    display: block;
+}
+
+/* Landscape orientation */
+@media (orientation: landscape) {
+    .batch-camera-video {
+        max-width: 70vw;
+        max-height: 50vh;
+    }
+
+    .batch-center-area {
+        padding: 10px;
+    }
+
+    .batch-top-bar, .batch-bottom-bar {
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+}
+
+.batch-preview {
+    width: 100%;
+    max-width: 320px;
+    position: relative;
+}
+
+.batch-preview img {
+    width: 100%;
+    border-radius: 16px;
+    border: 3px solid #4fd1c5;
+    box-shadow: 0 8px 32px rgba(79, 209, 197, 0.3);
+}
+
+.batch-preview-overlay {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.preview-saved-text {
+    background: rgba(79, 209, 197, 0.9);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.done-label {
+    font-size: 0.7rem;
+    display: block;
+    margin-top: 2px;
+}
+
+.viewfinder-frame {
+    width: 280px;
+    height: 200px;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    position: relative;
+}
+
+.viewfinder-frame::before,
+.viewfinder-frame::after {
+    content: '';
+    position: absolute;
+    background: #4fd1c5;
+}
+
+/* Corner accents */
+.viewfinder-frame::before {
+    width: 40px;
+    height: 3px;
+    top: -3px;
+    left: 20px;
+}
+
+.viewfinder-frame::after {
+    width: 3px;
+    height: 40px;
+    top: 20px;
+    left: -3px;
+}
+
+.viewfinder-hint {
+    margin-top: 20px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.batch-bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 24px 20px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+}
+
+.batch-control-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.batch-control-btn.secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.batch-control-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.batch-control-btn.primary {
+    background: linear-gradient(135deg, #4fd1c5 0%, #38b2ac 100%);
+    color: white;
+}
+
+.batch-control-btn.primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.batch-control-btn.primary:not(:disabled):hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 20px rgba(79, 209, 197, 0.5);
+}
+
+.batch-capture-button {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #1e293b;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.batch-capture-button:hover {
+    transform: scale(1.05);
+}
+
+.batch-capture-button:active {
+    transform: scale(0.95);
+}
+
+.capture-ring {
+    position: absolute;
+    inset: -6px;
+    border: 4px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+}
+
+.batch-capture-button:active .capture-ring {
+    border-color: #4fd1c5;
+}
+
+/* Flash animation */
+@keyframes capture-flash {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.capture-flash {
+    position: fixed;
+    inset: 0;
+    background: white;
+    z-index: 100;
+    animation: capture-flash 0.3s ease-out;
+    pointer-events: none;
+}
+
 /* ========== RESPONSIVE ========== */
 @media (min-width: 768px) {
     .scout-modes {
@@ -1200,6 +1691,11 @@
         left: 20px;
         right: auto;
         transform: none;
+    }
+
+    .batch-cemetery-content {
+        max-width: 500px;
+        margin: 0 auto;
     }
 }
 </style>

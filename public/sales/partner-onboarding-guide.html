@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Headstone Legacy - Partner Onboarding Guide</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @page {
+      size: letter;
+      margin: 0.5in;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #1a1a2e;
+      max-width: 8.5in;
+      margin: 0 auto;
+      padding: 0.5in;
+      background: white;
+    }
+
+    @media print {
+      body { padding: 0; }
+      .page-break { page-break-before: always; }
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #2c5282;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    .logo {
+      font-size: 22pt;
+      font-weight: bold;
+      color: #2c5282;
+    }
+
+    .logo span {
+      color: #c9a227;
+    }
+
+    .doc-title {
+      text-align: right;
+    }
+
+    .doc-title h2 {
+      font-size: 14pt;
+      color: #2c5282;
+    }
+
+    .doc-title p {
+      font-size: 10pt;
+      color: #666;
+    }
+
+    h1 {
+      font-size: 18pt;
+      color: #2c5282;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    h2 {
+      font-size: 14pt;
+      color: #2c5282;
+      margin: 25px 0 12px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    h3 {
+      font-size: 12pt;
+      color: #1a1a2e;
+      margin: 18px 0 10px;
+    }
+
+    .welcome-box {
+      background: linear-gradient(135deg, #2c5282 0%, #1a365d 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+    }
+
+    .welcome-box h2 {
+      color: white;
+      border: none;
+      margin: 0 0 10px;
+      font-size: 16pt;
+    }
+
+    .welcome-box p {
+      opacity: 0.95;
+      margin-bottom: 15px;
+    }
+
+    .welcome-box .highlight {
+      background: rgba(201, 162, 39, 0.3);
+      padding: 12px 15px;
+      border-radius: 8px;
+      border-left: 4px solid #c9a227;
+    }
+
+    .checklist {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .checklist-item:last-child {
+      border-bottom: none;
+    }
+
+    .checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #2c5282;
+      border-radius: 4px;
+      margin-right: 12px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .checklist-content strong {
+      color: #2c5282;
+    }
+
+    .checklist-content p {
+      font-size: 10pt;
+      color: #666;
+      margin-top: 3px;
+    }
+
+    .step-box {
+      display: flex;
+      gap: 15px;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 12px 0;
+    }
+
+    .step-num {
+      width: 35px;
+      height: 35px;
+      background: #2c5282;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .step-content h4 {
+      color: #2c5282;
+      margin-bottom: 5px;
+    }
+
+    .step-content p {
+      font-size: 10pt;
+      color: #555;
+    }
+
+    .talking-points {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .talking-point {
+      background: #f0f7ff;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #2c5282;
+    }
+
+    .talking-point h4 {
+      color: #2c5282;
+      font-size: 11pt;
+      margin-bottom: 8px;
+    }
+
+    .talking-point p {
+      font-size: 10pt;
+      color: #555;
+    }
+
+    .script-box {
+      background: #fffbeb;
+      border: 1px solid #f59e0b;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    .script-box h4 {
+      color: #b45309;
+      margin-bottom: 10px;
+      font-size: 11pt;
+    }
+
+    .script-box p {
+      font-style: italic;
+      color: #555;
+      font-size: 10pt;
+      line-height: 1.7;
+    }
+
+    .faq-item {
+      margin: 15px 0;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .faq-q {
+      font-weight: bold;
+      color: #2c5282;
+      margin-bottom: 5px;
+    }
+
+    .faq-a {
+      color: #555;
+      font-size: 10pt;
+    }
+
+    .contact-card {
+      background: #2c5282;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 25px;
+    }
+
+    .contact-card h3 {
+      color: white;
+      margin: 0 0 12px;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .contact-item {
+      text-align: center;
+    }
+
+    .contact-item .label {
+      font-size: 9pt;
+      opacity: 0.8;
+      margin-bottom: 3px;
+    }
+
+    .contact-item .value {
+      font-weight: bold;
+      color: #c9a227;
+    }
+
+    .tips-box {
+      background: #e8f5e9;
+      border-left: 4px solid #2e7d32;
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    .tips-box h4 {
+      color: #2e7d32;
+      margin-bottom: 8px;
+    }
+
+    .tips-box ul {
+      margin-left: 20px;
+      font-size: 10pt;
+    }
+
+    .tips-box li {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Headstone<span>Legacy</span></div>
+    <div class="doc-title">
+      <h2>Partner Onboarding Guide</h2>
+      <p>Everything you need to start offering QR memorials</p>
+    </div>
+  </div>
+
+  <div class="welcome-box">
+    <h2>Welcome to the Partner Program!</h2>
+    <p>Thank you for joining Headstone Legacy. This guide will help you and your staff start offering QR Memorial Tags to families right away.</p>
+    <div class="highlight">
+      <strong>Your Partner ID:</strong> _________________ &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Pricing Tier:</strong> _________________
+    </div>
+  </div>
+
+  <h2>Quick Start Checklist</h2>
+  <div class="checklist">
+    <div class="checklist-item">
+      <div class="checkbox"></div>
+      <div class="checklist-content">
+        <strong>Access your Partner Dashboard</strong>
+        <p>Log in at headstonelegacy.com/partner-dashboard with your credentials</p>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <div class="checkbox"></div>
+      <div class="checklist-content">
+        <strong>Review the product samples</strong>
+        <p>Examine the QR tag quality and test scanning with your phone</p>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <div class="checkbox"></div>
+      <div class="checklist-content">
+        <strong>Train your staff</strong>
+        <p>Share this guide and the talking points with your team</p>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <div class="checkbox"></div>
+      <div class="checklist-content">
+        <strong>Display marketing materials</strong>
+        <p>Place the brochure in your arrangement room</p>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <div class="checkbox"></div>
+      <div class="checklist-content">
+        <strong>Add to your service packages</strong>
+        <p>Include as an option in your pricing menu</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>How to Present to Families</h2>
+
+  <h3>When to Introduce</h3>
+  <div class="step-box">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>During Arrangement Conference</h4>
+      <p>After discussing the headstone/marker, naturally transition to "There's also a way to share their complete story with anyone who visits..."</p>
+    </div>
+  </div>
+  <div class="step-box">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>With Memorial Package Options</h4>
+      <p>Present alongside other keepsakes like prayer cards, memorial folders, or photo displays.</p>
+    </div>
+  </div>
+  <div class="step-box">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>At Follow-Up Visits</h4>
+      <p>For families who weren't ready initially, mention during aftercare calls or anniversary check-ins.</p>
+    </div>
+  </div>
+
+  <h3>Key Talking Points</h3>
+  <div class="talking-points">
+    <div class="talking-point">
+      <h4>"More Than Just Dates"</h4>
+      <p>"A headstone shows when they lived. A QR memorial shows HOW they lived - their stories, photos, and the people who loved them."</p>
+    </div>
+    <div class="talking-point">
+      <h4>"For Future Generations"</h4>
+      <p>"Grandchildren and great-grandchildren can scan this tag and learn about someone they never got to meet."</p>
+    </div>
+    <div class="talking-point">
+      <h4>"The Whole Family Can Contribute"</h4>
+      <p>"Multiple family members can add their own photos and memories. It becomes a living tribute."</p>
+    </div>
+    <div class="talking-point">
+      <h4>"Built to Last"</h4>
+      <p>"The tag is weatherproof stainless steel with a lifetime guarantee. The memorial stays online forever."</p>
+    </div>
+  </div>
+
+  <div class="script-box">
+    <h4>Sample Introduction Script</h4>
+    <p>"Many families are now adding a QR memorial to their loved one's gravesite. It's a small weatherproof tag that anyone can scan with their phone to see a beautiful digital memorial - photos, stories, even a family tree. It helps visitors connect with the person, not just see their name. Would you like me to show you an example?"</p>
+  </div>
+
+  <h2>Handling Common Questions</h2>
+
+  <div class="faq-item">
+    <div class="faq-q">Q: "How long does the memorial stay online?"</div>
+    <div class="faq-a">A: "Forever. There are no monthly fees and the memorial is always accessible. The family can update it anytime they want."</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q: "What if the family isn't tech-savvy?"</div>
+    <div class="faq-a">A: "Creating a memorial takes about 5 minutes and is very simple. We also have an AI assistant that helps write the biography just by answering a few questions. And visitors only need to point their phone camera at the tag - no app required."</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q: "Will it damage the headstone?"</div>
+    <div class="faq-a">A: "The tag uses industrial-grade adhesive designed for outdoor monuments, or it can be attached with included screws. It won't damage the stone and is designed to withstand all weather conditions."</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q: "What if they already have a headstone?"</div>
+    <div class="faq-a">A: "The tag can be added to any existing headstone. Many families add it months or even years after the burial."</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q: "Can anyone see it or is it private?"</div>
+    <div class="faq-a">A: "The family controls the privacy settings. They can make it fully public, or require a password for certain sections."</div>
+  </div>
+
+  <h2>Placing Orders</h2>
+
+  <div class="step-box">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>Family Creates Memorial</h4>
+      <p>Direct families to headstonelegacy.com to create their memorial (free). They'll receive a Memorial ID when done.</p>
+    </div>
+  </div>
+  <div class="step-box">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>Log Into Partner Dashboard</h4>
+      <p>Go to headstonelegacy.com/partner-dashboard and sign in with your credentials.</p>
+    </div>
+  </div>
+  <div class="step-box">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>Place Order</h4>
+      <p>Enter the Memorial ID, select product(s), and enter shipping address. Choose drop-ship to family or ship to your location.</p>
+    </div>
+  </div>
+  <div class="step-box">
+    <div class="step-num">4</div>
+    <div class="step-content">
+      <h4>Track & Deliver</h4>
+      <p>Tags ship within 3-5 business days. You'll receive tracking info via email.</p>
+    </div>
+  </div>
+
+  <div class="tips-box">
+    <h4>Pro Tips for Success</h4>
+    <ul>
+      <li><strong>Show, don't tell:</strong> Have a sample tag and pull up a demo memorial on your phone</li>
+      <li><strong>Use the brochure:</strong> Hand it to families to review - many will bring it up themselves later</li>
+      <li><strong>Bundle it:</strong> Include in premium service packages at a discounted bundle price</li>
+      <li><strong>Follow up:</strong> Families who say "not right now" often change their mind after the service</li>
+      <li><strong>Share success stories:</strong> "Another family just told me how much it meant to see their father's photos come up when they visited"</li>
+    </ul>
+  </div>
+
+  <div class="contact-card">
+    <h3>Partner Support</h3>
+    <div class="contact-grid">
+      <div class="contact-item">
+        <div class="label">Partner Support Email</div>
+        <div class="value">partners@headstonelegacy.com</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">Phone Support</div>
+        <div class="value">(XXX) XXX-XXXX</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">Partner Dashboard</div>
+        <div class="value">headstonelegacy.com/partner-dashboard</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

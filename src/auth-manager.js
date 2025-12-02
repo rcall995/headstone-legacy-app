@@ -35,23 +35,8 @@ export async function signUp(name, email, password) {
 
         if (error) throw error;
 
-        // Create profile in profiles table
-        if (data.user) {
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .insert({
-                    id: data.user.id,
-                    email: email,
-                    name: name,
-                    is_scout: false,
-                    is_admin: false
-                });
-
-            if (profileError) {
-                console.error("Profile creation error:", profileError);
-                // Don't fail signup if profile creation fails - it can be created later
-            }
-        }
+        // Profile is auto-created by database trigger (handle_new_user)
+        // The trigger uses display_name from user metadata set above
 
         return true;
     } catch (error) {

@@ -67,37 +67,37 @@
                         <div class="col-md-4 mb-2">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check text-success me-2"></i>
-                                <span>Ancestry.com</span>
+                                <span class="text-light">Ancestry.com</span>
                             </div>
                         </div>
                         <div class="col-md-4 mb-2">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check text-success me-2"></i>
-                                <span>FamilySearch.org</span>
+                                <span class="text-light">FamilySearch.org</span>
                             </div>
                         </div>
                         <div class="col-md-4 mb-2">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check text-success me-2"></i>
-                                <span>MyHeritage</span>
+                                <span class="text-light">MyHeritage</span>
                             </div>
                         </div>
                         <div class="col-md-4 mb-2">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check text-success me-2"></i>
-                                <span>FindMyPast</span>
+                                <span class="text-light">FindMyPast</span>
                             </div>
                         </div>
                         <div class="col-md-4 mb-2">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check text-success me-2"></i>
-                                <span>Legacy Family Tree</span>
+                                <span class="text-light">Legacy Family Tree</span>
                             </div>
                         </div>
                         <div class="col-md-4 mb-2">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check text-success me-2"></i>
-                                <span>RootsMagic</span>
+                                <span class="text-light">RootsMagic</span>
                             </div>
                         </div>
                     </div>
@@ -256,7 +256,7 @@
 .import-steps {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     gap: 0;
 }
 
@@ -308,11 +308,11 @@
 }
 
 .step-connector {
-    width: 100px;
+    width: 80px;
     height: 2px;
     background: var(--bs-secondary);
-    margin: 0 1rem;
-    margin-bottom: 1.5rem;
+    margin-top: 19px; /* Half of step-number height to center vertically */
+    flex-shrink: 0;
 }
 
 .upload-zone {

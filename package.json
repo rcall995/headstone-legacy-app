@@ -23,6 +23,7 @@
     "parse-gedcom": "^2.0.1",
     "qrcode": "^1.5.4",
     "react": "^19.2.0",
+    "resend": "^6.5.2",
     "square": "^37.0.0",
     "stripe": "^14.0.0"
   },

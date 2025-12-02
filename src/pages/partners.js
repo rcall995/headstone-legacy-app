@@ -28,19 +28,29 @@ async function handlePartnerSignup(e) {
   const submitBtn = document.getElementById('partner-submit-btn');
   const successDiv = document.getElementById('partner-success');
 
-  // Get form values
-  const businessName = document.getElementById('business-name').value.trim();
-  const contactName = document.getElementById('contact-name').value.trim();
-  const businessType = document.getElementById('business-type').value;
-  const email = document.getElementById('email').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const website = document.getElementById('website').value.trim();
-  const paymentMethod = document.getElementById('payment-method').value;
-  const paymentEmail = document.getElementById('payment-email').value.trim();
-  const agreeTerms = document.getElementById('agree-terms').checked;
+  // Get form values (some fields may be optional in new form)
+  const businessNameEl = document.getElementById('business-name');
+  const contactNameEl = document.getElementById('contact-name');
+  const businessTypeEl = document.getElementById('business-type');
+  const emailEl = document.getElementById('email');
+  const phoneEl = document.getElementById('phone');
+  const websiteEl = document.getElementById('website');
+  const paymentMethodEl = document.getElementById('payment-method');
+  const paymentEmailEl = document.getElementById('payment-email');
+  const agreeTermsEl = document.getElementById('agree-terms');
 
-  // Validation
-  if (!businessName || !contactName || !businessType || !email || !paymentMethod) {
+  const businessName = businessNameEl?.value?.trim() || '';
+  const contactName = contactNameEl?.value?.trim() || '';
+  const businessType = businessTypeEl?.value || 'other';
+  const email = emailEl?.value?.trim() || '';
+  const phone = phoneEl?.value?.trim() || '';
+  const website = websiteEl?.value?.trim() || '';
+  const paymentMethod = paymentMethodEl?.value || '';
+  const paymentEmail = paymentEmailEl?.value?.trim() || '';
+  const agreeTerms = agreeTermsEl?.checked || false;
+
+  // Validation - only require essential fields
+  if (!contactName || !email || !paymentMethod) {
     showToast('Please fill in all required fields', 'error');
     return;
   }
@@ -60,8 +70,8 @@ async function handlePartnerSignup(e) {
   submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Processing...</span>';
 
   try {
-    // Generate unique referral code
-    let referralCode = generateReferralCode(businessName);
+    // Generate unique referral code (use business name or contact name)
+    let referralCode = generateReferralCode(businessName || contactName);
 
     // Check if code exists, regenerate if needed
     const { data: existing } = await supabase
@@ -84,7 +94,7 @@ async function handlePartnerSignup(e) {
     if (existingEmail) {
       showToast('This email is already registered. Please log in to your partner dashboard.', 'error');
       submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="fas fa-handshake"></i> <span>Join Partner Program</span>';
+      submitBtn.innerHTML = '<i class="fas fa-rocket"></i> <span>Get My Referral Link</span>';
       return;
     }
 
@@ -142,7 +152,7 @@ async function handlePartnerSignup(e) {
     console.error('Partner signup error:', error);
     showToast(error.message || 'Failed to create partner account', 'error');
     submitBtn.disabled = false;
-    submitBtn.innerHTML = '<i class="fas fa-handshake"></i> <span>Join Partner Program</span>';
+    submitBtn.innerHTML = '<i class="fas fa-rocket"></i> <span>Get My Referral Link</span>';
   }
 }
 

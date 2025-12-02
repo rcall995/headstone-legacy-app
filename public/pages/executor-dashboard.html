@@ -1,0 +1,108 @@
+<!-- Executor Dashboard -->
+<div class="executor-dashboard-page">
+  <!-- Header -->
+  <section class="executor-dashboard-header">
+    <div class="container">
+      <div class="dashboard-header-content">
+        <div class="legacy-badge">
+          <i class="fas fa-user-shield"></i>
+          <span>Executor</span>
+        </div>
+        <h1>Executor Dashboard</h1>
+        <p class="dashboard-header-subtitle">Manage the legacies entrusted to you</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="container executor-dashboard-container">
+    <!-- Loading State -->
+    <div id="executor-loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3 text-muted">Loading your executor responsibilities...</p>
+    </div>
+
+    <!-- Not Logged In State -->
+    <div id="executor-not-logged-in" style="display: none;">
+      <div class="executor-empty-card">
+        <i class="fas fa-user-circle"></i>
+        <h2>Sign In Required</h2>
+        <p>Please sign in to view your executor dashboard.</p>
+        <a href="/login?redirect=/executor-dashboard" data-route class="btn btn-legacy-primary">
+          <i class="fas fa-sign-in-alt"></i>
+          Sign In
+        </a>
+      </div>
+    </div>
+
+    <!-- No Legacies State -->
+    <div id="executor-empty" style="display: none;">
+      <div class="executor-empty-card">
+        <i class="fas fa-inbox"></i>
+        <h2>No Legacies Assigned</h2>
+        <p>You haven't been designated as an executor for any legacies yet.</p>
+        <p class="text-muted">When someone chooses you as their executor, their legacy will appear here.</p>
+      </div>
+    </div>
+
+    <!-- Legacies List -->
+    <div id="executor-legacies" style="display: none;">
+      <div class="executor-info-banner">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Your Responsibility</strong>
+          <p>As an executor, you are trusted to activate these legacies when the time comes. This will make their memorial public and trigger scheduled message deliveries to their loved ones.</p>
+        </div>
+      </div>
+
+      <div id="legacies-list" class="legacies-list">
+        <!-- Will be populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Activation Confirmation Modal -->
+<div class="modal fade" id="activateModal" tabindex="-1" aria-labelledby="activateModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="activateModalLabel">Activate Legacy</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="activation-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>You are about to activate <strong id="activate-name">this person</strong>'s legacy.</p>
+        </div>
+
+        <p class="activation-message">This action confirms that they have passed away and will:</p>
+        <ul class="activation-effects">
+          <li><i class="fas fa-globe text-primary"></i> Make their memorial publicly visible</li>
+          <li><i class="fas fa-envelope text-primary"></i> Begin delivering scheduled messages to their loved ones</li>
+          <li><i class="fas fa-lock-open text-primary"></i> Unlock their life story for family to view</li>
+        </ul>
+
+        <div class="mb-3">
+          <label for="death-date" class="form-label">Date of Passing (optional)</label>
+          <input type="date" class="form-control" id="death-date">
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="confirm-activation">
+          <label class="form-check-label" for="confirm-activation">
+            I confirm that <span id="confirm-name">this person</span> has passed away and I am authorized to activate their legacy.
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirm-activate-btn" disabled>
+          <i class="fas fa-check"></i> Activate Legacy
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -27,14 +27,16 @@ export default async function handler(req, res) {
     const qrSize = 1000;
     const logoSize = 200; // Logo will be 200x200 in center
     const margin = 80;
+    const textHeight = 80; // Space for branding text below QR
+    const totalHeight = qrSize + textHeight;
 
-    // Create canvas
-    const canvas = createCanvas(qrSize, qrSize);
+    // Create canvas with extra space for text
+    const canvas = createCanvas(qrSize, totalHeight);
     const ctx = canvas.getContext('2d');
 
     // Fill white background
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, qrSize, qrSize);
+    ctx.fillRect(0, 0, qrSize, totalHeight);
 
     // Generate QR code as data URL
     const qrDataUrl = await QRCode.toDataURL(memorialUrl, {
@@ -72,6 +74,13 @@ export default async function handler(req, res) {
       console.log('Could not load logo, generating QR without it:', logoError.message);
       // Continue without logo - QR code is still valid
     }
+
+    // Draw "HEADSTONELEGACY.COM" text below QR code
+    ctx.fillStyle = '#005F60'; // Brand teal color
+    ctx.font = 'bold 42px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('HEADSTONELEGACY.COM', qrSize / 2, qrSize + (textHeight / 2));
 
     // Convert to PNG buffer
     const buffer = canvas.toBuffer('image/png');

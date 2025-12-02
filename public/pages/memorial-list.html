@@ -9,8 +9,29 @@
                 <i class="fas fa-plus me-2"></i>Create Memorial
             </a>
         </div>
-        <div id="list-container" class="memorial-list">
+
+        <!-- Search and Sort Controls -->
+        <div class="memorial-list-controls mb-3">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="memorial-search" class="form-control" placeholder="Search memorials...">
             </div>
+            <div class="sort-box">
+                <label for="memorial-sort" class="visually-hidden">Sort by</label>
+                <select id="memorial-sort" class="form-select">
+                    <option value="updated_desc">Recently Updated</option>
+                    <option value="name_asc">Name (A-Z)</option>
+                    <option value="name_desc">Name (Z-A)</option>
+                    <option value="birth_asc">Birth Date (Oldest)</option>
+                    <option value="birth_desc">Birth Date (Newest)</option>
+                    <option value="death_asc">Death Date (Oldest)</option>
+                    <option value="death_desc">Death Date (Newest)</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="list-container" class="memorial-list">
+        </div>
     </div>
 </div>
 

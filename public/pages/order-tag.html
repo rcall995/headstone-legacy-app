@@ -2,15 +2,71 @@
   <!-- Hero -->
   <section class="page-hero">
     <div class="container">
-      <h1 class="page-hero-title">Make Their Memorial Last Forever</h1>
-      <p class="page-hero-subtitle">Weatherproof QR code tag professionally engraved on premium stainless steel</p>
+      <h1 class="page-hero-title">Complete Legacy Package</h1>
+      <p class="page-hero-subtitle">Everything you need to preserve their memory forever</p>
     </div>
   </section>
 
   <div class="order-tag-page">
-    <div class="container" style="max-width: 900px;">
+    <div class="container" style="max-width: 1000px;">
+
+      <!-- Package Selection -->
+      <section class="order-packages-section">
+        <div class="row g-4 justify-content-center">
+
+          <!-- Complete Legacy Package -->
+          <div class="col-md-6">
+            <div class="order-package-card selected" id="package-legacy" data-tier="legacy" data-price="99">
+              <div class="package-badge">Most Popular</div>
+              <h3 class="package-title">Complete Legacy Package</h3>
+              <div class="package-price">
+                <span class="price-amount">$99</span>
+              </div>
+              <ul class="package-features">
+                <li><i class="fas fa-check"></i> Stainless steel QR plaque (2" x 2")</li>
+                <li><i class="fas fa-check"></i> Lifetime digital memorial</li>
+                <li><i class="fas fa-check"></i> Unlimited photos & videos</li>
+                <li><i class="fas fa-check"></i> Living Legacy messages</li>
+                <li><i class="fas fa-check"></i> Family tree connections</li>
+                <li><i class="fas fa-check"></i> Lifetime replacement guarantee</li>
+                <li><i class="fas fa-check"></i> Free shipping</li>
+              </ul>
+              <button class="btn btn-package-select" type="button">
+                <i class="fas fa-check-circle"></i> Selected
+              </button>
+            </div>
+          </div>
+
+          <!-- Family Bundle -->
+          <div class="col-md-6">
+            <div class="order-package-card" id="package-family" data-tier="family" data-price="259">
+              <div class="package-badge savings">Save $38</div>
+              <h3 class="package-title">Family Bundle</h3>
+              <div class="package-price">
+                <span class="price-amount">$259</span>
+                <span class="price-per">for 3 plaques</span>
+              </div>
+              <ul class="package-features">
+                <li><i class="fas fa-check"></i> <strong>3 Stainless steel QR plaques</strong></li>
+                <li><i class="fas fa-check"></i> 3 Lifetime digital memorials</li>
+                <li><i class="fas fa-check"></i> Unlimited photos & videos</li>
+                <li><i class="fas fa-check"></i> Living Legacy messages</li>
+                <li><i class="fas fa-check"></i> Family tree connections</li>
+                <li><i class="fas fa-check"></i> Lifetime replacement guarantee</li>
+                <li><i class="fas fa-check"></i> Free shipping</li>
+              </ul>
+              <button class="btn btn-package-select" type="button">
+                Select This Package
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       <!-- Product Features Section -->
       <section class="order-features-section">
+        <h4 class="text-center mb-4">Premium Quality You Can Trust</h4>
         <div class="order-features-grid">
           <div class="order-feature-card">
             <div class="order-feature-icon">
@@ -28,46 +84,44 @@
           </div>
           <div class="order-feature-card">
             <div class="order-feature-icon">
-              <i class="fas fa-wrench"></i>
+              <i class="fas fa-infinity"></i>
             </div>
-            <h5>Easy Installation</h5>
-            <p>Includes adhesive backing or mounting screws. Attaches to granite, marble, or bronze in minutes.</p>
+            <h5>Lifetime Guarantee</h5>
+            <p>If your plaque ever fades or becomes unreadable, we'll replace it free. Forever.</p>
           </div>
         </div>
       </section>
 
-      <!-- Order Details -->
+      <!-- Order Summary & Checkout -->
       <section class="order-details-section">
-        <div class="row g-4">
-          <div class="col-md-7 col-lg-8">
-            <!-- What's Included -->
-            <div class="card-unified mb-4">
-              <h4 class="order-section-title"><i class="fas fa-box-open"></i>What's Included</h4>
-              <ul class="order-checklist">
-                <li><i class="fas fa-check"></i> 3" x 2" stainless steel QR code tag</li>
-                <li><i class="fas fa-check"></i> Laser-engraved with your unique memorial code</li>
-                <li><i class="fas fa-check"></i> Heavy-duty outdoor adhesive backing</li>
-                <li><i class="fas fa-check"></i> Optional mounting screws for permanent installation</li>
-                <li><i class="fas fa-check"></i> Installation instructions</li>
-                <li><i class="fas fa-check"></i> Lifetime replacement guarantee</li>
-              </ul>
-            </div>
-
-            <!-- Guarantee -->
-            <div class="order-guarantee-card">
-              <div class="order-guarantee-icon">
-                <i class="fas fa-infinity"></i>
+        <div class="row g-4 justify-content-center">
+          <div class="col-md-8 col-lg-6">
+            <!-- Order Summary -->
+            <div class="order-summary-card">
+              <div class="order-summary-header">
+                <h5><i class="fas fa-shopping-cart"></i>Order Summary</h5>
               </div>
-              <div class="order-guarantee-content">
-                <h5>Lifetime Guarantee</h5>
-                <p>If your tag ever fades, cracks, or becomes unreadable, we'll replace it free of charge. Forever.</p>
+              <div class="order-summary-body">
+                <div class="order-summary-item">
+                  <h6 id="order-package-name">Complete Legacy Package</h6>
+                  <p class="order-memorial-name" id="order-memorial-name">Loading memorial...</p>
+                  <p class="order-item-details" id="order-item-details">1 QR Plaque + Lifetime Memorial</p>
+                </div>
+                <hr>
+                <div class="order-summary-row">
+                  <span>Subtotal</span>
+                  <span id="order-subtotal">$99.00</span>
+                </div>
+                <div class="order-summary-row">
+                  <span>Shipping</span>
+                  <span class="order-free-shipping">FREE</span>
+                </div>
+                <hr>
+                <div class="order-summary-row order-total">
+                  <strong>Total (USD)</strong>
+                  <strong id="order-total">$99.00</strong>
+                </div>
               </div>
-            </div>
-
-            <!-- Shipping Info -->
-            <div class="order-shipping-info">
-              <h4>Shipping Information</h4>
-              <p>Your final shipping address will be collected securely at checkout. Ships within 3-5 business days via USPS First Class Mail.</p>
             </div>
 
             <div class="d-grid gap-2 mt-4">
@@ -78,36 +132,6 @@
               <p class="order-secure-text">
                 <i class="fas fa-shield-alt"></i> Secure payment processed by Stripe
               </p>
-            </div>
-          </div>
-
-          <div class="col-md-5 col-lg-4">
-            <!-- Order Summary -->
-            <div class="order-summary-card">
-              <div class="order-summary-header">
-                <h5><i class="fas fa-shopping-cart"></i>Order Summary</h5>
-              </div>
-              <div class="order-summary-body">
-                <div class="order-summary-item">
-                  <h6>Stainless Steel QR Tag</h6>
-                  <p class="order-memorial-name" id="order-memorial-name">For memorial...</p>
-                  <p class="order-item-details">3" x 2" • Weatherproof • Laser Engraved</p>
-                </div>
-                <hr>
-                <div class="order-summary-row">
-                  <span>Subtotal</span>
-                  <span>$39.00</span>
-                </div>
-                <div class="order-summary-row">
-                  <span>Shipping</span>
-                  <span class="order-free-shipping">FREE</span>
-                </div>
-                <hr>
-                <div class="order-summary-row order-total">
-                  <strong>Total (USD)</strong>
-                  <strong>$39.00</strong>
-                </div>
-              </div>
             </div>
 
             <!-- Trust Badges -->
@@ -135,26 +159,26 @@
         <div class="row g-4">
           <div class="col-md-6">
             <div class="order-faq-item">
-              <h6>How do I install the tag?</h6>
+              <h6>What's included in the Complete Legacy Package?</h6>
+              <p>You get a premium stainless steel QR plaque, a lifetime digital memorial with unlimited storage, Living Legacy message features, and family tree connections.</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="order-faq-item">
+              <h6>How do I install the plaque?</h6>
               <p>Peel and stick the adhesive backing onto any clean, dry headstone surface. For permanent installation, use the included mounting screws.</p>
             </div>
           </div>
           <div class="col-md-6">
             <div class="order-faq-item">
               <h6>Will it work in all weather?</h6>
-              <p>Yes! Our tags are tested to withstand temperatures from -40°F to 180°F and resist rain, snow, UV rays, and humidity.</p>
+              <p>Yes! Our plaques are tested to withstand temperatures from -40°F to 180°F and resist rain, snow, UV rays, and humidity.</p>
             </div>
           </div>
           <div class="col-md-6">
             <div class="order-faq-item">
-              <h6>What if it gets damaged?</h6>
-              <p>We offer a lifetime replacement guarantee. If your tag ever becomes unreadable, contact us for a free replacement.</p>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="order-faq-item">
-              <h6>Can I order multiple tags?</h6>
-              <p>Yes! Complete this purchase, then return to order additional tags. Contact us for bulk pricing on 5+ tags.</p>
+              <h6>What is the Family Bundle?</h6>
+              <p>The Family Bundle includes 3 QR plaques for different family members at a discounted price. Perfect for honoring multiple loved ones.</p>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 // /js/pages/partner-dashboard.js - Partner dashboard
 import { supabase } from '/js/supabase-client.js';
 import { showToast } from '/js/utils/toasts.js';
+import { generatePartnerBrochure, generatePartnerBusinessCards, generatePartnerRackCard } from '/js/utils/marketing-materials.js';
 
 /* ------------------- Format currency ------------------- */
 function formatCurrency(amount) {
@@ -166,6 +167,59 @@ async function displayDashboard(partner) {
   document.getElementById('payout-method').textContent =
     partner.payment_method ? partner.payment_method.charAt(0).toUpperCase() + partner.payment_method.slice(1) : '-';
   document.getElementById('payout-email').textContent = partner.payment_email || '-';
+
+  // Setup marketing materials download buttons
+  const brochureBtn = document.getElementById('download-brochure');
+  const cardsBtn = document.getElementById('download-business-cards');
+  const rackCardBtn = document.getElementById('download-rack-card');
+
+  if (brochureBtn) {
+    brochureBtn.onclick = async function () {
+      brochureBtn.disabled = true;
+      brochureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Generating...</span>';
+      try {
+        await generatePartnerBrochure(partner);
+        showToast('Brochure downloaded!', 'success');
+      } catch (err) {
+        console.error('Error generating brochure:', err);
+        showToast('Failed to generate brochure', 'error');
+      }
+      brochureBtn.disabled = false;
+      brochureBtn.innerHTML = '<i class="fas fa-file-pdf"></i> <span>Brochure (8.5x11)</span>';
+    };
+  }
+
+  if (cardsBtn) {
+    cardsBtn.onclick = async function () {
+      cardsBtn.disabled = true;
+      cardsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Generating...</span>';
+      try {
+        await generatePartnerBusinessCards(partner);
+        showToast('Business cards downloaded!', 'success');
+      } catch (err) {
+        console.error('Error generating business cards:', err);
+        showToast('Failed to generate business cards', 'error');
+      }
+      cardsBtn.disabled = false;
+      cardsBtn.innerHTML = '<i class="fas fa-id-card"></i> <span>Business Cards (8-up)</span>';
+    };
+  }
+
+  if (rackCardBtn) {
+    rackCardBtn.onclick = async function () {
+      rackCardBtn.disabled = true;
+      rackCardBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Generating...</span>';
+      try {
+        await generatePartnerRackCard(partner);
+        showToast('Rack card downloaded!', 'success');
+      } catch (err) {
+        console.error('Error generating rack card:', err);
+        showToast('Failed to generate rack card', 'error');
+      }
+      rackCardBtn.disabled = false;
+      rackCardBtn.innerHTML = '<i class="fas fa-scroll"></i> <span>Rack Card (4x9)</span>';
+    };
+  }
 
   // Show dashboard
   loadingDiv.style.display = 'none';

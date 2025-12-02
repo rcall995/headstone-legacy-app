@@ -103,11 +103,11 @@ Guidelines:
 
     const userPrompt = `Please write a memorial biography for ${name}${ageInfo}.
 
-Here's what the family shared about them:
+Here's what was shared about them:
 
 ${answeredPrompts}
 
-Write a cohesive, heartfelt biography based on these memories.`;
+Write a cohesive, heartfelt biography based on these details.`;
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',

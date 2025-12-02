@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import QRCode from 'qrcode';
+import { createCanvas, loadImage } from 'canvas';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -11,17 +12,44 @@ export async function generateQRForOrder(orderId, memorialId) {
   const memorialUrl = `https://www.headstonelegacy.com/memorial?id=${memorialId}`;
 
   try {
-    // Generate high-resolution QR code as PNG buffer
-    const qrBuffer = await QRCode.toBuffer(memorialUrl, {
-      type: 'png',
-      width: 1000,  // High res for laser engraving
-      margin: 2,
-      errorCorrectionLevel: 'H', // Highest error correction
+    // QR Code settings
+    const qrSize = 1000;
+    const margin = 40;
+    const textHeight = 80;
+    const totalHeight = qrSize + textHeight;
+
+    // Create canvas with space for branding text
+    const canvas = createCanvas(qrSize, totalHeight);
+    const ctx = canvas.getContext('2d');
+
+    // Fill white background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, qrSize, totalHeight);
+
+    // Generate QR code as data URL
+    const qrDataUrl = await QRCode.toDataURL(memorialUrl, {
+      width: qrSize - (margin * 2),
+      margin: 0,
+      errorCorrectionLevel: 'H',
       color: {
         dark: '#000000',
         light: '#FFFFFF'
       }
     });
+
+    // Load and draw QR code
+    const qrImage = await loadImage(qrDataUrl);
+    ctx.drawImage(qrImage, margin, margin, qrSize - (margin * 2), qrSize - (margin * 2));
+
+    // Draw "HEADSTONELEGACY.COM" text below QR code
+    ctx.fillStyle = '#005F60';
+    ctx.font = 'bold 42px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('HEADSTONELEGACY.COM', qrSize / 2, qrSize + (textHeight / 2));
+
+    // Convert to PNG buffer
+    const qrBuffer = canvas.toBuffer('image/png');
 
     // Upload to Supabase storage
     const fileName = `order-${orderId}-qr.png`;

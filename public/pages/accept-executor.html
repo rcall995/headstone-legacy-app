@@ -1,0 +1,93 @@
+<!-- Accept Executor Invitation -->
+<div class="accept-executor-page">
+  <div class="container">
+    <!-- Loading State -->
+    <div id="executor-loading" class="executor-state">
+      <div class="executor-card">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Loading invitation details...</p>
+      </div>
+    </div>
+
+    <!-- Invalid Token State -->
+    <div id="executor-invalid" class="executor-state" style="display: none;">
+      <div class="executor-card">
+        <div class="executor-icon error">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h2>Invalid Invitation</h2>
+        <p id="invalid-message">This invitation link is invalid or has expired.</p>
+        <a href="/" data-route class="btn btn-legacy-primary">
+          Go to Homepage
+        </a>
+      </div>
+    </div>
+
+    <!-- Not Logged In State -->
+    <div id="executor-login" class="executor-state" style="display: none;">
+      <div class="executor-card">
+        <div class="executor-icon">
+          <i class="fas fa-user-shield"></i>
+        </div>
+        <h2>Executor Invitation</h2>
+        <p>You've been invited to be the executor of a Living Legacy. Please sign in to accept.</p>
+        <a href="/login?redirect=/accept-executor" data-route class="btn btn-legacy-primary">
+          <i class="fas fa-sign-in-alt"></i>
+          Sign In to Continue
+        </a>
+      </div>
+    </div>
+
+    <!-- Invitation Details -->
+    <div id="executor-invite" class="executor-state" style="display: none;">
+      <div class="executor-card">
+        <div class="executor-icon">
+          <i class="fas fa-user-shield"></i>
+        </div>
+        <h2>Executor Invitation</h2>
+        <p class="invite-message">
+          <strong id="inviter-name">Someone</strong> has asked you to be the executor of their Living Legacy.
+        </p>
+
+        <div class="executor-responsibilities">
+          <h4>As an executor, you will:</h4>
+          <ul>
+            <li><i class="fas fa-check text-success"></i> Confirm their passing when the time comes</li>
+            <li><i class="fas fa-check text-success"></i> Activate their memorial to make it public</li>
+            <li><i class="fas fa-check text-success"></i> Trigger scheduled message deliveries to their loved ones</li>
+          </ul>
+        </div>
+
+        <p class="invite-note">
+          This is an important responsibility. Only accept if you are prepared to fulfill this role.
+        </p>
+
+        <div class="executor-actions">
+          <button id="accept-btn" class="btn btn-legacy-primary">
+            <i class="fas fa-check"></i>
+            Accept Executor Role
+          </button>
+          <button id="decline-btn" class="btn btn-outline-secondary">
+            Decline
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success State -->
+    <div id="executor-success" class="executor-state" style="display: none;">
+      <div class="executor-card">
+        <div class="executor-icon success">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h2 id="success-title">You're Now an Executor</h2>
+        <p id="success-message">You have accepted the executor role. You will be notified when action is needed.</p>
+        <a href="/" data-route class="btn btn-legacy-primary">
+          Go to Homepage
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
