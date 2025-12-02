@@ -109,17 +109,13 @@ export default async function handler(req, res) {
                     .is('gravesite_lat', null);
             }
         } else {
-            // All wanted - flagged OR active searches OR genuinely missing location
-            // Only show memorials that are ACTUALLY missing critical location data:
-            // - No cemetery name AND no gravesite pin (we don't know where they're buried)
-            // - OR explicitly flagged as needing location
+            // All wanted - show memorials missing cemetery OR missing gravesite pin
+            // These are memorials that scouts can help locate
             if (searchMemorialIds.length > 0) {
                 query = query.or(`needs_location.eq.true,needs_cemetery.eq.true,id.in.(${searchMemorialIds.join(',')})`);
             } else {
-                // Show memorials that are genuinely missing location:
-                // - No cemetery name (we don't know the cemetery) AND no gravesite pin
-                // - Memorials WITH a cemetery name are considered "found" even without exact pin
-                query = query.is('gravesite_lat', null).is('cemetery_name', null);
+                // Show memorials missing either cemetery name or gravesite pin
+                query = query.or('cemetery_name.is.null,gravesite_lat.is.null');
             }
         }
 
@@ -227,15 +223,14 @@ export default async function handler(req, res) {
 
             totalCount += searchOnlyCount || 0;
         } else {
-            // Count memorials genuinely missing location (no cemetery AND no gravesite pin)
-            const { count: missingGpsCount } = await supabase
+            // Count memorials missing cemetery OR gravesite pin
+            const { count: missingCount } = await supabase
                 .from('memorials')
                 .select('id', { count: 'exact', head: true })
                 .neq('status', 'living_legacy')
-                .is('gravesite_lat', null)
-                .is('cemetery_name', null);
+                .or('cemetery_name.is.null,gravesite_lat.is.null');
 
-            totalCount = missingGpsCount || 0;
+            totalCount = missingCount || 0;
         }
 
         // Calculate nearby count if location provided
