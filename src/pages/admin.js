@@ -1150,6 +1150,278 @@ function setupEventHandlers() {
     });
 
     document.getElementById('generate-branded-qr-btn')?.addEventListener('click', generateBrandedQR);
+
+    // Duplicates tab
+    document.getElementById('duplicates-tab')?.addEventListener('shown.bs.tab', () => {
+        // Don't auto-scan, let user click the button
+    });
+
+    // Scan for duplicates button
+    document.getElementById('scan-duplicates-btn')?.addEventListener('click', scanForDuplicates);
+
+    // Merge group buttons (delegated)
+    document.getElementById('duplicates-list')?.addEventListener('click', (e) => {
+        const mergeBtn = e.target.closest('.merge-group-btn');
+        if (mergeBtn) {
+            const groupIndex = parseInt(mergeBtn.dataset.group, 10);
+            openMergeModal(groupIndex);
+        }
+    });
+
+    // Merge confirm button
+    document.getElementById('merge-confirm-btn')?.addEventListener('click', executeMerge);
+}
+
+// ==================== DUPLICATES ====================
+let duplicateGroups = [];
+let mergeModal = null;
+let currentMergeGroup = null;
+let selectedMergeData = {};
+
+async function scanForDuplicates() {
+    const btn = document.getElementById('scan-duplicates-btn');
+    const loading = document.getElementById('duplicates-loading');
+    const empty = document.getElementById('duplicates-empty');
+    const list = document.getElementById('duplicates-list');
+    const summary = document.getElementById('duplicates-summary');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Scanning...';
+    loading.style.display = '';
+    empty.style.display = 'none';
+    list.innerHTML = '';
+    summary.style.display = 'none';
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const response = await fetch('/api/admin/find-duplicates', {
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to scan for duplicates');
+
+        const data = await response.json();
+        duplicateGroups = data.groups || [];
+
+        loading.style.display = 'none';
+
+        if (duplicateGroups.length === 0) {
+            empty.style.display = '';
+            return;
+        }
+
+        document.getElementById('duplicates-count').textContent = duplicateGroups.length;
+        summary.style.display = '';
+
+        // Update badge
+        const badge = document.getElementById('duplicates-badge');
+        if (badge) {
+            badge.textContent = duplicateGroups.length;
+            badge.style.display = duplicateGroups.length > 0 ? '' : 'none';
+        }
+
+        // Render groups
+        list.innerHTML = duplicateGroups.map((group, idx) => `
+            <div class="duplicate-group">
+                <div class="duplicate-group-header">
+                    <div>
+                        <strong>${escapeHtml(group.memorials[0].name)}</strong>
+                        <span class="badge bg-warning text-dark ms-2">${group.memorials.length} duplicates</span>
+                    </div>
+                    <button class="btn btn-warning btn-sm merge-group-btn" data-group="${idx}">
+                        <i class="fas fa-object-group me-2"></i>Review & Merge
+                    </button>
+                </div>
+                <div class="duplicate-items">
+                    ${group.memorials.map((m, i) => `
+                        <div class="duplicate-item ${i === 0 ? 'primary' : ''}">
+                            ${i === 0 ? '<span class="badge bg-success position-absolute top-0 end-0 m-2">Most Complete</span>' : ''}
+                            <h6 class="mb-2">${escapeHtml(m.name)}</h6>
+                            <div class="small text-muted mb-1">
+                                <i class="fas fa-calendar me-1"></i>
+                                ${m.birth_date?.substring(0, 4) || '?'} - ${m.death_date?.substring(0, 4) || '?'}
+                            </div>
+                            ${m.cemetery_name ? `<div class="small text-muted mb-1"><i class="fas fa-church me-1"></i>${escapeHtml(m.cemetery_name)}</div>` : ''}
+                            ${m.gravesite_lat ? '<span class="badge bg-success me-1">GPS</span>' : '<span class="badge bg-secondary me-1">No GPS</span>'}
+                            ${m.main_photo ? '<span class="badge bg-info me-1">Photo</span>' : ''}
+                            ${m.biography ? '<span class="badge bg-primary">Bio</span>' : ''}
+                            <div class="completeness-bar mt-2">
+                                <div class="completeness-fill" style="width: ${m.completeness}%"></div>
+                            </div>
+                            <small class="text-muted">${m.completeness}% complete</small>
+                            ${m.matchScore ? `<div class="small text-warning mt-1"><i class="fas fa-exclamation-triangle me-1"></i>${m.matchScore}% match</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('Error scanning duplicates:', error);
+        showToast('Error scanning for duplicates', 'error');
+        loading.style.display = 'none';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search me-2"></i>Scan for Duplicates';
+    }
+}
+
+function openMergeModal(groupIndex) {
+    currentMergeGroup = duplicateGroups[groupIndex];
+    if (!currentMergeGroup) return;
+
+    selectedMergeData = {};
+    const memorials = currentMergeGroup.memorials;
+
+    // Fields to merge
+    const fields = [
+        { key: 'name', label: 'Name' },
+        { key: 'birth_date', label: 'Birth Date' },
+        { key: 'death_date', label: 'Death Date' },
+        { key: 'birth_place', label: 'Birth Place' },
+        { key: 'death_place', label: 'Death Place' },
+        { key: 'cemetery_name', label: 'Cemetery' },
+        { key: 'cemetery_address', label: 'Cemetery Address' },
+        { key: 'biography', label: 'Biography', truncate: true }
+    ];
+
+    const modalContent = document.getElementById('merge-modal-content');
+    modalContent.innerHTML = `
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Review carefully!</strong> Select which value to keep for each field. The merged memorial will use your selections.
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Keep which memorial ID?</label>
+            <div class="d-flex flex-wrap gap-2">
+                ${memorials.map((m, i) => `
+                    <div class="form-check">
+                        <input class="form-check-input keep-memorial-radio" type="radio" name="keepMemorial" id="keep-${m.id}" value="${m.id}" ${i === 0 ? 'checked' : ''}>
+                        <label class="form-check-label" for="keep-${m.id}">
+                            <strong>${escapeHtml(m.name)}</strong>
+                            <span class="badge bg-${i === 0 ? 'success' : 'secondary'} ms-1">${m.completeness}%</span>
+                        </label>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        <hr>
+        <h6 class="mb-3">Select best value for each field:</h6>
+        ${fields.map(field => {
+            const values = memorials.map(m => m[field.key]).filter(v => v);
+            const uniqueValues = [...new Set(values)];
+
+            if (uniqueValues.length <= 1) {
+                // All same or only one value
+                const val = uniqueValues[0] || '(empty)';
+                selectedMergeData[field.key] = uniqueValues[0] || null;
+                return `
+                    <div class="merge-field-row">
+                        <div class="merge-field-label">${field.label}</div>
+                        <div class="merge-field-options">
+                            <span class="merge-option selected">${field.truncate && val.length > 50 ? escapeHtml(val.substring(0, 50)) + '...' : escapeHtml(val)}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Multiple different values - let user choose
+            return `
+                <div class="merge-field-row">
+                    <div class="merge-field-label">${field.label}</div>
+                    <div class="merge-field-options">
+                        ${uniqueValues.map((val, i) => `
+                            <span class="merge-option ${i === 0 ? 'selected' : ''}" data-field="${field.key}" data-value="${escapeHtml(val)}">
+                                ${field.truncate && val.length > 50 ? escapeHtml(val.substring(0, 50)) + '...' : escapeHtml(val)}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('')}
+    `;
+
+    // Pre-select first values
+    fields.forEach(field => {
+        const values = memorials.map(m => m[field.key]).filter(v => v);
+        selectedMergeData[field.key] = values[0] || null;
+    });
+
+    // Add click handlers for merge options
+    modalContent.querySelectorAll('.merge-option[data-field]').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const field = opt.dataset.field;
+            const value = opt.dataset.value;
+
+            // Update selection
+            opt.closest('.merge-field-options').querySelectorAll('.merge-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            selectedMergeData[field] = value;
+        });
+    });
+
+    // Show modal
+    if (!mergeModal) {
+        const modalEl = document.getElementById('mergeModal');
+        if (modalEl) mergeModal = new bootstrap.Modal(modalEl);
+    }
+    mergeModal?.show();
+}
+
+async function executeMerge() {
+    if (!currentMergeGroup) return;
+
+    const keepId = document.querySelector('input[name="keepMemorial"]:checked')?.value;
+    if (!keepId) {
+        showToast('Please select which memorial to keep', 'error');
+        return;
+    }
+
+    const mergeIds = currentMergeGroup.memorials
+        .filter(m => m.id !== keepId)
+        .map(m => m.id);
+
+    const btn = document.getElementById('merge-confirm-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Merging...';
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const response = await fetch('/api/admin/merge-memorials', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+                keepId,
+                mergeIds,
+                mergedData: selectedMergeData
+            })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Merge failed');
+        }
+
+        showToast(`Merged ${mergeIds.length + 1} memorials into one!`, 'success');
+        mergeModal?.hide();
+
+        // Re-scan
+        scanForDuplicates();
+
+    } catch (error) {
+        console.error('Merge error:', error);
+        showToast(error.message || 'Error merging memorials', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-object-group me-2"></i>Merge Selected';
+    }
 }
 
 // ==================== MAIN EXPORT ====================
