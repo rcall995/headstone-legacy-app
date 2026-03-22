@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#005F60">
+    <meta name="description" content="Create beautiful digital memorials and preserve family legacies with Headstone Legacy. GPS-precise cemetery locations, family trees, and QR codes for headstones.">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Headstone Legacy">
+    <meta property="og:title" content="Headstone Legacy - Digital Memorials & Family History">
+    <meta property="og:description" content="Create beautiful digital memorials and preserve family legacies. GPS-precise cemetery locations, family trees, and QR codes for headstones.">
+    <meta property="og:image" content="https://www.headstonelegacy.com/images/og-image.jpg">
+    <meta property="og:url" content="https://www.headstonelegacy.com">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Headstone Legacy - Digital Memorials & Family History">
+    <meta name="twitter:description" content="Create beautiful digital memorials and preserve family legacies.">
+    <meta name="twitter:image" content="https://www.headstonelegacy.com/images/og-image.jpg">
+
+    <title>Headstone Legacy - Digital Memorials & Family History</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/logo1.png?v=2">
+    <link rel="icon" type="image/png" sizes="192x192" href="/logo1.png?v=2">
+    <link rel="icon" type="image/png" sizes="512x512" href="/logo1.png?v=2">
+    <link rel="apple-touch-icon" href="/logo1.png?v=2">
+    <link rel="apple-touch-icon" sizes="192x192" href="/logo1.png?v=2">
+    <link rel="apple-touch-icon" sizes="512x512" href="/logo1.png?v=2">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css?v=66">
+    <link rel="stylesheet" href="/css/nav-redesign.css?v=56">
+    <link rel="stylesheet" href="/css/dashboard.css?v=1">
+    <script src="https://cdn.jsdelivr.net/npm/mapbox-gl@3.6.0/dist/mapbox-gl.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/mapbox-gl@3.6.0/dist/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="module" src="/js/app.js?v=55"></script>
+</head>
+<body>
+    <div id="card-menu-overlay" class="card-menu-overlay">
+        <div class="card-menu-header">
+            <h4>Menu</h4>
+            <button id="card-menu-close-btn" class="btn-close"></button>
+        </div>
+        <div class="card-menu-content">
+            <div id="universal-menu-items">
+                <!-- Minimal menu for logged-out visitors - they use the landing page CTAs -->
+                <a href="/login" class="card-menu-item text-decoration-none" data-route data-route-mobile id="mobile-menu-signin">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Sign In</h5>
+                    </div>
+                </a>
+                <a href="/memorial-form" class="card-menu-item text-decoration-none" data-route data-route-mobile id="mobile-menu-create">
+                    <i class="fas fa-dove"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Honor a Loved One</h5>
+                        <p class="card-menu-desc">Create a memorial</p>
+                    </div>
+                </a>
+                <a href="/plan-your-legacy" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-feather-alt"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Plan Your Legacy</h5>
+                        <p class="card-menu-desc">Write your own story</p>
+                    </div>
+                </a>
+                <a href="/how-it-works" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-info-circle"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">How It Works</h5>
+                        <p class="card-menu-desc">See the process</p>
+                    </div>
+                </a>
+            </div>
+            <div id="curator-nav-menu-items" class="d-none">
+                 <hr style="border-color: rgba(255,255,255,0.2);">
+                 <a href="/dashboard" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-th-large"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Dashboard</h5>
+                        <p class="card-menu-desc">View all your memorials and activity</p>
+                    </div>
+                </a>
+                 <a href="/scout-mode" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Scout Mode</h5>
+                        <p class="card-menu-desc">Find and map new memorials</p>
+                    </div>
+                </a>
+                <a href="/memorial-form" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-plus"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Create New Memorial</h5>
+                        <p class="card-menu-desc">Start a new memorial page</p>
+                    </div>
+                </a>
+                <a href="/dashboard" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-book-open"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">View Memorials</h5>
+                        <p class="card-menu-desc">See your memorials and tributes</p>
+                    </div>
+                </a>
+                <a href="/memorial-list?status=draft" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-pencil-ruler"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Drafts</h5>
+                        <p class="card-menu-desc">View unpublished work</p>
+                    </div>
+                    <span class="notification-badge" id="mobile-draft-badge" style="display: none;"></span>
+                </a>
+                <a href="/tributes-list" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-comment-check"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Pending Tributes</h5>
+                        <p class="card-menu-desc">Approve visitor tributes</p>
+                    </div>
+                    <span class="notification-badge" id="mobile-tribute-badge" style="display: none;"></span>
+                </a>
+                <a href="/legacy-messages" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-envelope-open-text"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Legacy Messages</h5>
+                        <p class="card-menu-desc">Schedule messages for loved ones</p>
+                    </div>
+                </a>
+                <a href="/my-legacy" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-feather-alt"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">My Legacy</h5>
+                        <p class="card-menu-desc">Plan your own legacy</p>
+                    </div>
+                </a>
+                <a href="/executor-dashboard" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-user-shield"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Executor Dashboard</h5>
+                        <p class="card-menu-desc">Manage entrusted legacies</p>
+                    </div>
+                </a>
+                <a href="/import-family-tree" class="card-menu-item text-decoration-none" data-route data-route-mobile>
+                    <i class="fas fa-file-import"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Import Family Tree</h5>
+                        <p class="card-menu-desc">Upload GEDCOM file</p>
+                    </div>
+                </a>
+                <hr style="border-color: rgba(255,255,255,0.2);">
+                <a href="#" class="card-menu-item text-decoration-none" id="signOutLink-menu">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <div class="card-menu-text">
+                        <h5 class="card-menu-title">Sign Out</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== NEW APP NAVIGATION (Logged-In Users) ===== -->
+
+    <!-- App Header (Desktop & Mobile) -->
+    <div class="app-header" id="app-header">
+        <div class="app-header-inner">
+            <!-- Logo -->
+            <a href="/" class="app-header-logo" data-route>
+                <img src="/logo1.png" alt="Headstone Legacy">
+                <span class="app-header-logo-text">Headstone Legacy</span>
+            </a>
+
+            <!-- Desktop Navigation -->
+            <nav class="app-nav-desktop" id="app-nav-desktop">
+                <a href="/dashboard" class="app-nav-item" data-route data-nav="memorials">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/memorial-list?status=draft" class="app-nav-item" data-route data-nav="drafts">
+                    <i class="fas fa-pencil-alt"></i>
+                    <span>Drafts</span>
+                    <span class="app-nav-badge" id="nav-draft-badge" style="display: none;"></span>
+                </a>
+                <a href="/scout-mode" class="app-nav-item" data-route data-nav="scout">
+                    <i class="fas fa-binoculars"></i>
+                    <span>Scout</span>
+                </a>
+                <a href="/tributes-list" class="app-nav-item" data-route data-nav="tributes">
+                    <i class="fas fa-comments"></i>
+                    <span>Tributes</span>
+                    <span class="app-nav-badge" id="nav-tribute-badge" style="display: none;"></span>
+                </a>
+                <a href="/memorial-form" class="app-nav-cta" data-route>
+                    <i class="fas fa-plus"></i>
+                    <span>Create</span>
+                </a>
+            </nav>
+
+            <!-- Right Section -->
+            <div class="app-header-right">
+                <!-- Scout Points Badge -->
+                <a href="/scout-leaderboard" class="app-scout-badge" id="app-scout-badge" data-route>
+                    <i class="fas fa-medal"></i>
+                    <span id="app-scout-points">0 pts</span>
+                </a>
+
+                <!-- User Menu (Desktop) -->
+                <div class="position-relative d-none d-lg-block">
+                    <button class="app-user-btn" id="app-user-btn" aria-expanded="false">
+                        <div class="app-user-avatar" id="app-user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span class="app-user-name" id="app-user-name">Account</span>
+                        <i class="fas fa-chevron-down app-user-chevron"></i>
+                    </button>
+
+                    <!-- User Dropdown -->
+                    <div class="app-user-dropdown" id="app-user-dropdown">
+                        <div class="app-user-dropdown-header">
+                            <div class="app-user-dropdown-email" id="app-user-email">user@email.com</div>
+                            <div class="app-user-stats">
+                                <div class="app-user-stat">
+                                    <div class="app-user-stat-value" id="user-stat-memorials">0</div>
+                                    <div class="app-user-stat-label">Memorials</div>
+                                </div>
+                                <div class="app-user-stat">
+                                    <div class="app-user-stat-value" id="user-stat-points">0</div>
+                                    <div class="app-user-stat-label">Points</div>
+                                </div>
+                                <div class="app-user-stat">
+                                    <div class="app-user-stat-value" id="user-stat-level">1</div>
+                                    <div class="app-user-stat-label">Level</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-user-dropdown-body">
+                            <a href="/scout-leaderboard" class="app-user-dropdown-item" data-route>
+                                <i class="fas fa-trophy"></i>
+                                <span>Leaderboard</span>
+                            </a>
+                            <a href="/legacy-messages" class="app-user-dropdown-item" data-route>
+                                <i class="fas fa-envelope-open-text"></i>
+                                <span>Legacy Messages</span>
+                            </a>
+                            <a href="/import-family-tree" class="app-user-dropdown-item" data-route>
+                                <i class="fas fa-sitemap"></i>
+                                <span>Import Family Tree</span>
+                            </a>
+                            <div class="app-user-dropdown-divider"></div>
+                            <a href="/admin" class="app-user-dropdown-item" id="admin-link-desktop" style="display: none;" data-route>
+                                <i class="fas fa-cog"></i>
+                                <span>Admin Dashboard</span>
+                            </a>
+                            <button class="app-user-dropdown-item danger" id="app-signout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="app-user-btn d-lg-none" id="app-mobile-menu-toggle">
+                    <div class="app-user-avatar" id="app-user-avatar-mobile">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <i class="fas fa-bars" style="color: var(--nav-text-muted);"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Wizard Progress Bar (shown only on memorial form) -->
+        <div class="wizard-header-row" id="wizard-header-row" style="display: none;">
+            <div class="container">
+                <div class="wizard-progress" id="header-wizard-progress">
+                    <div class="wizard-progress-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <span class="step-label">About</span>
+                    </div>
+                    <div class="wizard-progress-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Places</span>
+                    </div>
+                    <div class="wizard-progress-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Family</span>
+                    </div>
+                    <div class="wizard-progress-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <span class="step-label">Memories</span>
+                    </div>
+                    <div class="wizard-progress-step" data-step="5">
+                        <div class="step-number">5</div>
+                        <span class="step-label">Photos</span>
+                    </div>
+                    <div class="wizard-progress-step living-legacy-only" data-step="6" style="display: none;">
+                        <div class="step-number">6</div>
+                        <span class="step-label">Executor</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="app-bottom-nav" id="app-bottom-nav">
+        <div class="app-bottom-nav-inner">
+            <a href="/dashboard" class="app-bottom-nav-item" data-route data-nav="memorials">
+                <span class="app-bottom-nav-icon">
+                    <i class="fas fa-th-large"></i>
+                </span>
+                <span class="app-bottom-nav-label">Dashboard</span>
+            </a>
+            <a href="/scout-mode" class="app-bottom-nav-item" data-route data-nav="scout">
+                <span class="app-bottom-nav-icon">
+                    <i class="fas fa-binoculars"></i>
+                </span>
+                <span class="app-bottom-nav-label">Scout</span>
+            </a>
+            <div class="app-bottom-nav-fab">
+                <a href="/memorial-form" class="app-bottom-nav-fab-btn" data-route title="Create Memorial">
+                    <i class="fas fa-plus"></i>
+                </a>
+            </div>
+            <a href="/tributes-list" class="app-bottom-nav-item" data-route data-nav="tributes">
+                <span class="app-bottom-nav-icon">
+                    <i class="fas fa-comments"></i>
+                    <span class="app-bottom-nav-badge" id="bottom-nav-tribute-badge" style="display: none;"></span>
+                </span>
+                <span class="app-bottom-nav-label">Tributes</span>
+            </a>
+            <button class="app-bottom-nav-item" id="app-bottom-nav-more">
+                <span class="app-bottom-nav-icon">
+                    <i class="fas fa-ellipsis-h"></i>
+                </span>
+                <span class="app-bottom-nav-label">More</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Slide-Out Panel -->
+    <div class="app-mobile-menu" id="app-mobile-menu">
+        <div class="app-mobile-menu-panel">
+            <div class="app-mobile-menu-header">
+                <div class="app-mobile-menu-user">
+                    <div class="app-mobile-menu-avatar" id="mobile-menu-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="app-mobile-menu-user-info">
+                        <h4 id="mobile-menu-name">Welcome</h4>
+                        <p id="mobile-menu-email">user@email.com</p>
+                    </div>
+                </div>
+                <button class="app-mobile-menu-close" id="app-mobile-menu-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="app-mobile-menu-stats">
+                <div class="app-mobile-menu-stat">
+                    <div class="app-mobile-menu-stat-value" id="mobile-stat-memorials">0</div>
+                    <div class="app-mobile-menu-stat-label">Memorials</div>
+                </div>
+                <div class="app-mobile-menu-stat">
+                    <div class="app-mobile-menu-stat-value" id="mobile-stat-points">0</div>
+                    <div class="app-mobile-menu-stat-label">Scout Points</div>
+                </div>
+                <div class="app-mobile-menu-stat">
+                    <div class="app-mobile-menu-stat-value" id="mobile-stat-level">1</div>
+                    <div class="app-mobile-menu-stat-label">Level</div>
+                </div>
+            </div>
+
+            <div class="app-mobile-menu-section">
+                <div class="app-mobile-menu-section-title">Memorials</div>
+                <a href="/dashboard" class="app-mobile-menu-item" data-route data-route-mobile>
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/memorial-list?status=draft" class="app-mobile-menu-item" data-route data-route-mobile>
+                    <i class="fas fa-pencil-alt"></i>
+                    <span>Drafts</span>
+                    <span class="app-mobile-menu-item-badge" id="mobile-menu-draft-badge" style="display: none;"></span>
+                </a>
+                <a href="/memorial-form" class="app-mobile-menu-item" data-route data-route-mobile>
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Create New Memorial</span>
+                </a>
+            </div>
+
+            <div class="app-mobile-menu-section">
+                <div class="app-mobile-menu-section-title">Scout Mode</div>
+                <a href="/scout-mode" class="app-mobile-menu-item" data-route data-route-mobile>
+                    <i class="fas fa-binoculars"></i>
+                    <span>Start Scouting</span>
+                </a>
+                <a href="/scout-leaderboard" class="app-mobile-menu-item" data-route data-route-mobile>
+                    <i class="fas fa-trophy"></i>
+                    <span>Leaderboard</span>
+                </a>
+            </div>
+
+            <div class="app-mobile-menu-section">
+                <div class="app-mobile-menu-section-title">Tools</div>
+                <a href="/tributes-list" class="app-mobile-menu-item" data-route data-route-mobile>
+                    <i class="fas fa-comments"></i>
+                    <span>Pending Tributes</span>
+                    <span class="app-mobile-menu-item-badge" id="mobile-menu-tribute-badge" style="display: none;"></span>
+                </a>
+                <a href="/legacy-messages" class="app-mobile-menu-item" data-route data-route-mobile>
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Legacy Messages</span>
+                </a>
+                <a href="/import-family-tree" class="app-mobile-menu-item" data-route data-route-mobile>
+                    <i class="fas fa-sitemap"></i>
+                    <span>Import Family Tree</span>
+                </a>
+                <a href="/admin" class="app-mobile-menu-item" id="admin-link-mobile" style="display: none;" data-route data-route-mobile>
+                    <i class="fas fa-cog"></i>
+                    <span>Admin Dashboard</span>
+                </a>
+            </div>
+
+            <div class="app-mobile-menu-footer">
+                <button class="app-mobile-menu-signout" id="app-mobile-signout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sign Out</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== END NEW APP NAVIGATION ===== -->
+
+    <header class="header-visible" id="main-header">
+    <div class="container">
+            <nav class="navbar navbar-expand-lg">
+                <a class="navbar-brand d-flex align-items-center" href="/" data-route>
+                    <img src="/logo1.png" alt="Headstone Legacy" class="navbar-brand-logo">
+                    <span class="brand-text ms-2">Headstone Legacy</span>
+                </a>
+
+                <div class="ms-auto d-flex align-items-center">
+                    <a href="/login" class="btn btn-sm btn-outline-primary d-lg-none me-2" id="mobile-signin-btn" data-route>Sign In</a>
+                    <button id="mobile-menu-trigger" class="mobile-menu-toggler d-none" type="button">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
+
+                <div class="collapse navbar-collapse">
+                    <!-- Marketing Navigation (Shown when logged OUT) -->
+                    <ul class="navbar-nav me-auto" id="marketing-nav-desktop">
+                        <li class="nav-item"><a class="nav-link" href="/memorial-form" data-route><i class="fas fa-dove me-1"></i> Honor a Loved One</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/plan-your-legacy" data-route><i class="fas fa-feather-alt me-1"></i> Plan Your Legacy</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/about-scouting" data-route><i class="fas fa-binoculars me-1"></i> Become a Scout</a></li>
+                    </ul>
+
+                    <!-- Curator Navigation (Shown when logged IN) -->
+                    <ul class="navbar-nav me-auto d-none" id="curator-nav-desktop">
+                        <li class="nav-item"><a class="nav-link" href="/dashboard" data-route><i class="fas fa-th-large me-1"></i> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/scout-mode" data-route><i class="fas fa-map-marker-alt me-1"></i> Scout Mode</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/memorial-form" data-route><i class="fas fa-plus me-1"></i> Create Memorial</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/memorial-list?status=draft" data-route><i class="fas fa-pencil-ruler me-1"></i> Drafts <span class="badge bg-danger ms-1" id="desktop-draft-badge" style="display: none;"></span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="/tributes-list" data-route><i class="fas fa-comment-check me-1"></i> Tributes <span class="badge bg-danger ms-1" id="desktop-tribute-badge" style="display: none;"></span></a></li>
+                    </ul>
+
+                    <ul class="navbar-nav align-items-center">
+                        <li class="nav-item d-none" id="signInLink-desktop">
+                            <a class="btn btn-outline-dark btn-signin-desktop" href="/login" data-route>Sign In</a>
+                        </li>
+                        <li class="nav-item dropdown d-none" id="userDropdown-desktop">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/legacy-messages" data-route><i class="fas fa-envelope-open-text me-2"></i>Legacy Messages</a></li>
+                                <li><a class="dropdown-item" href="/import-family-tree" data-route><i class="fas fa-file-import me-2"></i>Import Family Tree</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="signOutLink-desktop" href="#"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <!-- Wizard Progress Bar for Logged-Out Users (inside header for sticky) -->
+        <div class="wizard-header-row wizard-logged-out" id="wizard-header-row-logged-out" style="display: none;">
+            <div class="container">
+                <div class="wizard-progress" id="header-wizard-progress-logged-out">
+                    <div class="wizard-progress-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <span class="step-label">About</span>
+                    </div>
+                    <div class="wizard-progress-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Places</span>
+                    </div>
+                    <div class="wizard-progress-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Family</span>
+                    </div>
+                    <div class="wizard-progress-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <span class="step-label">Memories</span>
+                    </div>
+                    <div class="wizard-progress-step" data-step="5">
+                        <div class="step-number">5</div>
+                        <span class="step-label">Photos</span>
+                    </div>
+                    <div class="wizard-progress-step living-legacy-only" data-step="6" style="display: none;">
+                        <div class="step-number">6</div>
+                        <span class="step-label">Executor</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="app-root" class="container mt-4">
+        <!-- Initial loading state - replaced by JavaScript router -->
+        <div class="text-center py-5" id="initial-loader">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-nav">
+                <div class="footer-nav-section">
+                    <h5>Get Started</h5>
+                    <a href="/memorial-form" data-route>Create Memorial</a>
+                    <a href="/plan-your-legacy" data-route>Plan Your Legacy</a>
+                    <a href="/how-it-works" data-route>How It Works</a>
+                    <a href="/order-tag" data-route>Order QR Plaque</a>
+                </div>
+                <div class="footer-nav-section">
+                    <h5>Community</h5>
+                    <a href="/about-scouting" data-route>Become a Scout</a>
+                    <a href="/scout-leaderboard" data-route>Scout Leaderboard</a>
+                </div>
+                <div class="footer-nav-section">
+                    <h5>Partners</h5>
+                    <a href="/partners" data-route>Partner Program</a>
+                    <a href="/wholesale" data-route>Wholesale Orders</a>
+                </div>
+                <div class="footer-nav-section">
+                    <h5>Support</h5>
+                    <a href="mailto:support@headstonelegacy.com">Contact Us</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-disclaimer">
+                    Memorial records may be compiled from publicly available sources including cemetery records and headstone inscriptions.
+                    Families may claim and enhance these records at any time.
+                    To request updates or removal, contact <a href="mailto:support@headstonelegacy.com">support@headstonelegacy.com</a>
+                </p>
+                <p class="footer-copyright">&copy; 2025 Headstone Legacy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
